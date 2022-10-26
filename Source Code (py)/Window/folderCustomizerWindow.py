@@ -8,6 +8,8 @@ from Helper.Operator import resetFolder, folderColorizerTagger
 from Helper.Registry import install_key, uninstall_key
 
 program_path = "C:\\Program Files\\Folder Customizer"
+colors = ["Default", "Red", "Brown", "Orange", "Lemon", "Green", "Azure", "Blue", "Pink", "Violet", "White", "Gray", "Black"]
+tones = ["Default", "Light", "Normal", "Dark"]
 
 class FolderCustomizerWindow(QWidget):
 	# global program_path
@@ -16,7 +18,7 @@ class FolderCustomizerWindow(QWidget):
 		# self.resize(1200, 600)
 
 		# -- check if the icons are in the Program Files
-		program_path = Path("C:\Program Files", "Folder Customizer")
+		program_path = Path(program_path)
 		if not program_path.exists():
 			shutil.copytree(Path().absolute(), program_path)
 
@@ -59,7 +61,7 @@ class FolderCustomizerWindow(QWidget):
 		self.tone_comboBox_label = QLabel("Tone")
 
 		self.tone_comboBox = QComboBox()
-		self.tone_comboBox.addItems(["Default", "Light", "Normal", "Dark"])
+		self.tone_comboBox.addItems(tones)
 		self.tone_comboBox.setCurrentIndex(1)
 
 		self.tone_comboBox_Layout.addWidget(self.tone_comboBox_label)
@@ -70,7 +72,7 @@ class FolderCustomizerWindow(QWidget):
 		self.color_comboBox_label = QLabel("Color")
 
 		self.color_comboBox = QComboBox()
-		self.color_comboBox.addItems(["Default", "Red", "Brown", "Orange", "Lemon", "Green", "Azure", "Blue", "Pink", "Violet", "White", "Gray", "Black"])
+		self.color_comboBox.addItems(colors)
 		self.color_comboBox.setCurrentIndex(0)
 
 		self.color_comboBox_Layout.addWidget(self.color_comboBox_label)
