@@ -12,7 +12,7 @@
             ],
             "compilerPath": "C:\\msys64\\mingw64\\bin\\g++.exe",
             "compilerArgs": [
-                "-I \"C:\\local\\boost_1_80_0\""
+                "-lboost_program_options-mt"
             ],
             "cStandard": "gnu17",
             "cppStandard": "gnu++20",
