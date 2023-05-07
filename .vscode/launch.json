@@ -8,13 +8,15 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/${fileBasenameNoExtension}.exe",
-            "args": [
-                "-f", "C:\\Users\\Eliaz\\Desktop\\NF",
-                "-t", "Light",
-                "-c", "Red"
-            ],
-            "stopAtEntry": false,
+            // "program": "${workspaceFolder}/${fileBasenameNoExtension}.exe",
+            "program": "${command:cmake.launchTargetPath}",
+            // "program": "${workspaceFolder}/Build/${fileBasenameNoExtension}.exe",
+            // "args": [
+                // "-f", "C:\\Users\\Eliaz\\Desktop\\NF",
+                // "-t", "Light",
+                // "-c", "Red"
+            // ],
+            "stopAtEntry": true,
             "cwd": "${fileDirname}",
             "environment": [],
             "externalConsole": false,
@@ -32,7 +34,9 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "C++: g++.exe build active file"
-        },
+            "preLaunchTask": "C++: g++.exe build active file",
+            "visualizerFile": "C:\\msys64\\mingw64\\qt5-static\\qt5.natvis.xml",
+            "showDisplayString": true
+        }
     ]
 }

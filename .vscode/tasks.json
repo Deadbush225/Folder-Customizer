@@ -2,13 +2,10 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "type": "cppbuild",
             "label": "C++: g++.exe build active file",
-            "command": "",
-            "args": [
-                "mingw32-make",
-                "--directory=${workspaceFolder}"
-            ],
+            "command": "${onCommand:cmake.build}",
+            "type": "shell",
+            "args": [],
             "options": {
                 "cwd": "C:\\msys64\\mingw64\\bin"
             },
