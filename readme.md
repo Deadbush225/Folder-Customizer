@@ -18,7 +18,7 @@
 ## How to use?
 1. Drag and drop the folder you want to customize
 
-<img src="./docs/drag and drop.png">
+<img src="./docs/drag-and-drop.png">
 
 2. Choose the `Tone` and `Color`, if you want to customize the icon
 3. Fill up the `Custom Tag` if you want to set a custom tag (by default a tag will be set equal to the `Theme` and `Color`)
