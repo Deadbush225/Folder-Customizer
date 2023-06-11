@@ -113,9 +113,9 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     customization_layout->addWidget(new QHSeparationLine());
 
     customization_layout->addWidget(this->yes_icon_chkbx);
-    customization_layout->addLayout(combo_layout);
+    // customization_layout->addLayout(combo_layout);  // referred 2 times
     customization_layout->addWidget(this->yes_tag_chkbx);
-    customization_layout->addLayout(line_edit_layout);
+    // customization_layout->addLayout(line_edit_layout);  // referred 2 times
     customization_layout->addWidget(apply_button);
 
     customization_layout->addStretch();

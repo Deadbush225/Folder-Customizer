@@ -1,92 +1,20 @@
 # ninja log v5
-41	178	7081870481309792	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-41	178	7081870481309792	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-41	178	7081870481309792	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
+61	214	7081892241061477	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
 2707	14306	7050751799160133	CMakeFiles/FolderCustomizer.dir/Customizer/icon_refresher.cpp.obj	b463e36e4eacbb73
-41	178	7081870481309792	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
+61	214	7081892241061477	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
+61	214	7081892241061477	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
 2696	7124	7050751727265405	CMakeFiles/FolderCustomizer.dir/Window/subclass.cpp.obj	47e70995d07a39b8
-2691	7017	7050751725465407	CMakeFiles/FolderCustomizer.dir/FolderCustomizer_autogen/mocs_compilation.cpp.obj	477402acc00d860
+61	214	7081892241061477	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
 2713	10470	7050751760825403	CMakeFiles/FolderCustomizer.dir/Customizer/tagger.cpp.obj	7f3b725b86970107
+2691	7017	7050751725465407	CMakeFiles/FolderCustomizer.dir/FolderCustomizer_autogen/mocs_compilation.cpp.obj	477402acc00d860
 198	8299	7081870035272261	CMakeFiles/FolderCustomizer.dir/main.cpp.obj	11126ec57d5ebb7c
-188	8515	7081870037442247	CMakeFiles/FolderCustomizer.dir/Window/window.cpp.obj	3fbe6e0ac412e008
-191	3222	7081870511707857	CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj	e0636e2181908a1
-3222	3854	7081870517948575	FolderCustomizer.exe	fedf86760adf0020
-103	2599	7081743729041499	build.ninja	5f6c65cd062d3a8d
-30	165	7081870751794238	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-30	165	7081870751794238	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-30	165	7081870751794238	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-30	165	7081870751794238	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-178	3164	7081870781729449	CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj	e0636e2181908a1
-3165	3801	7081870788004577	FolderCustomizer.exe	fedf86760adf0020
-40	178	7081872712903811	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-40	178	7081872712903811	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-40	178	7081872712903811	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-40	178	7081872712903811	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-191	3121	7081872742273846	CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj	e0636e2181908a1
-3122	3754	7081872748509176	FolderCustomizer.exe	fedf86760adf0020
-40	188	7081872989361878	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-40	188	7081872989361878	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-40	188	7081872989361878	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-40	188	7081872989361878	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-201	3190	7081873019342417	CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj	e0636e2181908a1
-3191	3820	7081873025552485	FolderCustomizer.exe	fedf86760adf0020
-39	176	7081876233046057	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-39	176	7081876233046057	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-39	176	7081876233046057	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-39	176	7081876233046057	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-189	3552	7081876266751156	CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj	e0636e2181908a1
-3553	4233	7081876273483819	FolderCustomizer.exe	fedf86760adf0020
-39	182	7081876666998552	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-39	182	7081876666998552	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-39	182	7081876666998552	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-39	182	7081876666998552	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-195	3115	7081876696290345	CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj	e0636e2181908a1
-3115	3762	7081876702701710	FolderCustomizer.exe	fedf86760adf0020
-43	190	7081877063429723	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-43	190	7081877063429723	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-43	190	7081877063429723	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-43	190	7081877063429723	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-204	3435	7081877095833812	CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj	e0636e2181908a1
-3435	4073	7081877102162508	FolderCustomizer.exe	fedf86760adf0020
-42	190	7081877807887573	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-42	190	7081877807887573	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-42	190	7081877807887573	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-42	190	7081877807887573	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-203	3180	7081877837737544	CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj	e0636e2181908a1
-3180	3841	7081877844297807	FolderCustomizer.exe	fedf86760adf0020
-41	189	7081880117645777	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-41	189	7081880117645777	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-41	189	7081880117645777	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-41	189	7081880117645777	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-202	3158	7081880147297438	CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj	e0636e2181908a1
-3159	3790	7081880153554341	FolderCustomizer.exe	fedf86760adf0020
-42	185	7081881511974629	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-42	185	7081881511974629	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-42	185	7081881511974629	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-42	185	7081881511974629	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-198	3316	7081881543234888	CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj	e0636e2181908a1
-3316	3950	7081881549514892	FolderCustomizer.exe	fedf86760adf0020
-39	178	7081882183719773	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-39	178	7081882183719773	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-39	178	7081882183719773	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-39	178	7081882183719773	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-191	3082	7081882212707798	CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj	e0636e2181908a1
-3083	3754	7081882219371537	FolderCustomizer.exe	fedf86760adf0020
-38	176	7081883731107325	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-38	176	7081883731107325	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-38	176	7081883731107325	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-38	176	7081883731107325	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-189	3104	7081883760330966	CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj	e0636e2181908a1
-3104	3738	7081883766643052	FolderCustomizer.exe	fedf86760adf0020
-40	202	7081883964698784	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-40	202	7081883964698784	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-40	202	7081883964698784	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-40	202	7081883964698784	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-214	3513	7081883997177370	CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj	e0636e2181908a1
-3514	4271	7081884005277340	FolderCustomizer.exe	fedf86760adf0020
-41	186	7081884144310107	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-41	186	7081884144310107	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
-41	186	7081884144310107	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
-41	186	7081884144310107	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
+226	7092	7081892309741149	CMakeFiles/FolderCustomizer.dir/Window/window.cpp.obj	3fbe6e0ac412e008
+7092	7752	7081892316361114	FolderCustomizer.exe	fedf86760adf0020
 199	3187	7081884174290379	CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj	e0636e2181908a1
-3188	3816	7081884180520070	FolderCustomizer.exe	fedf86760adf0020
+103	2599	7081743729041499	build.ninja	5f6c65cd062d3a8d
+43	205	7081895046528523	FolderCustomizer_autogen/timestamp	a55bc4de831cba35
+43	205	7081895046528523	FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
+43	205	7081895046528523	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/timestamp	a55bc4de831cba35
+43	205	7081895046528523	D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/mocs_compilation.cpp	a55bc4de831cba35
+219	7661	7081895120911935	CMakeFiles/FolderCustomizer.dir/Window/window.cpp.obj	3fbe6e0ac412e008
+7662	8416	7081895128491923	FolderCustomizer.exe	fedf86760adf0020
