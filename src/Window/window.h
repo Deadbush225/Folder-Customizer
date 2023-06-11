@@ -16,6 +16,7 @@
 
 #include "../Customizer/icon_refresher.h"
 #include "../Customizer/tagger.h"
+#include "../Logger/logger.h"
 #include "subclass.h"
 
 class FolderCustomizerWindow : public QWidget {

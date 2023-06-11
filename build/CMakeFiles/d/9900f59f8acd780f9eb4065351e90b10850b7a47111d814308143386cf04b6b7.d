@@ -582,6 +582,8 @@ FolderCustomizer_autogen/timestamp: \
   D:/CODING\ RELATED/Projects/Folder\ Customizer/src/Customizer/icon_refresher.h \
   D:/CODING\ RELATED/Projects/Folder\ Customizer/src/Customizer/tagger.cpp \
   D:/CODING\ RELATED/Projects/Folder\ Customizer/src/Customizer/tagger.h \
+  D:/CODING\ RELATED/Projects/Folder\ Customizer/src/Logger/logger.cpp \
+  D:/CODING\ RELATED/Projects/Folder\ Customizer/src/Logger/logger.h \
   D:/CODING\ RELATED/Projects/Folder\ Customizer/src/Window/subclass.cpp \
   D:/CODING\ RELATED/Projects/Folder\ Customizer/src/Window/subclass.h \
   D:/CODING\ RELATED/Projects/Folder\ Customizer/src/Window/window.cpp \

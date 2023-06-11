@@ -1,0 +1,139 @@
+{
+	"kind" : "toolchains",
+	"toolchains" : 
+	[
+		{
+			"compiler" : 
+			{
+				"id" : "GNU",
+				"implicit" : 
+				{
+					"includeDirectories" : 
+					[
+						"C:/Users/Eliaz/scoop/apps/mingw/current/lib/gcc/x86_64-w64-mingw32/12.2.0/include",
+						"C:/Users/Eliaz/scoop/apps/mingw/current/lib/gcc/x86_64-w64-mingw32/12.2.0/include-fixed",
+						"C:/Users/Eliaz/scoop/apps/mingw/current/x86_64-w64-mingw32/include"
+					],
+					"linkDirectories" : 
+					[
+						"C:/Users/Eliaz/scoop/apps/mingw/current/lib/gcc/x86_64-w64-mingw32/12.2.0",
+						"C:/Users/Eliaz/scoop/apps/mingw/current/lib/gcc",
+						"C:/Users/Eliaz/scoop/apps/mingw/current/x86_64-w64-mingw32/lib",
+						"C:/Users/Eliaz/scoop/apps/mingw/current/lib"
+					],
+					"linkFrameworkDirectories" : [],
+					"linkLibraries" : 
+					[
+						"mingw32",
+						"gcc",
+						"moldname",
+						"mingwex",
+						"kernel32",
+						"pthread",
+						"advapi32",
+						"shell32",
+						"user32",
+						"kernel32",
+						"iconv",
+						"mingw32",
+						"gcc",
+						"moldname",
+						"mingwex",
+						"kernel32"
+					]
+				},
+				"path" : "C:/Users/Eliaz/scoop/apps/mingw/current/bin/gcc.exe",
+				"version" : "12.2.0"
+			},
+			"language" : "C",
+			"sourceFileExtensions" : 
+			[
+				"c",
+				"m"
+			]
+		},
+		{
+			"compiler" : 
+			{
+				"id" : "GNU",
+				"implicit" : 
+				{
+					"includeDirectories" : 
+					[
+						"C:/Users/Eliaz/scoop/apps/mingw/current/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++",
+						"C:/Users/Eliaz/scoop/apps/mingw/current/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/x86_64-w64-mingw32",
+						"C:/Users/Eliaz/scoop/apps/mingw/current/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/backward",
+						"C:/Users/Eliaz/scoop/apps/mingw/current/lib/gcc/x86_64-w64-mingw32/12.2.0/include",
+						"C:/Users/Eliaz/scoop/apps/mingw/current/lib/gcc/x86_64-w64-mingw32/12.2.0/include-fixed",
+						"C:/Users/Eliaz/scoop/apps/mingw/current/x86_64-w64-mingw32/include"
+					],
+					"linkDirectories" : 
+					[
+						"C:/Users/Eliaz/scoop/apps/mingw/current/lib/gcc/x86_64-w64-mingw32/12.2.0",
+						"C:/Users/Eliaz/scoop/apps/mingw/current/lib/gcc",
+						"C:/Users/Eliaz/scoop/apps/mingw/current/x86_64-w64-mingw32/lib",
+						"C:/Users/Eliaz/scoop/apps/mingw/current/lib"
+					],
+					"linkFrameworkDirectories" : [],
+					"linkLibraries" : 
+					[
+						"stdc++",
+						"mingw32",
+						"gcc_s",
+						"gcc",
+						"moldname",
+						"mingwex",
+						"kernel32",
+						"pthread",
+						"advapi32",
+						"shell32",
+						"user32",
+						"kernel32",
+						"iconv",
+						"mingw32",
+						"gcc_s",
+						"gcc",
+						"moldname",
+						"mingwex",
+						"kernel32"
+					]
+				},
+				"path" : "C:/Users/Eliaz/scoop/apps/mingw/current/bin/c++.exe",
+				"version" : "12.2.0"
+			},
+			"language" : "CXX",
+			"sourceFileExtensions" : 
+			[
+				"C",
+				"M",
+				"c++",
+				"cc",
+				"cpp",
+				"cxx",
+				"mm",
+				"mpp",
+				"CPP",
+				"ixx",
+				"cppm"
+			]
+		},
+		{
+			"compiler" : 
+			{
+				"implicit" : {},
+				"path" : "C:/Users/Eliaz/scoop/apps/mingw/current/bin/windres.exe"
+			},
+			"language" : "RC",
+			"sourceFileExtensions" : 
+			[
+				"rc",
+				"RC"
+			]
+		}
+	],
+	"version" : 
+	{
+		"major" : 1,
+		"minor" : 0
+	}
+}

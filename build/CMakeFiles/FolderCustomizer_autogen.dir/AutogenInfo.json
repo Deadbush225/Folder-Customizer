@@ -273,6 +273,12 @@
 			null
 		],
 		[
+			"D:/CODING RELATED/Projects/Folder Customizer/src/Logger/logger.h",
+			"MU",
+			"QE42HHNMTI/moc_logger.cpp",
+			null
+		],
+		[
 			"D:/CODING RELATED/Projects/Folder Customizer/src/Window/subclass.h",
 			"MU",
 			"ZHOWCWJ7OX/moc_subclass.cpp",
@@ -364,6 +370,11 @@
 		],
 		[
 			"D:/CODING RELATED/Projects/Folder Customizer/src/Customizer/tagger.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/CODING RELATED/Projects/Folder Customizer/src/Logger/logger.cpp",
 			"MU",
 			null
 		],

@@ -84,6 +84,14 @@ build CMakeFiles/FolderCustomizer.dir/Customizer/tagger.cpp.obj: CXX_COMPILER__F
   OBJECT_DIR = CMakeFiles\FolderCustomizer.dir
   OBJECT_FILE_DIR = CMakeFiles\FolderCustomizer.dir\Customizer
 
+build CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj: CXX_COMPILER__FolderCustomizer_unscanned_ D$:/CODING$ RELATED/Projects/Folder$ Customizer/src/Logger/logger.cpp || cmake_object_order_depends_target_FolderCustomizer
+  DEFINES = -DMINGW_HAS_SECURE_API=1 -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -D_UNICODE -D_WIN64
+  DEP_FILE = CMakeFiles\FolderCustomizer.dir\Logger\logger.cpp.obj.d
+  FLAGS = -std=gnu++20
+  INCLUDES = -I"D:/CODING RELATED/Projects/Folder Customizer/build" -I"D:/CODING RELATED/Projects/Folder Customizer/src" -I"D:/CODING RELATED/Projects/Folder Customizer/build/FolderCustomizer_autogen/include" -IC:/Dev/boost_1_81_0 -isystem C:/Qt/6.4.2/mingw_64/include/QtWidgets -isystem C:/Qt/6.4.2/mingw_64/include -isystem C:/Qt/6.4.2/mingw_64/include/QtCore -isystem C:/Qt/6.4.2/mingw_64/mkspecs/win32-g++ -isystem C:/Qt/6.4.2/mingw_64/include/QtGui
+  OBJECT_DIR = CMakeFiles\FolderCustomizer.dir
+  OBJECT_FILE_DIR = CMakeFiles\FolderCustomizer.dir\Logger
+
 build CMakeFiles/FolderCustomizer.dir/main.cpp.obj: CXX_COMPILER__FolderCustomizer_unscanned_ D$:/CODING$ RELATED/Projects/Folder$ Customizer/src/main.cpp || cmake_object_order_depends_target_FolderCustomizer
   DEFINES = -DMINGW_HAS_SECURE_API=1 -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DUNICODE -DWIN32 -DWIN64 -D_ENABLE_EXTENDED_ALIGNED_STORAGE -D_UNICODE -D_WIN64
   DEP_FILE = CMakeFiles\FolderCustomizer.dir\main.cpp.obj.d
@@ -100,7 +108,7 @@ build CMakeFiles/FolderCustomizer.dir/main.cpp.obj: CXX_COMPILER__FolderCustomiz
 #############################################
 # Link the executable FolderCustomizer.exe
 
-build FolderCustomizer.exe: CXX_EXECUTABLE_LINKER__FolderCustomizer_ CMakeFiles/FolderCustomizer.dir/FolderCustomizer_autogen/mocs_compilation.cpp.obj CMakeFiles/FolderCustomizer.dir/Window/subclass.cpp.obj CMakeFiles/FolderCustomizer.dir/Window/window.cpp.obj CMakeFiles/FolderCustomizer.dir/Customizer/icon_refresher.cpp.obj CMakeFiles/FolderCustomizer.dir/Customizer/tagger.cpp.obj CMakeFiles/FolderCustomizer.dir/main.cpp.obj | C$:/Qt/6.4.2/mingw_64/lib/libQt6Widgets.a C$:/Qt/6.4.2/mingw_64/lib/libQt6Gui.a C$:/Qt/6.4.2/mingw_64/lib/libQt6Core.a || FolderCustomizer_autogen FolderCustomizer_autogen_timestamp_deps
+build FolderCustomizer.exe: CXX_EXECUTABLE_LINKER__FolderCustomizer_ CMakeFiles/FolderCustomizer.dir/FolderCustomizer_autogen/mocs_compilation.cpp.obj CMakeFiles/FolderCustomizer.dir/Window/subclass.cpp.obj CMakeFiles/FolderCustomizer.dir/Window/window.cpp.obj CMakeFiles/FolderCustomizer.dir/Customizer/icon_refresher.cpp.obj CMakeFiles/FolderCustomizer.dir/Customizer/tagger.cpp.obj CMakeFiles/FolderCustomizer.dir/Logger/logger.cpp.obj CMakeFiles/FolderCustomizer.dir/main.cpp.obj | C$:/Qt/6.4.2/mingw_64/lib/libQt6Widgets.a C$:/Qt/6.4.2/mingw_64/lib/libQt6Gui.a C$:/Qt/6.4.2/mingw_64/lib/libQt6Core.a || FolderCustomizer_autogen FolderCustomizer_autogen_timestamp_deps
   LINK_LIBRARIES = C:/Qt/6.4.2/mingw_64/lib/libQt6Widgets.a  C:/Qt/6.4.2/mingw_64/lib/libQt6Gui.a  C:/Qt/6.4.2/mingw_64/lib/libQt6Core.a  -lmpr  -luserenv  -ld3d11  -ldxgi  -ldxguid  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\FolderCustomizer.dir
   POST_BUILD = cd .
@@ -159,7 +167,7 @@ build FolderCustomizer_autogen/timestamp FolderCustomizer_autogen/mocs_compilati
 #############################################
 # Phony custom command for CMakeFiles\FolderCustomizer_autogen_timestamp_deps
 
-build CMakeFiles/FolderCustomizer_autogen_timestamp_deps | ${cmake_ninja_workdir}CMakeFiles/FolderCustomizer_autogen_timestamp_deps: phony C$:/Qt/6.4.2/mingw_64/lib/libQt6Core.a C$:/Qt/6.4.2/mingw_64/./bin/moc.exe C$:/Qt/6.4.2/mingw_64/./bin/uic.exe C$:/Qt/6.4.2/mingw_64/lib/libQt6Widgets.a
+build CMakeFiles/FolderCustomizer_autogen_timestamp_deps | ${cmake_ninja_workdir}CMakeFiles/FolderCustomizer_autogen_timestamp_deps: phony C$:/Qt/6.4.2/mingw_64/./bin/uic.exe C$:/Qt/6.4.2/mingw_64/./bin/moc.exe C$:/Qt/6.4.2/mingw_64/lib/libQt6Core.a C$:/Qt/6.4.2/mingw_64/lib/libQt6Widgets.a
 
 
 #############################################

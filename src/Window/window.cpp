@@ -1,11 +1,16 @@
 #include "window.h"
 
 FolderCustomizerWindow::FolderCustomizerWindow() {
+    Logger* log = new Logger();
+    log->write(QString("Test message"), LOGGER::CHRONOLOGY::AFT);
+
+    ////////// DEBUG
+
     this->programPath = new QString("C:\\Program Files\\Folder Customizer");
 
     // + DND Layout
     this->listview = new ListBoxwidget();
-    this->listview->addItem("C:\\Users\\Eliaz\\Desktop\\Test");
+    // this->listview->addItem("C:\\Users\\Eliaz\\Desktop\\Test");
 
     QHBoxLayout* buttonLayout = new QHBoxLayout();
 
