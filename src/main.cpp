@@ -9,9 +9,9 @@
 #include "Window/window.h"
 
 int main(int argc, char* argv[]) {
-#if defined(Q_OS_WIN)
-    ::ShowWindow(::GetConsoleWindow(), SW_HIDE);  // hide console window
-#endif
+    // #if defined(Q_OS_WIN)
+    //     ::ShowWindow(::GetConsoleWindow(), SW_HIDE);  // hide console window
+    // #endif
 
     auto app = new QApplication(argc, argv);
 

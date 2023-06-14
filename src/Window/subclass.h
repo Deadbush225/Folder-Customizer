@@ -19,6 +19,7 @@
 #include <QtGui/QDragMoveEvent>
 #include <QtGui/QDropEvent>
 
+#include <QtCore/QDebug>
 #include <QtCore/QMimeData>
 #include <QtCore/QUrl>
 
@@ -66,6 +67,9 @@ class ListBoxwidget : public QListWidget {
     void dragEnterEvent(QDragEnterEvent* event) override;
     void dragMoveEvent(QDragMoveEvent* event) override;
     void dropEvent(QDropEvent* event) override;
+    void ov_addItems(const QStringList labels);
+
+    QStringList removeDuplicates(const QStringList labels);
 
    private:
     QList<QString> dir_list;

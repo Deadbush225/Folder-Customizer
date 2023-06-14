@@ -85,7 +85,8 @@ void ListBoxwidget::dropEvent(QDropEvent* event) {
                 tmp_list.append(url.toLocalFile());
             }
         }
-        this->addItems(tmp_list);
+        this->ov_addItems(tmp_list);
+        qDebug() << "Dropping";
     } else {
         event->ignore();
     }
@@ -99,6 +100,33 @@ QList<QString> ListBoxwidget::getAllItems() {
         this->dir_list.append(url);
     }
     return this->dir_list;
+}
+
+QStringList ListBoxwidget::removeDuplicates(const QStringList labels) {
+    QStringList nodup;
+
+    QStringList contents = this->getAllItems();
+
+    for (auto i : labels) {
+        if (!contents.contains(i)) {
+            nodup.append(i);
+        }
+    }
+
+    return nodup;
+}
+
+void ListBoxwidget::ov_addItems(const QStringList labels) {
+    // remove item on the list that are duplicates
+
+    // (const_cast<QStringList*>(labels))->removeDuplicates();
+
+    qDebug() << (labels);
+
+    QStringList nodup = this->removeDuplicates(labels);
+
+    qDebug() << (nodup);
+    this->addItems(nodup);
 }
 
 // + QGroupBox
