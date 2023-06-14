@@ -2,9 +2,6 @@
 #include <iostream>
 
 #include <QtWidgets/QApplication>
-// #include <QtWidgets/QWidget>
-
-// #include <QtCore/QDebug>
 
 #include <stdio.h>
 #include <windows.h>
@@ -20,11 +17,6 @@ int main(int argc, char* argv[]) {
 
     FolderCustomizerWindow window = FolderCustomizerWindow();
     window.show();
-
-    // QWidget window = QWidget();
-    // window.show();
-
-    // qDebug() << "test";
 
     app->exec();
     delete app;
