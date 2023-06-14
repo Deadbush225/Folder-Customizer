@@ -1,5 +1,0 @@
-D:/CODING RELATED/Projects/Folder Customizer/build/CMakeFiles/FolderCustomizer.dir
-D:/CODING RELATED/Projects/Folder Customizer/build/CMakeFiles/edit_cache.dir
-D:/CODING RELATED/Projects/Folder Customizer/build/CMakeFiles/rebuild_cache.dir
-D:/CODING RELATED/Projects/Folder Customizer/build/CMakeFiles/FolderCustomizer_autogen_timestamp_deps.dir
-D:/CODING RELATED/Projects/Folder Customizer/build/CMakeFiles/FolderCustomizer_autogen.dir
