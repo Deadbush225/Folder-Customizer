@@ -3,29 +3,30 @@
 
 #define MyAppName "Folder Customizer"
 #define MyAppVersion "1.0"
-#define MyAppPublisher "DeadBush225"
+#define MyAppPublisher "Deadbush225"
 #define MyAppExeName "FolderCustomizer.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{B73A5994-0BAB-42BD-B151-21C4FFBE9A6B}
+AppId={{FF1863AF-44EF-4140-8CBC-73A48E8F9884}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={autopf}\{#MyAppName}
+DefaultDirName={pf}\{#MyAppName}
 DisableProgramGroupPage=yes
-; InfoBeforeFile=D:\CODING RELATED\Projects\Folder Customizer\Installer\before_installation.txt
-; InfoAfterFile=D:\CODING RELATED\Projects\Folder Customizer\Installer\after_installation.txt
-; Remove the following line to run in administrative install mode (install for all users.)
-PrivilegesRequired=admin
+; Uncomment the following line to run in non administrative install mode (install for current user only.)
+;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-OutputBaseFilename=Folder Customizer Installer
+OutputDir=Output
+OutputBaseFilename=Folder Customizer - Installer
 SetupIconFile=D:\CODING RELATED\Projects\Folder Customizer\src\Icons\Program icon.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
+
+ArchitecturesInstallIn64BitMode=x64
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -35,7 +36,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "D:\CODING RELATED\Projects\Folder Customizer\build\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "D:\CODING RELATED\Projects\Folder Customizer\src\Icons\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "D:\CODING RELATED\Projects\Folder Customizer\src\Icons\*"; DestDir: "{app}\Icons"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
