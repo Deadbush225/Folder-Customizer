@@ -2,7 +2,8 @@
 
 FolderCustomizerWindow::FolderCustomizerWindow() {
     Logger* log = new Logger();
-    log->write(QString("Test message"), LOGGER::CHRONOLOGY::AFT);
+    log->write(QString("Test message"), LOGGER::CHRONOLOGY::AFT,
+               LOGGER::STATUS::WARN, LOGGER::PRIORITY::MID);
 
     ////////// DEBUG
 

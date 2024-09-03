@@ -1,7 +1,9 @@
 # run using run-build.ps1
 
+# cmake -S "./src" -B "./build" -G "Ninja"
+
 $processOptions = @{
-    FilePath = "cmake"
+    FilePath     = "cmake"
     ArgumentList = "--build `"./build`""
 }
 

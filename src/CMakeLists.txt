@@ -31,11 +31,13 @@ qt_standard_project_setup()
 file(GLOB_RECURSE WINDOW "Window/*.cpp")
 file(GLOB_RECURSE CUSTOMIZER "Customizer/*.cpp")
 file(GLOB_RECURSE LOGGER "Logger/*.cpp")
+file(GLOB_RECURSE REGISTRY "Registry/*.cpp")
 
 set(SOURCE_FILES
 ${WINDOW}
 ${CUSTOMIZER}
 ${LOGGER}
+${REGISTRY}
 main.cpp
 )
 
