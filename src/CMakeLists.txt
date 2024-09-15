@@ -27,7 +27,6 @@ find_package(Boost 1.81.0)
 
 qt_standard_project_setup()
 
-
 file(GLOB_RECURSE WINDOW "Window/*.cpp")
 file(GLOB_RECURSE CUSTOMIZER "Customizer/*.cpp")
 file(GLOB_RECURSE LOGGER "Logger/*.cpp")
@@ -43,7 +42,16 @@ main.cpp
 
 # add_executable(PrintingRates main.cpp DashboardWidget.cpp)
 #---
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+message(${CMAKE_CURRENT_SOURCE_DIR})
+set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Folder Customizer.rc")
+add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${app_icon_resource_windows}
+    "Icons/resource.qrc")
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set_property(TARGET ${PROJECT_NAME} PROPERTY WIN32_EXECUTABLE true)
+endif()
+
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "Folder Customizer")
 
 # set(INSTALLER_SOURCE_FILES "../Installer/installer.cpp")
 # add_executable(Installer ${INSTALLER_SOURCE_FILES})

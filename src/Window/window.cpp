@@ -1,9 +1,9 @@
 #include "window.h"
 
 FolderCustomizerWindow::FolderCustomizerWindow() {
-    Logger* log = new Logger();
-    log->write(QString("Test message"), LOGGER::CHRONOLOGY::AFT,
-               LOGGER::STATUS::WARN, LOGGER::PRIORITY::MID);
+    // Logger* log = new Logger();
+    // log->write(QString("Test message"), LOGGER::CHRONOLOGY::AFT,
+    //            LOGGER::STATUS::WARN, LOGGER::PRIORITY::MID);
 
     ////////// DEBUG
 
@@ -160,8 +160,8 @@ void FolderCustomizerWindow::clearAll() {
 void FolderCustomizerWindow::hide_show_advanced_settings() {
     this->install_key_btn->setHidden(!this->install_key_btn->isHidden());
     this->uninstall_key_btn->setHidden(!this->uninstall_key_btn->isHidden());
-    this->separator_horizontal->setHidden(
-        !this->separator_horizontal->isHidden());
+    // this->separator_horizontal->setHidden(
+    //     !this->separator_horizontal->isHidden());
 }
 
 void FolderCustomizerWindow::apply() {

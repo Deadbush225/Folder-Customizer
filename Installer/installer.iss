@@ -4,7 +4,9 @@
 #define MyAppName "Folder Customizer"
 #define MyAppVersion "1.0"
 #define MyAppPublisher "Deadbush225"
-#define MyAppExeName "FolderCustomizer.exe"
+#define MyAppExeName "Folder Customizer.exe"
+
+#define ProjectPath "C:\System\Coding\Projects\folder-customizer"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
@@ -21,7 +23,7 @@ DisableProgramGroupPage=yes
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=Output
 OutputBaseFilename=Folder Customizer - Installer
-SetupIconFile=D:\CODING RELATED\Projects\Folder Customizer\src\Icons\Program icon.ico
+SetupIconFile="{#ProjectPath}\src\Icons\Folder Customizer.ico"
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -35,8 +37,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "D:\CODING RELATED\Projects\Folder Customizer\build\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "D:\CODING RELATED\Projects\Folder Customizer\src\Icons\*"; DestDir: "{app}\Icons"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#ProjectPath}\build\Desktop_Qt_6_7_2_MinGW_64_bit-Release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#ProjectPath}\src\Icons\*"; DestDir: "{app}\Icons"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

@@ -1,5 +1,5 @@
 <p align="center" width="100%">
-<img src="./src/Icons/Program icon.ico" alt="logo" height="50" width="50"/>
+<img src="./src/Icons/Folder Customizer.png" alt="logo"/>
 </p>
 
 # Folder Customizer
