@@ -52,39 +52,11 @@ void changeIcon(QString folder_path, QString tone, QString color) {
 
     LPSHFOLDERCUSTOMSETTINGS pfcs = &fcs;
 
-    HRESULT ret =
+    const HRESULT ret =
         SHGetSetFolderCustomSettings(pfcs, LPWSTR_folder_path, FCS_FORCEWRITE);
 
     // std::cout << ret << std::endl;
+
+    delete LPWSTR_folder_path;
+    delete LPWSTR_icon_path;
 }
-
-// int main(int argc, char const* argv[]) {
-//     changeIcon("C:\\Users\\Eliaz\\Desktop\\Test", "Light", "Red");
-//     return 0;
-// }
-
-/******** Options Description *********/
-
-// std::string folder_path;
-// std::string tone;
-// std::string color;
-
-// std::cout << "initialization" << std::endl;
-
-// po::options_description desc("Optional Arguments");
-// desc.add_options()("help,h", "display help message")(
-//     "folder-path,f", po::value<std::string>(&folder_path),
-//     "The folders path")(
-//     "tone,t", po::value<std::string>(&tone)->default_value("Default"),
-//     "The tone to apply")(
-//     "color,c", po::value<std::string>(&color)->default_value("Default"),
-//     "The color to apply");
-
-// po::variables_map vm;
-// po::store(po::parse_command_line(argc, argv, desc), vm);
-// po::notify(vm);
-
-// if (vm.count("help")) {
-//     std::cout << doc::usage << "\n";
-//     return 0;
-// }

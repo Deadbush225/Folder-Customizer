@@ -23,12 +23,8 @@ Logger::Logger(QString name) {
 
     this->m_file = new QFile(*(this->m_fileName));
 
-    /////////
-
     QFileInfo* fileinfo = new QFileInfo(this->m_file->filesystemFileName());
     // qDebug() << fileinfo->absoluteFilePath();
-
-    /////////
 
     this->m_isWritable = this->m_file->open(QIODevice::WriteOnly);
 
@@ -39,6 +35,7 @@ Logger::Logger(QString name) {
     }
 }
 
+// Todo: add version control inside Logger
 void Logger::write(QVariant message,
                    LOGGER::CHRONOLOGY chronology,
                    LOGGER::STATUS status,
@@ -65,6 +62,7 @@ void Logger::write(QVariant message,
     // this->mt_file->open(QIODevice::WriteOnly);
     QTextStream stream = QTextStream(this->m_file);
     stream << line.toStdString().c_str();
+    stream << line.int64()
 }
 
 QString Logger::generateAutoName() {
