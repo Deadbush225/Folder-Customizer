@@ -1,0 +1,27 @@
+Windows Registry Editor Version 5.00
+
+; Setup context menu item for click on right panel:
+[HKEY_CURRENT_USER\Software\Classes\directory\Background\shell\Folder Customizer\command]
+@="\"C:\\Program Files\\Folder Customizer\\Folder Customizer.exe\" \"%V\""
+
+; Optional: specify an icon for the item:   
+[HKEY_CURRENT_USER\Software\Classes\directory\Background\shell\Folder Customizer]
+"icon"="\"C:\\Program Files\\Folder Customizer\\Icons\\Folder Customizer.ico\""
+
+; Optional: specify a position in the menu
+; HKEY_CURRENT_USER\Software\Classes\directory\Background\shell\MenuItemNameBackground]
+;"position"="Bottom"
+
+; --------------------------------------------------------------------
+
+; Setup context menu item for click on folders tree item:
+[HKEY_CURRENT_USER\Software\Classes\directory\shell\Folder Customizer\command]
+@="\"C:\\Program Files\\Folder Customizer\\Folder Customizer.exe\" \"%1\""
+
+; Optional: specify an icon for the item:   
+[HKEY_CURRENT_USER\Software\Classes\directory\shell\Folder Customizer]
+"icon"="\"C:\\Program Files\\Folder Customizer\\Icons\\Folder Customizer.ico\""
+
+; Optional: specify a position in the menu
+; [HKEY_CURRENT_USER\Software\Classes\directory\shell\MenuItemNamePanel]
+;"position"="Top"

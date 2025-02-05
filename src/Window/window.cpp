@@ -1,4 +1,4 @@
-#include "window.h"
+#include "../../Include/Window/window.h"
 
 FolderCustomizerWindow::FolderCustomizerWindow() {
     // Logger* log = new Logger();

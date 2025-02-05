@@ -11,12 +11,12 @@
 #include <stdio.h>
 #include <windows.h>
 
-#include "Window/window.h"
+#include "../Include/Window/window.h"
 
 int main(int argc, char* argv[]) {
-    #if defined(Q_OS_WIN)
-        ::ShowWindow(::GetConsoleWindow(), SW_HIDE);  // hide console window
-    #endif
+#if defined(Q_OS_WIN)
+    ::ShowWindow(::GetConsoleWindow(), SW_HIDE);  // hide console window
+#endif
 
     auto app = new QApplication(argc, argv);
     QApplication::setWindowIcon(QIcon(":/icons/Folder Customizer.png"));

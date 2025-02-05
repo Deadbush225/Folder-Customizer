@@ -1,4 +1,4 @@
-#include "logger.h"
+#include "../../Include/Logger/logger.h"
 
 namespace LOGGER {
 std::map<STATUS, QString> status_table = {{STATUS::WARN, "WARN"},
@@ -62,7 +62,6 @@ void Logger::write(QVariant message,
     // this->mt_file->open(QIODevice::WriteOnly);
     QTextStream stream = QTextStream(this->m_file);
     stream << line.toStdString().c_str();
-    stream << line.int64()
 }
 
 QString Logger::generateAutoName() {

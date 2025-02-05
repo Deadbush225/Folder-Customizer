@@ -1,4 +1,4 @@
-#include "icon_refresher.h"
+#include "../../Include/Customizer/icon_refresher.h"
 
 wchar_t* str_to_lpwstr_st(std::string string) {
     std::cout << "Function called" << std::endl;
@@ -24,19 +24,12 @@ void changeIcon(QString folder_path, QString tone, QString color) {
     QString program_path = "C:\\Program Files\\Folder Customizer";
     QString strin = program_path + "\\Icons\\" + tone + "\\" + color + ".ico";
 
-    // LPCWSTR LPWSTR_folder_path = str_to_lpwstr_st(folder_path);
-
     // const wchar_t* wchar_t_folder_path = folder_path.toStdWString().c_str();
-
     // qDebug() << "wchar_t" << wchar_t_folder_path;
-
     // LPCWSTR LPWSTR_folder_path = wchar_t_folder_path;
+
     LPCWSTR LPWSTR_folder_path = str_to_lpwstr_st(folder_path.toStdString());
-
     // qDebug() << LPWSTR_folder_path;
-
-    // LPCWSTR LPWSTR_folder_path = L"C:\\Users\\Eliaz\\Desktop\\NF";
-    // std::wstring wstring = StringToWString(folder_path);
 
     SHFOLDERCUSTOMSETTINGS fcs;
 

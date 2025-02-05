@@ -1,4 +1,4 @@
-#include "subclass.h"
+#include "../../Include/Window/subclass.h"
 
 // + QHSeparationLine
 QHSeparationLine::QHSeparationLine() {
