@@ -1,0 +1,23 @@
+<Updates>
+ <ApplicationName>{AnyApplication}</ApplicationName>
+ <ApplicationVersion>1.0.0</ApplicationVersion>
+ <Checksum>true</Checksum>
+ <PackageUpdate>
+  <Name>com.foldercustomizer</Name>
+  <DisplayName>Folder Customizer</DisplayName>
+  <Description>Main program</Description>
+  <Version>0.0.3</Version>
+  <ReleaseDate>2019-09-24</ReleaseDate>
+  <Default>script</Default>
+  <Script>AddMenuShortcut.qs</Script>
+  <UpdateFile CompressedSize="16878375" OS="Any" UncompressedSize="58137645"/>
+  <DownloadableArchives>bin.7z,plugins.7z</DownloadableArchives>
+  <UserInterfaces>page.ui</UserInterfaces>
+  <Licenses>
+   <License file="license.txt" name="GNU Affero General Public License v3.0 (GNU AGPLv3)"/>
+  </Licenses>
+  <SHA1>9b9dc980c62c1cecbb92ecb3a9273d6fd4eeaa7b</SHA1>
+ </PackageUpdate>
+ <SHA1>6216ff9b5b590474aa64097f72ab4a65d7f08bfe</SHA1>
+ <MetadataName>2025-02-06-1638_meta.7z</MetadataName>
+</Updates>

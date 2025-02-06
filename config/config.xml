@@ -9,10 +9,10 @@
     <InstallerApplicationIcon>../Icons/Folder Customizer</InstallerApplicationIcon>
     <TargetDir>@ApplicationsDirX64@/Folder Customizer</TargetDir>
     <MaintenanceToolName>Folder Customizer MaintenanceTool</MaintenanceToolName>
-    <!-- <RemoteRepositories>
+    <RemoteRepositories>
         <Repository>
             <Url>https://raw.githubusercontent.com/Deadbush225/PrintingRates/main/repository</Url>
             <Enabled>1</Enabled>
         </Repository>
-    </RemoteRepositories> -->
+    </RemoteRepositories>
 </Installer>
