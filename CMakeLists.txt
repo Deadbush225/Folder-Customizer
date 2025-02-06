@@ -21,7 +21,7 @@ file(GLOB_RECURSE HEADER Include/*.h)
 file(GLOB_RECURSE WINDOW ${PROJECT_SOURCE}/Window/*.cpp)
 file(GLOB_RECURSE CUSTOMIZER ${PROJECT_SOURCE}/Customizer/*.cpp)
 file(GLOB_RECURSE LOGGER ${PROJECT_SOURCE}/Logger/*.cpp)
-file(GLOB_RECURSE REGISTRY ${PROJECT_SOURCE}/Registry/*.cpp)
+# file(GLOB_RECURSE REGISTRY ${PROJECT_SOURCE}/Registry/*.cpp)
 
 set(SOURCE_FILES
 ${HEADER}
@@ -39,7 +39,8 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${app_icon_resource_windows}
     Icons/resource.qrc)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set_property(TARGET ${PROJECT_NAME} PROPERTY WIN32_EXECUTABLE true)
+    message("It is in Release.")
+    # set_property(TARGET ${PROJECT_NAME} PROPERTY WIN32_EXECUTABLE true)
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "FolderCustomizer")

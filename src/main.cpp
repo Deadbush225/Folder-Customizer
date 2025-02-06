@@ -1,4 +1,3 @@
-
 #include <iostream>
 
 #include <QApplication>
@@ -15,7 +14,7 @@
 
 int main(int argc, char* argv[]) {
 #if defined(Q_OS_WIN)
-    ::ShowWindow(::GetConsoleWindow(), SW_HIDE);  // hide console window
+    // ::ShowWindow(::GetConsoleWindow(), SW_HIDE);  // hide console window
 #endif
 
     auto app = new QApplication(argc, argv);
@@ -47,6 +46,29 @@ int main(int argc, char* argv[]) {
     dark_palette->setColor(QPalette::Disabled, QPalette::Light,
                            QColor(53, 53, 53));
     QApplication::setPalette(*dark_palette);
+
+    // FolderCustomizer.exe <Folder> -F Dark -C Red -T
+
+    for (int i = 0; i < argc; i++) {
+        qDebug() << argv[i];
+    }
+
+    // QString folderPath;
+    // QString folderColor;
+    // QString folderTextColor;
+
+    // for (int i = 1; i < argc; ++i) {
+    //     if (strcmp(argv[i], "-F") == 0 && i + 1 < argc) {
+    //         folderColor = argv[++i];
+    //     } else if (strcmp(argv[i], "-C") == 0 && i + 1 < argc) {
+    //         folderTextColor = argv[++i];
+    //     } else if (folderPath.isEmpty()) {
+    //         folderPath = argv[i];
+    //     } else {
+    //         std::cerr << "Unknown option or argument: " << argv[i] << "\n";
+    //         return 1;
+    //     }
+    // }
 
     FolderCustomizerWindow window = FolderCustomizerWindow();
     window.show();

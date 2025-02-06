@@ -1,4 +1,5 @@
 #include "../../Include/Window/window.h"
+#include <string>
 
 FolderCustomizerWindow::FolderCustomizerWindow() {
     // Logger* log = new Logger();
@@ -34,7 +35,8 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
                      &hide_show_advanced_settings);
 
     install_key_btn = new QPushButton("Add to context menu");
-    // QObject::connect(install_key_btn, QPushButton::clicked, this, )
+    QObject::connect(install_key_btn, QPushButton::clicked, this,
+                     &installRegistry);
     install_key_btn->setHidden(true);
 
     uninstall_key_btn = new QPushButton("Remove from context menu");
@@ -108,9 +110,9 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
 
     // + CUSTOMIZATION Layout
     auto customization_layout = new QVBoxLayout();
+    customization_layout->addWidget(show_more);
     customization_layout->addWidget(install_key_btn);
     customization_layout->addWidget(uninstall_key_btn);
-    customization_layout->addWidget(show_more);
     customization_layout->addWidget(new QHSeparationLine());
 
     customization_layout->addWidget(this->yes_icon_chkbx);
@@ -235,3 +237,72 @@ void FolderCustomizerWindow::folderColorizeTagger(QString folderPath,
 
     delete desktopManip;
 }
+
+void FolderCustomizerWindow::createRegistryKey(HKEY hKeyRoot,
+                                               LPCSTR subKey,
+                                               LPCSTR valueName,
+                                               LPCSTR value) {
+    HKEY hKey;
+    LONG result =
+        RegCreateKeyExA(hKeyRoot, subKey, 0, NULL, REG_OPTION_NON_VOLATILE,
+                        KEY_WRITE, NULL, &hKey, NULL);
+    if (result == ERROR_SUCCESS) {
+        RegSetValueExA(hKey, valueName, 0, REG_SZ, (const BYTE*)value,
+                       strlen(value) + 1);
+        RegCloseKey(hKey);
+    } else {
+        std::cerr << "Error creating registry key: " << result << std::endl;
+    }
+}
+
+void FolderCustomizerWindow::installRegistry() {
+    // Setup context menu item for click on right panel
+    char rootMenu[] =
+        R"(Software\Classes\directory\Background\shell\Folder Customizer)";
+
+    // icon path
+    createRegistryKey(
+        HKEY_CURRENT_USER, rootMenu, "icon",
+        R"("C:\Program Files\Folder Customizer\Icons\Folder Customizer.ico")");
+    // set up to have submenu
+    createRegistryKey(HKEY_CURRENT_USER, rootMenu, "SubCommands", "");
+
+    // root name
+    createRegistryKey(HKEY_CURRENT_USER, rootMenu, "MUIVerb",
+                      "Folder Customizer");
+
+    // command
+    createRegistryKey(
+        HKEY_CURRENT_USER, strcat(rootMenu, R"(\command)"), "",
+        R"("C:\Program Files\Folder Customizer\Folder Customizer.exe" "%V")");
+
+    for (QString tone : this->tones) {
+        QString toneKeyPath =
+            QString(strcat(rootMenu, R"(\shell\%1)")).arg(tone);
+        createRegistryKey(HKEY_CURRENT_USER, toneKeyPath.toStdString().c_str(),
+                          "", "");
+        createRegistryKey(HKEY_CURRENT_USER, toneKeyPath.toStdString().c_str(),
+                          "SubCommands", "");
+
+        for (QString color : this->colors) {
+            QString colorKeyPath =
+                QString(strcat(rootMenu, R"(\shell\%1\shell\%2)"))
+                    .arg(tone)
+                    .arg(color);
+            createRegistryKey(HKEY_CURRENT_USER,
+                              colorKeyPath.toStdString().c_str(), "", "");
+        }
+    }
+
+    // Setup context menu item for click on folders tree item
+    createRegistryKey(
+        HKEY_CURRENT_USER,
+        R"(Software\Classes\directory\shell\Folder Customizer\command)", "",
+        R"("C:\Program Files\Folder Customizer\Folder Customizer.exe" "%1")");
+    createRegistryKey(
+        HKEY_CURRENT_USER,
+        R"(Software\Classes\directory\shell\Folder Customizer)", "icon",
+        R"("C:\Program Files\Folder Customizer\Icons\Folder Customizer.ico")");
+}
+
+void FolderCustomizerWindow::uninstallRegistry() {}
