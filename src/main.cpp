@@ -14,7 +14,7 @@
 
 int main(int argc, char* argv[]) {
 #if defined(Q_OS_WIN)
-    // ::ShowWindow(::GetConsoleWindow(), SW_HIDE);  // hide console window
+    ::ShowWindow(::GetConsoleWindow(), SW_HIDE);  // hide console window
 #endif
 
     auto app = new QApplication(argc, argv);
@@ -51,6 +51,7 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < argc; i++) {
         qDebug() << argv[i];
+        // qDebug() << "TEST";
     }
 
     // QString folderPath;

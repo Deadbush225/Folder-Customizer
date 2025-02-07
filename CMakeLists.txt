@@ -11,25 +11,24 @@ set(PROJECT_NAME FolderCustomizer)
 set(PROJECT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 message(${PROJECT_SOURCE})
 
+# include_directories(${CMAKE_SOURCE_DIR}/Include)
+
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Boost 1.81.0)
 
 qt_standard_project_setup()
 
-file(GLOB_RECURSE HEADER Include/*.h)
-file(GLOB_RECURSE WINDOW ${PROJECT_SOURCE}/Window/*.cpp)
-file(GLOB_RECURSE CUSTOMIZER ${PROJECT_SOURCE}/Customizer/*.cpp)
-file(GLOB_RECURSE LOGGER ${PROJECT_SOURCE}/Logger/*.cpp)
-# file(GLOB_RECURSE REGISTRY ${PROJECT_SOURCE}/Registry/*.cpp)
+# target_include_directories(Logger PUBLIC ../../Include)
+# file(GLOB_RECURSE HEADER Include/*.h)
+
+add_subdirectory(src/Logger)
+add_subdirectory(src/Customizer)
+add_subdirectory(src/Utils)
+add_subdirectory(src/Window)
 
 set(SOURCE_FILES
-${HEADER}
-
-${WINDOW}
-${CUSTOMIZER}
-${LOGGER}
-${REGISTRY}
+# ${HEADER}
 ${PROJECT_SOURCE}/main.cpp
 )
 
@@ -47,8 +46,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "FolderCustomizer")
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets)
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core)
+target_link_libraries(${PROJECT_NAME} PRIVATE Utils Logger Customizer Window Qt6::Widgets Qt6::Core)
 
 if(Boost_FOUND)
     message("Boost Found...")

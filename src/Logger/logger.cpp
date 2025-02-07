@@ -70,6 +70,6 @@ QString Logger::generateAutoName() {
                        .prepend("LOG_")
                        .append(".txt");
     // QString name = "Test.txt";
-    // qDebug() << name;
+    qDebug() << name;
     return name;
 }
