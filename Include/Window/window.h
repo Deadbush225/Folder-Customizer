@@ -48,9 +48,6 @@ class FolderCustomizerWindow : public QWidget {
                               QString tone,
                               QString color,
                               QString tag);
-    // void resetToDefault();
-    // void resetColor();
-    // void resetTag();
 
    private:
     ListBoxwidget* listview;

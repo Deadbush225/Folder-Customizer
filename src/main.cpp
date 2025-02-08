@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     auto app = new QApplication(argc, argv);
     QApplication::setWindowIcon(QIcon(":/icons/Folder Customizer.png"));
 
-    QApplication::setStyle("Fusion");
+    // QApplication::setStyle("Fusion");
 
     QPalette* dark_palette = new QPalette();
     dark_palette->setColor(QPalette::Window, QColor(53, 53, 53));
@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < argc; i++) {
         qDebug() << argv[i];
-        // qDebug() << "TEST";
+        qDebug() << "TEST";
     }
 
     // QString folderPath;
