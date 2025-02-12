@@ -5,7 +5,7 @@ if(POLICY CMP0167)
 endif()
 
 set(Boost_ROOT D:/Dev/boost_1_87_0/stage)
-set(Boost_LIBRARY_DIR D:/Dev/boost_1_87_0/stage/lib)
+set(Boost_LIBRARY_DIR D:/Dev/boost_1_87_0/stage/lib) # ? old hard coded, currently not used
 
 # add any of these lines to find the BoostConfig.cmake
 set(Boost_DIR D:/Dev/boost_1_87_0/stage/lib/cmake/Boost-1.87.0)
@@ -21,11 +21,21 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 # set(Boost_USE_STATIC_LIBS OFF)
 
-include_directories(${PROJECT_SOURCE_DIR}/Include)
-
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 qt_standard_project_setup()
 find_package(Boost REQUIRED COMPONENTS program_options)
+
+# utility functions
+function(utility_include_and_link_boost SUBDIR_NAME)
+if(Boost_FOUND)
+message("Boost Found...")
+target_include_directories(${SUBDIR_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries(${SUBDIR_NAME} PUBLIC Boost::program_options)
+# target_link_libraries(${PROJECT_NAME} PUBLIC Boost::boost)
+endif()
+endfunction()
+
+include_directories(${PROJECT_SOURCE_DIR}/Include)
 
 add_subdirectory(src/Core)
 add_subdirectory(src/Logger)
@@ -71,3 +81,4 @@ qt_generate_deploy_app_script(
 )
 
 install(SCRIPT ${deploy_script})
+
