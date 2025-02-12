@@ -1,4 +1,4 @@
-#include "../../Include/Logger/logger.h"
+#include "Logger/logger.h"
 
 namespace LOGGER {
 std::map<STATUS, QString> status_table = {{STATUS::WARN, "WARN"},

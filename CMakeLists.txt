@@ -1,5 +1,16 @@
 cmake_minimum_required(VERSION 3.16)
 
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
+
+set(Boost_ROOT D:/Dev/boost_1_87_0/stage)
+set(Boost_LIBRARY_DIR D:/Dev/boost_1_87_0/stage/lib)
+
+# add any of these lines to find the BoostConfig.cmake
+set(Boost_DIR D:/Dev/boost_1_87_0/stage/lib/cmake/Boost-1.87.0)
+set(CMAKE_PREFIX_PATH ${Boost_ROOT})
+
 project(FolderCustomizer VERSION 0.1.0)
 set(PROJECT_NAME FolderCustomizer)
 set(PROJECT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -8,17 +19,19 @@ message("PROJECT SOURCE: " ${PROJECT_SOURCE} "\n")
 # Turn on automatic invocation of the MOC, UIC & RCC
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-set(Boost_USE_STATIC_LIBS OFF)
+# set(Boost_USE_STATIC_LIBS OFF)
 
+include_directories(${PROJECT_SOURCE_DIR}/Include)
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 qt_standard_project_setup()
-find_package(Boost 1.81.0)
+find_package(Boost REQUIRED COMPONENTS program_options)
 
+add_subdirectory(src/Core)
 add_subdirectory(src/Logger)
 add_subdirectory(src/Customizer)
 add_subdirectory(src/Utils)
-add_subdirectory(src/Window)
+add_subdirectory(src/UserInterface)
 
 set(SOURCE_FILES
     ${PROJECT_SOURCE}/main.cpp)
@@ -39,12 +52,12 @@ set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "FolderCustomizer")
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Utils $<TARGET_OBJECTS:Logger> $<TARGET_OBJECTS:Customizer> $<TARGET_OBJECTS:Window> Qt6::Widgets Qt6::Core)
+target_link_libraries(${PROJECT_NAME} PRIVATE Core Utils Logger Customizer UserInterface Qt6::Widgets Qt6::Core)
 
 if(Boost_FOUND)
     message("Boost Found...")
     target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PUBLIC Boost::program_options)
     # target_link_libraries(${PROJECT_NAME} PUBLIC Boost::boost)
 endif()
 

@@ -1,26 +1,22 @@
 #include <iostream>
 
-#include <QApplication>
-#include <QColor>
-#include <QIcon>
-#include <QPalette>
-#include <QWidget>
-#include <Qt>
+#include <QtCore/Qt>
+#include <QtGui/QColor>
+#include <QtGui/QIcon>
+#include <QtGui/QPalette>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QWidget>
 
 #include <stdio.h>
 #include <windows.h>
+#include <boost/program_options.hpp>
 
-#include "../Include/Window/window.h"
+#include "../Include/UserInterface/window.h"
 
-int main(int argc, char* argv[]) {
-#if defined(Q_OS_WIN)
-    ::ShowWindow(::GetConsoleWindow(), SW_HIDE);  // hide console window
-#endif
+namespace po = boost::program_options;
 
-    auto app = new QApplication(argc, argv);
-    QApplication::setWindowIcon(QIcon(":/icons/Folder Customizer.png"));
-
-    // QApplication::setStyle("Fusion");
+void setDarkTheme() {
+    QApplication::setStyle("Fusion");
 
     QPalette* dark_palette = new QPalette();
     dark_palette->setColor(QPalette::Window, QColor(53, 53, 53));
@@ -46,35 +42,54 @@ int main(int argc, char* argv[]) {
     dark_palette->setColor(QPalette::Disabled, QPalette::Light,
                            QColor(53, 53, 53));
     QApplication::setPalette(*dark_palette);
+}  // namespace boost::program
+
+int main(int argc, char* argv[]) {
+#if defined(Q_OS_WIN)
+    ::ShowWindow(::GetConsoleWindow(), SW_HIDE);  // hide console window
+#endif
 
     // FolderCustomizer.exe <Folder> -F Dark -C Red -T
 
-    for (int i = 0; i < argc; i++) {
-        qDebug() << argv[i];
-        qDebug() << "TEST";
+    po::options_description desc("Allowed options");
+    desc.add_options()("help,h", "produce help message")(
+        "folder,F", po::value<std::string>(), "set folder path")(
+        "tone,T", po::value<std::string>(), "set folder tone")(
+        "color,C", po::value<std::string>(), "set folder color");
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if (vm.count("help")) {
+        std::cout << desc << "\n";
+        return 1;
     }
 
-    // QString folderPath;
-    // QString folderColor;
-    // QString folderTextColor;
+    QString folderPath;
+    QString folderColor;
+    QString folderTextColor;
 
-    // for (int i = 1; i < argc; ++i) {
-    //     if (strcmp(argv[i], "-F") == 0 && i + 1 < argc) {
-    //         folderColor = argv[++i];
-    //     } else if (strcmp(argv[i], "-C") == 0 && i + 1 < argc) {
-    //         folderTextColor = argv[++i];
-    //     } else if (folderPath.isEmpty()) {
-    //         folderPath = argv[i];
-    //     } else {
-    //         std::cerr << "Unknown option or argument: " << argv[i] << "\n";
-    //         return 1;
-    //     }
-    // }
+    if (vm.count("folder")) {
+        folderPath = QString::fromStdString(vm["folder"].as<std::string>());
+    }
+    if (vm.count("color")) {
+        folderColor = QString::fromStdString(vm["color"].as<std::string>());
+    }
+    if (vm.count("tone")) {
+        folderTextColor = QString::fromStdString(vm["tone"].as<std::string>());
+    }
 
-    FolderCustomizerWindow window = FolderCustomizerWindow();
-    window.show();
+    // auto app = new QApplication(argc, argv);
 
-    app->exec();
-    delete app;
+    // // GUI
+    // setDarkTheme();
+    // QApplication::setWindowIcon(QIcon(":/icons/Folder Customizer.png"));
+
+    // FolderCustomizerWindow window = FolderCustomizerWindow();
+    // window.show();
+
+    // app->exec();
+    // delete app;
     // delete window;
 };

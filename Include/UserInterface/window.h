@@ -16,30 +16,24 @@
 
 #include <windows.h>
 
-#include "../Customizer/icon_refresher.h"
-#include "../Customizer/tagger.h"
-#include "../Logger/logger.h"
+#include "Core/registry.h"
+
+#include "Customizer/icon_refresher.h"
+#include "Customizer/settings.h"
+#include "Customizer/tagger.h"
+
+#include "Logger/logger.h"
 #include "subclass.h"
 
 class FolderCustomizerWindow : public QWidget {
    public:
-    QList<QString> colors = {"Red",    "Brown", "Orange", "Lemon",
-                             "Green",  "Azure", "Blue",   "Pink",
-                             "Violet", "White", "Gray",   "Black"};
-    QList<QString> tones = {"Light", "Normal", "Dark"};
-
     FolderCustomizerWindow();
+    RegistryManipulator* registryManipulator = new RegistryManipulator();
+    Settings* settings = new Settings();
 
     void hide_show_advanced_settings();  // LATER
     void deleteSelectedItem();
     void clearAll();
-
-    void createRegistryKey(HKEY hKeyRoot,
-                           LPCSTR subKey,
-                           LPCSTR valueName,
-                           LPCSTR value);
-    void installRegistry();
-    void uninstallRegistry();
 
     void apply();
     void reset();

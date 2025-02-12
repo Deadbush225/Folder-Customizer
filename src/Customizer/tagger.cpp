@@ -1,4 +1,4 @@
-#include "../../Include/Customizer/tagger.h"
+#include "Customizer/tagger.h"
 
 QRegularExpression section_re("\\[(.+)\\]");
 QRegularExpression key_value_re("(.*)=(.*)");

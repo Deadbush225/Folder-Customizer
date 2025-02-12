@@ -1,4 +1,4 @@
-#include "../../Include/Customizer/icon_refresher.h"
+#include "Customizer/icon_refresher.h"
 
 wchar_t* str_to_lpwstr_st(std::string string) {
     std::cout << "Function called" << std::endl;
