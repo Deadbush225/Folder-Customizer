@@ -5,16 +5,12 @@ if(POLICY CMP0167)
 endif()
 
 set(Boost_ROOT D:/Dev/boost_1_87_0/stage)
-set(Boost_LIBRARY_DIR D:/Dev/boost_1_87_0/stage/lib) # ? old hard coded, currently not used
-
-# add any of these lines to find the BoostConfig.cmake
-set(Boost_DIR D:/Dev/boost_1_87_0/stage/lib/cmake/Boost-1.87.0)
 set(CMAKE_PREFIX_PATH ${Boost_ROOT})
 
 project(FolderCustomizer VERSION 0.1.0)
 set(PROJECT_NAME FolderCustomizer)
 set(PROJECT_SOURCE ${CMAKE_SOURCE_DIR}/src)
-message("PROJECT SOURCE: " ${PROJECT_SOURCE} "\n")
+message("\nPROJECT SOURCE: " ${PROJECT_SOURCE})
 
 # Turn on automatic invocation of the MOC, UIC & RCC
 set(CMAKE_AUTOMOC ON)
@@ -45,8 +41,7 @@ endfunction()
 include_directories(${PROJECT_SOURCE_DIR}/Include)
 
 add_subdirectory(src/Core)
-
-# add_subdirectory(src/Logger)
+add_subdirectory(src/Logger)
 add_subdirectory(src/Customizer)
 add_subdirectory(src/Utils)
 add_subdirectory(src/UserInterface)
@@ -72,12 +67,12 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_link_libraries(${PROJECT_NAME} PRIVATE Core Utils Customizer UserInterface Qt6::Widgets Qt6::Core)
 
 # installer
-install(TARGETS ${PROJECT_NAME} BUNDLE DESTINATION . RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS ${PROJECT_NAME} BUNDLE DESTINATION . RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}) # move the executable
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Icons DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons) # move directory
 
 qt_generate_deploy_app_script(
     TARGET ${PROJECT_NAME} OUTPUT_SCRIPT deploy_script NO_TRANSLATIONS
-)
+) # create deploy script
 
-install(SCRIPT ${deploy_script})
+install(SCRIPT ${deploy_script}) # run deploy script
