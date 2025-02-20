@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include <QtCore/QString>
+#include <QtWidgets/QApplication>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QGroupBox>
@@ -17,11 +19,8 @@
 #include <windows.h>
 
 #include "Core/registry.h"
-
-#include "Customizer/icon_refresher.h"
+#include "Customizer/folderCustomizer.h"
 #include "Customizer/settings.h"
-#include "Customizer/tagger.h"
-
 #include "Logger/logger.h"
 #include "subclass.h"
 
@@ -38,12 +37,9 @@ class FolderCustomizerWindow : public QWidget {
     void apply();
     void reset();
 
-    void folderColorizeTagger(QString folderPath,
-                              QString tone,
-                              QString color,
-                              QString tag);
-
    private:
+    void setDarkTheme();
+
     ListBoxwidget* listview;
 
     QPushButton* install_key_btn;

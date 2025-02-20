@@ -40,11 +40,13 @@ endfunction()
 
 include_directories(${PROJECT_SOURCE_DIR}/Include)
 
-add_subdirectory(src/Core)
+# add_subdirectory(src/Core)
 add_subdirectory(src/Logger)
 add_subdirectory(src/Customizer)
 add_subdirectory(src/Utils)
 add_subdirectory(src/UserInterface)
+
+add_subdirectory(src/context-menu)
 
 set(SOURCE_FILES ${PROJECT_SOURCE}/main.cpp)
 

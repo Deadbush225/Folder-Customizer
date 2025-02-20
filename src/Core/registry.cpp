@@ -21,52 +21,51 @@ void RegistryManipulator::installRegistry() {
     auto settings = Settings::getInstance();
 
     // Setup context menu item for click on right panel
-    char rootMenu[] =
-        R"(Software\Classes\directory\Background\shell\Folder Customizer)";
+    std::string rootMenu =
+        R"(Software\Classes\directory\shell\Folder Customizer)";
 
     // icon path
     createRegistryKey(
-        HKEY_CURRENT_USER, rootMenu, "icon",
+        HKEY_CURRENT_USER, rootMenu.c_str(), "icon",
         R"("C:\Program Files\Folder Customizer\Icons\Folder Customizer.ico")");
     // set up to have submenu
-    createRegistryKey(HKEY_CURRENT_USER, rootMenu, "SubCommands", "");
+    createRegistryKey(HKEY_CURRENT_USER, rootMenu.c_str(), "SubCommands", "");
 
     // root name
-    createRegistryKey(HKEY_CURRENT_USER, rootMenu, "MUIVerb",
+    createRegistryKey(HKEY_CURRENT_USER, rootMenu.c_str(), "MUIVerb",
                       "Folder Customizer");
 
     // command
+    std::string commandKey = rootMenu + R"(\command)";
     createRegistryKey(
-        HKEY_CURRENT_USER, strcat(rootMenu, R"(\command)"), "",
+        HKEY_CURRENT_USER, commandKey.c_str(), "",
         R"("C:\Program Files\Folder Customizer\Folder Customizer.exe" "%V")");
 
-    for (QString tone : settings.tones) {
-        QString toneKeyPath =
-            QString(strcat(rootMenu, R"(\shell\%1)")).arg(tone);
-        createRegistryKey(HKEY_CURRENT_USER, toneKeyPath.toStdString().c_str(),
-                          "", "");
-        createRegistryKey(HKEY_CURRENT_USER, toneKeyPath.toStdString().c_str(),
-                          "SubCommands", "");
+    for (std::string tone : settings.tones) {
+        std::string toneKeyPath = rootMenu + "\\shell\\" + tone;
+        createRegistryKey(HKEY_CURRENT_USER, toneKeyPath.c_str(), "", "");
 
-        for (QString color : settings.colors) {
-            QString colorKeyPath =
-                QString(strcat(rootMenu, R"(\shell\%1\shell\%2)"))
-                    .arg(tone)
-                    .arg(color);
-            createRegistryKey(HKEY_CURRENT_USER,
-                              colorKeyPath.toStdString().c_str(), "", "");
+        createRegistryKey(HKEY_CURRENT_USER, toneKeyPath.c_str(), "SubCommands",
+                          "");
+
+        for (std::string color : settings.colors) {
+            std::string colorKeyPath =
+                rootMenu + "\\shell\\" + tone + "\\shell\\" + color;
+            createRegistryKey(HKEY_CURRENT_USER, colorKeyPath.c_str(), "", "");
         }
     }
 
     // Setup context menu item for click on folders tree item
-    createRegistryKey(
-        HKEY_CURRENT_USER,
-        R"(Software\Classes\directory\shell\Folder Customizer\command)", "",
-        R"("C:\Program Files\Folder Customizer\Folder Customizer.exe" "%1")");
-    createRegistryKey(
-        HKEY_CURRENT_USER,
-        R"(Software\Classes\directory\shell\Folder Customizer)", "icon",
-        R"("C:\Program Files\Folder Customizer\Icons\Folder Customizer.ico")");
+    // createRegistryKey(
+    //     HKEY_CURRENT_USER,
+    //     R"(Software\Classes\directory\shell\Folder Customizer\command)", "",
+    //     R"("C:\Program Files\Folder Customizer\Folder Customizer.exe"
+    //     "%1")");
+    // createRegistryKey(HKEY_CURRENT_USER,
+    //                   R"(Software\Classes\directory\shell\Folder
+    //                   Customizer)", "icon", R"("C:\Program Files\Folder
+    //                   Customizer\Icons\Folder
+    //     Customizer.ico")");
 }
 
 void RegistryManipulator::uninstallRegistry() {}

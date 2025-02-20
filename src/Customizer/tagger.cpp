@@ -24,16 +24,9 @@ void DesktopIniManipulator::resetAllSection() {
     this->m_iniSettings->clear();
     this->setHidden();
 }
-
-void DesktopIniManipulator::tagFolder(QString folder, QString tag) {
-    this->m_iniSettings->beginGroup("{F29F85E0-4FF9-1068-AB91-08002B27B3D9}");
-    this->m_iniSettings->setValue("Prop5", tag);
-    this->m_iniSettings->endGroup();
-
-    this->setHidden();
-}
-
 void DesktopIniManipulator::setHidden() {
+    // call this to sync changes and make the ini file hidden
+
     this->m_iniSettings->sync();
 
     SetFileAttributesA(this->m_iniPath->toStdString().c_str(), 0x2);
@@ -42,6 +35,10 @@ void DesktopIniManipulator::setHidden() {
 
     DWORD error = GetLastError();
     std::cout << "Error: " << error << "\n";
+}
+
+QSettings* DesktopIniManipulator::getInternalSettings() {
+    return m_iniSettings;
 }
 
 // STATIC METHODS
@@ -193,4 +190,13 @@ bool DesktopIniManipulator::writeDeskIniFile(
     // QString("Paused"), QString("Preparing to Exit` Write"));
     // ret2.exec();
     return true;
+}
+
+void Tagger::tagFolder(QString tag) {
+    this->getInternalSettings()->beginGroup(
+        "{F29F85E0-4FF9-1068-AB91-08002B27B3D9}");
+    this->getInternalSettings()->setValue("Prop5", tag);
+    this->getInternalSettings()->endGroup();
+
+    this->setHidden();
 }

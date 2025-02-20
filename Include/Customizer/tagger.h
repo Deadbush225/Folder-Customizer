@@ -7,6 +7,8 @@
 #include <QtCore/QtCore>
 #include <QtWidgets/QMessageBox>
 
+#include <QtCore/QSettings>
+
 #include <experimental/type_traits>
 #include <iostream>
 
@@ -16,23 +18,30 @@
 class DesktopIniManipulator {
    public:
     DesktopIniManipulator(QString folder);
-    void tagFolder(QString folder, QString tag);
+    // void tagFolder(QString tag);
 
     void removeSection(QString section);
     void resetAllSection();
 
     void setHidden();
 
+    QSettings* getInternalSettings();
+
    private:
     const QString* m_iniPath;
-    // const QString* m_iniPath;
     const QSettings::Format* m_iniFormat;
     QSettings* m_iniSettings;
 
     bool static readDeskIniFile(QIODevice& device, QSettings::SettingsMap& map);
     bool static writeDeskIniFile(QIODevice& device,
                                  const QSettings::SettingsMap&);
-    // map);
+};
+
+class Tagger : DesktopIniManipulator {
+   public:
+    using DesktopIniManipulator::DesktopIniManipulator;
+
+    void tagFolder(QString tag);
 };
 
 #endif

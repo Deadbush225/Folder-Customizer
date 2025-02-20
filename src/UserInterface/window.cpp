@@ -1,7 +1,15 @@
 #include "UserInterface/window.h"
-#include <string>
+
+QStringList* stdToQStringList(std::vector<std::string> stdStringList) {
+    QStringList* tones = new QStringList();
+    for (std::string tone : stdStringList) {
+        tones->append(QString::fromStdString(tone));
+    }
+    return tones;
+}
 
 FolderCustomizerWindow::FolderCustomizerWindow() {
+    setDarkTheme();
     // Logger* log = new Logger();
     // log->write(QString("Test message"), LOGGER::CHRONOLOGY::AFT,
     //            LOGGER::STATUS::WARN, LOGGER::PRIORITY::MID);
@@ -54,7 +62,8 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     auto tone_comboBox_label = new QLabel("Tone: ");
 
     this->tone_comboBox = new QComboBox();
-    tone_comboBox->addItems(settings->tones);
+
+    tone_comboBox->addItems(*stdToQStringList(settings->tones));
     tone_comboBox->setCurrentIndex(1);
 
     tone_comboBox_Layout->addWidget(tone_comboBox_label);
@@ -65,7 +74,7 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     auto color_comboBox_label = new QLabel("Color: ");
 
     this->color_comboBox = new QComboBox();
-    color_comboBox->addItems(settings->colors);
+    color_comboBox->addItems(*stdToQStringList(settings->colors));
     color_comboBox->setCurrentIndex(0);
 
     color_comboBox_Layout->addWidget(color_comboBox_label);
@@ -192,7 +201,7 @@ void FolderCustomizerWindow::apply() {
     for (QString folder : folders) {
         qDebug() << "folderColorizeTagger(" + folder + ", " + tone + ", " +
                         color + "," + tag + ")";
-        folderColorizeTagger(folder, tone, color, tag);
+        FolderCustomizer::colorizeTag(folder, tone, color, tag);
     }
 }
 
@@ -202,38 +211,35 @@ void FolderCustomizerWindow::reset() {
     QList<QString> folders = this->listview->getAllItems();
 
     for (QString folder : folders) {
-        DesktopIniManipulator* desktopManip = new DesktopIniManipulator(folder);
-
-        if (resetIcon) {
-            qDebug() << "Reseting icon";
-            desktopManip->removeSection(".ShellClassInfo");
-        }
-
-        if (resetTag) {
-            qDebug() << "Reseting tag";
-            desktopManip->removeSection(
-                "{F29F85E0-4FF9-1068-AB91-08002B27B3D9}");
-        }
+        FolderCustomizer::reset(folder, resetIcon, resetTag);
     }
 }
 
-void FolderCustomizerWindow::folderColorizeTagger(QString folderPath,
-                                                  QString tone,
-                                                  QString color,
-                                                  QString tag) {
-    DesktopIniManipulator* desktopManip = new DesktopIniManipulator(folderPath);
+void FolderCustomizerWindow::setDarkTheme() {
+    QApplication::setStyle("Fusion");
 
-    // if (!(tag.isNull() || tag.isEmpty())) {
-    // qDebug() << "tag is empty";
-    if (this->yes_tag_chkbx->isChecked()) {
-        qDebug() << "Tagging Folder";
-        desktopManip->tagFolder(folderPath, tag);
-    }
-    // }
-    if (this->yes_icon_chkbx->isChecked()) {
-        qDebug() << "Changing Icon";
-        changeIcon(folderPath, tone, color);
-    }
-
-    delete desktopManip;
+    QPalette* dark_palette = new QPalette();
+    dark_palette->setColor(QPalette::Window, QColor(53, 53, 53));
+    dark_palette->setColor(QPalette::WindowText, Qt::white);
+    dark_palette->setColor(QPalette::Base, QColor(35, 35, 35));
+    dark_palette->setColor(QPalette::AlternateBase, QColor(53, 53, 53));
+    dark_palette->setColor(QPalette::ToolTipBase, QColor(25, 25, 25));
+    dark_palette->setColor(QPalette::ToolTipText, Qt::white);
+    dark_palette->setColor(QPalette::Text, Qt::white);
+    dark_palette->setColor(QPalette::Button, QColor(53, 53, 53));
+    dark_palette->setColor(QPalette::ButtonText, Qt::white);
+    dark_palette->setColor(QPalette::BrightText, Qt::red);
+    dark_palette->setColor(QPalette::Link, QColor(42, 130, 218));
+    dark_palette->setColor(QPalette::Highlight, QColor(42, 130, 218));
+    dark_palette->setColor(QPalette::HighlightedText, QColor(35, 35, 35));
+    dark_palette->setColor(QPalette::Active, QPalette::Button,
+                           QColor(53, 53, 53));
+    dark_palette->setColor(QPalette::Disabled, QPalette::ButtonText,
+                           Qt::darkGray);
+    dark_palette->setColor(QPalette::Disabled, QPalette::WindowText,
+                           Qt::darkGray);
+    dark_palette->setColor(QPalette::Disabled, QPalette::Text, Qt::darkGray);
+    dark_palette->setColor(QPalette::Disabled, QPalette::Light,
+                           QColor(53, 53, 53));
+    QApplication::setPalette(*dark_palette);
 }

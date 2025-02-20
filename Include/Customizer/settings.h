@@ -1,7 +1,10 @@
 #pragma once
 
-#include <QtCore/QList>
-#include <QtCore/QString>
+// #include <QtCore/QList>
+// #include <QtCore/QString>
+
+#include <string>
+#include <vector>
 
 class Settings {
    public:
@@ -10,8 +13,8 @@ class Settings {
         return instance;
     }
 
-    QList<QString> colors = {"Red",    "Brown", "Orange", "Lemon",
-                             "Green",  "Azure", "Blue",   "Pink",
-                             "Violet", "White", "Gray",   "Black"};
-    QList<QString> tones = {"Light", "Normal", "Dark"};
+    std::vector<std::string> colors = {"Red",    "Brown", "Orange", "Lemon",
+                                       "Green",  "Azure", "Blue",   "Pink",
+                                       "Violet", "White", "Gray",   "Black"};
+    std::vector<std::string> tones = {"Light", "Normal", "Dark"};
 };

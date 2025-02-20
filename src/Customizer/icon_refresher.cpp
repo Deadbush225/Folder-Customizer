@@ -18,7 +18,6 @@ void changeIcon(QString folder_path, QString tone, QString color) {
      * [1] - folder path
      * [2] - tone
      * [3] - color
-     * [4] - tag
      */
 
     QString program_path = "C:\\Program Files\\Folder Customizer";
