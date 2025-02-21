@@ -1,7 +1,6 @@
 #include "FileContextMenuExt.h"
 #include <Shlwapi.h>
 #include <strsafe.h>
-#include "Customizer/settings.h"
 
 // #include "resource.h"
 // #include "../../Include/Customizer/settings.h"
@@ -26,15 +25,40 @@ FileContextMenuExt::FileContextMenuExt(void)
       m_pwszVerbHelpText(L"Display File Name (C++)") {
     InterlockedIncrement(&g_cDllRef);
 
+    settings = Settings::getInstance();
+
+    int SUBMENU_IDENTIFIER = 1;
+
+    for (int i = 0; i < settings.tones.size(); i++) {
+        std::wstring toneWStr =
+            std::wstring(settings.tones[i].begin(), settings.tones[i].end());
+
+        for (int j = 0; j < settings.colors.size(); j++) {
+            std::wstring colorWStr = std::wstring(settings.colors[j].begin(),
+                                                  settings.colors[j].end());
+
+            std::wstring iconpath =
+                (L"D:\\System\\Coding\\Projects\\folder-customizer\\Icons\\" +
+                 toneWStr + L"\\BMP\\" + colorWStr + L".bmp");
+
+            ImagesDump[SUBMENU_IDENTIFIER] = (HBITMAP)LoadImage(
+                g_hInst,
+
+                iconpath.c_str(), IMAGE_BITMAP, 0, 0,
+                LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_LOADTRANSPARENT);
+
+            SUBMENU_IDENTIFIER++;
+        }
+    }
+
     // Load the bitmap for the menu item.
     // If you want the menu item bitmap to be transparent, the color depth of
     // the bitmap must not be greater than 8bpp.
     m_hMenuBmp = (HBITMAP)LoadImage(
         g_hInst,
         L"D:\\System\\Coding\\Projects\\folder-"
-        L"customizer\\src\\context-menu\\OK.bmp",
-        IMAGE_BITMAP, 0, 0,
-        LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_LOADTRANSPARENT);
+        L"customizer\\Icons\\Normal\\BMP\\Orange.bmp",
+        IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
 
     // m_hMenuBmp = LoadImage(g_hInst, MAKEINTRESOURCE(L"OK.bmp"), IMAGE_BITMAP,
     // 0,
@@ -167,39 +191,44 @@ IFACEMETHODIMP FileContextMenuExt::QueryContextMenu(HMENU hMenu,
     // Create submenus
     HMENU rootMenu = CreateMenu();
 
-    Settings settings = Settings::getInstance();
-    std::vector<std::string> tones = settings.tones;
-    std::vector<std::string> colors = settings.colors;
-
     int SUBMENU_IDENTIFIER = 1;
 
-    for (int i = 0; i < tones.size(); i++) {
+    for (int i = 0; i < settings.tones.size(); i++) {
         HMENU hSubMenu = CreateMenu();
 
-        std::wstring toneWStr = std::wstring(tones[i].begin(), tones[i].end());
+        std::wstring toneWStr =
+            std::wstring(settings.tones[i].begin(), settings.tones[i].end());
 
         InsertMenu(rootMenu, 0, MF_BYPOSITION | MF_POPUP, (UINT_PTR)hSubMenu,
                    toneWStr.c_str());
-        for (int j = 0; j < colors.size(); j++) {
-            std::wstring colorWStr =
-                std::wstring(colors[j].begin(), colors[j].end());
+        for (int j = 0; j < settings.colors.size(); j++) {
+            std::wstring colorWStr = std::wstring(settings.colors[j].begin(),
+                                                  settings.colors[j].end());
             InsertMenu(hSubMenu, j, MF_BYPOSITION, idCmdFirst + j + 3,
                        colorWStr.c_str());
+
+            MENUITEMINFO mii = {sizeof(MENUITEMINFO)};
+            mii.fMask = MIIM_BITMAP;
+            mii.hbmpItem = ImagesDump[SUBMENU_IDENTIFIER];
+
+            // try: change first 2 arguments
+            // try: why only OK.bmp works and not my bmp
+            //  SetMenuItemInfo(hMenu, indexMenu, TRUE, &mii);
+
+            SetMenuItemInfo(hSubMenu, j, TRUE, &mii);
 
             SUBMENU_IDENTIFIER++;
         }
     }
 
     InsertMenu(hMenu, indexMenu, MF_BYPOSITION | MF_POPUP, (UINT_PTR)rootMenu,
-               L"Folder Colorizer");
+               L"Folder Colorizer 1");
 
     // Set the icon for the menu item
     MENUITEMINFO mii = {sizeof(MENUITEMINFO)};
     mii.fMask = MIIM_BITMAP;
     mii.hbmpItem = m_hMenuBmp;
     SetMenuItemInfo(hMenu, indexMenu, TRUE, &mii);
-
-    SetMenuItemInfo(rootMenu, 0, TRUE, &mii);
 
     // Return an HRESULT value with the severity set to SEVERITY_SUCCESS.
     // Set the code value to the offset of the largest command identifier

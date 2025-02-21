@@ -18,6 +18,8 @@ of the .cpp file. */
 #include <shlobj.h>  // For IShellExtInit and IContextMenu
 #include <windows.h>
 
+#include "Customizer/settings.h"
+
 class FileContextMenuExt : public IShellExtInit, public IContextMenu {
    public:
     // IUnknown
@@ -59,6 +61,10 @@ class FileContextMenuExt : public IShellExtInit, public IContextMenu {
     void OnSubMenuItemSelected(HWND hWnd, int itemId);
 
     void OnVerbDisplayFileName(HWND hWnd);
+
+    Settings settings;
+
+    HBITMAP ImagesDump[40];
 
     PCWSTR m_pszMenuText;
     HBITMAP m_hMenuBmp;
