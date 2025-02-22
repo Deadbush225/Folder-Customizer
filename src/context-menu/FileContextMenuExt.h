@@ -64,7 +64,7 @@ class FileContextMenuExt : public IShellExtInit, public IContextMenu {
 
     Settings settings;
 
-    HBITMAP ImagesDump[40];
+    HBITMAP ImagesDump[50];
 
     PCWSTR m_pszMenuText;
     HBITMAP m_hMenuBmp;
