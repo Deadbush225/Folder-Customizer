@@ -48,7 +48,8 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     install_key_btn->setHidden(true);
 
     uninstall_key_btn = new QPushButton("Remove from context menu");
-    // QObject::connect(uninstall_key_btn, QPushButton::clicked, this, )
+    QObject::connect(uninstall_key_btn, &QPushButton::clicked, this,
+                     [this]() { registryManipulator->uninstallRegistry(); });
     uninstall_key_btn->setHidden(true);
 
     separator_horizontal = new QHSeparationLine();

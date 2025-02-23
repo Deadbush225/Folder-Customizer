@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(ContextMenuDll CppShellExtContextMenuHandler)
+set(ContextMenuDll FCContextMenuHandler)
 
 # Set the project name and type
 project(${ContextMenuDll} LANGUAGES CXX)
@@ -30,10 +30,10 @@ set_target_properties(${ContextMenuDll} PROPERTIES
 )
 
 # Include directories
-include_directories(${ContextMenuDll} PRIVATE ${PROJECT_SOURCE_DIR}../../../Include)
+include_directories(${ContextMenuDll} PRIVATE ${PROJECT_SOURCE_DIR}/../../../Include)
 
 # Define UNICODE and _UNICODE to ensure Unicode API is used
 target_compile_definitions(${ContextMenuDll} PRIVATE UNICODE _UNICODE)
 
 # Link libraries (if any)
-target_link_libraries(CppShellExtContextMenuHandler shlwapi shell32)
+target_link_libraries(${ContextMenuDll} shlwapi shell32)

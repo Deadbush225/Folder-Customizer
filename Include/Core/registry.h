@@ -9,10 +9,10 @@
 
 class RegistryManipulator {
    public:
-    void createRegistryKey(HKEY hKeyRoot,
-                           LPCSTR subKey,
-                           LPCSTR valueName,
-                           LPCSTR value);
+    RegistryManipulator();
     void installRegistry();
     void uninstallRegistry();
+
+   private:
+    std::string directory;
 };

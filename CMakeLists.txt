@@ -7,6 +7,8 @@ endif()
 set(Boost_ROOT D:/Dev/boost_1_87_0/stage)
 set(CMAKE_PREFIX_PATH ${Boost_ROOT})
 
+set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/packages/com.foldercustomizer/data)
+
 project(FolderCustomizer VERSION 0.1.0)
 set(PROJECT_NAME FolderCustomizer)
 set(PROJECT_SOURCE ${CMAKE_SOURCE_DIR}/src)
@@ -40,7 +42,7 @@ endfunction()
 
 include_directories(${PROJECT_SOURCE_DIR}/Include)
 
-# add_subdirectory(src/Core)
+add_subdirectory(src/Core)
 add_subdirectory(src/Logger)
 add_subdirectory(src/Customizer)
 add_subdirectory(src/Utils)
@@ -66,12 +68,15 @@ set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "FolderCustomizer")
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE Core Utils Customizer UserInterface Qt6::Widgets Qt6::Core)
+target_link_libraries(${PROJECT_NAME} PRIVATE Core Logger Utils Customizer UserInterface Qt6::Widgets Qt6::Core)
 
 # installer
 install(TARGETS ${PROJECT_NAME} BUNDLE DESTINATION . RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}) # move the executable
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Icons DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons) # move directory
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Icons DESTINATION ${CMAKE_INSTALL_BINDIR}) # move directory
+
+# Move DLL to the installation folder
+install(TARGETS FCContextMenuHandler DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 qt_generate_deploy_app_script(
     TARGET ${PROJECT_NAME} OUTPUT_SCRIPT deploy_script NO_TRANSLATIONS

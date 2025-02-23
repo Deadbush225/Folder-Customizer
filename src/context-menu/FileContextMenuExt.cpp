@@ -89,18 +89,38 @@ void FileContextMenuExt::OnSubMenuItemSelected(HWND hWnd, int itemId) {
     tone = itemId / 12;
     color = itemId % 12;
 
-    // wchar_t szMessage[300];
-    std::string message = settings.tones[tone] + " " + settings.colors[color];
+    std::string toneStr = settings.tones[tone];
+    std::string colorStr = settings.colors[color];
 
-    // HRESULT ret = StringCchPrintf(
-    //     szMessage, ARRAYSIZE(szMessage), L"id: %d tone: %s color: %s",
-    //     itemId, settings.tones[tone].c_str(),
-    //     settings.colors[color].c_str());
+    std::wstring wToneStr(toneStr.begin(), toneStr.end());
+    std::wstring wColorStr(colorStr.begin(), colorStr.end());
 
-    // if (SUCCEEDED(ret)) {
-    std::wstring wmessage(message.begin(), message.end());
-    MessageBox(hWnd, wmessage.c_str(), L"CppShellExtContextMenuHandler", MB_OK);
-    // }
+    MessageBox(hWnd,
+               (wToneStr + L" " + wColorStr + L" " + m_szSelectedFile).c_str(),
+               L"Test", MB_OK);
+
+    std::wstring command =
+        L"FolderCustomizer.exe -F "
+        L"\"";
+    command += m_szSelectedFile;
+    command += L"\" -T ";
+    command += wToneStr;
+    command += L" -C ";
+    command += wColorStr;
+
+    // Execute the command
+    STARTUPINFO si = {sizeof(si)};
+    PROCESS_INFORMATION pi;
+    if (CreateProcessW(NULL, &command[0], NULL, NULL, FALSE, 0, NULL, NULL, &si,
+                       &pi)) {
+        // Wait until the process exits
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    } else {
+        MessageBox(hWnd, L"Failed to execute the command.",
+                   L"CppShellExtContextMenuHandler", MB_OK);
+    }
 }
 
 #pragma region IUnknown
@@ -283,7 +303,7 @@ IFACEMETHODIMP FileContextMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO pici) {
     // MessageBox(pici->hwnd, L"Invoke Command", L"Invoke Command", MB_OK);
 
     if (!fUnicode && HIWORD(pici->lpVerb)) {
-        MessageBox(pici->hwnd, L"Test 1", L"Test 1", MB_OK);
+        // MessageBox(pici->hwnd, L"Test 1", L"Test 1", MB_OK);
 
         // Is the verb supported by this context menu extension?
         if (StrCmpIA(pici->lpVerb, m_pszVerb) == 0) {
@@ -299,7 +319,7 @@ IFACEMETHODIMP FileContextMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO pici) {
     // For the Unicode case, if the high-order word is not zero, the
     // command's verb string is in lpcmi->lpVerbW.
     else if (fUnicode && HIWORD(((CMINVOKECOMMANDINFOEX*)pici)->lpVerbW)) {
-        MessageBox(pici->hwnd, L"Test 2", L"Test 2", MB_OK);
+        // MessageBox(pici->hwnd, L"Test 2", L"Test 2", MB_OK);
         // Is the verb supported by this context menu extension?
         if (StrCmpIW(((CMINVOKECOMMANDINFOEX*)pici)->lpVerbW, m_pwszVerb) ==
             0) {
@@ -317,7 +337,7 @@ IFACEMETHODIMP FileContextMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO pici) {
     else {
         // Is the command identifier offset supported by this context menu
         // extension?
-        MessageBox(pici->hwnd, L"Test 3", L"Test 3", MB_OK);
+        // MessageBox(pici->hwnd, L"Test 3", L"Test 3", MB_OK);
 
         // if (LOWORD(pici->lpVerb) == IDM_DISPLAY) {
         // OnVerbDisplayFileName(pici->hwnd);

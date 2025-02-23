@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package>
+
     <DisplayName>Folder Customizer</DisplayName>
-	<Description>Main program</Description>
-	<Version>0.0.3</Version>
+	<Description>Main program (Required)</Description>
+	<Version>0.0.4</Version>
 	<ReleaseDate>2019-09-24</ReleaseDate>
 	<Licenses>
 		<License name="GNU Affero General Public License v3.0 (GNU AGPLv3)" file="license.txt" />
