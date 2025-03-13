@@ -19,3 +19,13 @@ Component.prototype.createOperations = function()
             "workingDirectory=@TargetDir@", "description=Open Printing Rates");
     }
 }
+
+Component.prototype.setDescription = function()
+{
+    var version = installer.value("ProductVersion");
+    var additionalText = " - Additional Information";
+
+    console.log(version);
+
+    component.description = "Main program " + version + additionalText;
+}

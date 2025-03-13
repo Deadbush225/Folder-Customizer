@@ -10,7 +10,7 @@
 	</Licenses>
 	<Default>script</Default>
 	<Script>AddMenuShortcut.qs</Script>
-	<UserInterfaces>
+	<!-- <UserInterfaces>
 			<UserInterface>page.ui</UserInterface>
-	</UserInterfaces>
+	</UserInterfaces> -->
 </Package>
