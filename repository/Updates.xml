@@ -2,22 +2,21 @@
  <ApplicationName>{AnyApplication}</ApplicationName>
  <ApplicationVersion>1.0.0</ApplicationVersion>
  <Checksum>true</Checksum>
- <SHA1>dd62f51539e9b56f2b67e7fb7a3e59aa937669de</SHA1>
- <MetadataName>2025-02-23-1352_meta.7z</MetadataName>
  <PackageUpdate>
-  <Name>com.foldercustomizer</Name>
+  <Name>com.mainprogram</Name>
   <DisplayName>Folder Customizer</DisplayName>
   <Description>Main program (Required)</Description>
   <Version>0.0.4</Version>
   <ReleaseDate>2019-09-24</ReleaseDate>
   <Default>script</Default>
-  <Script>AddMenuShortcut.qs</Script>
-  <UpdateFile CompressedSize="17654631" OS="Any" UncompressedSize="63968010"/>
+  <Script>AddMenuShortcut.js</Script>
+  <UpdateFile CompressedSize="17059258" OS="Any" UncompressedSize="58915768"/>
   <DownloadableArchives>bin.7z,plugins.7z</DownloadableArchives>
-  <UserInterfaces>page.ui</UserInterfaces>
   <Licenses>
    <License file="license.txt" name="GNU Affero General Public License v3.0 (GNU AGPLv3)"/>
   </Licenses>
-  <SHA1>f9fc6d5d831005cd0a80fc3517bcdc1d22541d17</SHA1>
+  <SHA1>132dfcdb5c9ef8713bace86726692728b2f6b4a0</SHA1>
  </PackageUpdate>
+ <SHA1>47c461076e308cb6f0bba324ce3013f8b473aa64</SHA1>
+ <MetadataName>2025-03-30-2312_meta.7z</MetadataName>
 </Updates>

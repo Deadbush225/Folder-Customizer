@@ -4,10 +4,12 @@ if(POLICY CMP0167)
     cmake_policy(SET CMP0167 NEW)
 endif()
 
+set(CMAKE_BUILD_TYPE "Release")
+
 set(Boost_ROOT D:/Dev/boost_1_87_0/stage)
 set(CMAKE_PREFIX_PATH ${Boost_ROOT})
 
-set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/packages/com.foldercustomizer/data)
+set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/packages/com.mainprogram/data)
 
 project(FolderCustomizer VERSION 0.1.0)
 set(PROJECT_NAME FolderCustomizer)
