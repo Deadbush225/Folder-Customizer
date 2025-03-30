@@ -1,23 +1,30 @@
 #include "Core/registry.h"
 #include <cstdlib>
 
+#include <QtCore/QDebug>
+
 RegistryManipulator::RegistryManipulator() {
-    char fullPath[MAX_PATH];
-    GetModuleFileNameA(NULL, fullPath, MAX_PATH);
-    std::string path(fullPath);
+    char executableFullPath[MAX_PATH];
+    GetModuleFileNameA(NULL, executableFullPath, MAX_PATH);
+    std::string path(executableFullPath);
     size_t pos = path.find_last_of("\\/");
-    directory = (std::string::npos == pos) ? "" : path.substr(0, pos);
+
+    if (pos == std::string::npos) {
+        // Log: Error
+
+    } else {
+        directory = R"(")" + path.substr(0, pos) + R"(\)" +
+                    R"(libFCContextMenuHandler.dll")";
+        qDebug() << directory;
+    }
 }
 
 void RegistryManipulator::installRegistry() {
-    std::string command =
-        "regsvr32.exe " + directory + "\\libFCContextMenuHandler.dll";
+    std::string command = "regsvr32.exe " + directory;
     system(command.c_str());
 }
 
 void RegistryManipulator::uninstallRegistry() {
-    std::string command =
-        "regsvr32.exe /u " + directory + "\\libFCContextMenuHandler.dll";
+    std::string command = "regsvr32.exe /u " + directory;
     system(command.c_str());
-    ;
 }

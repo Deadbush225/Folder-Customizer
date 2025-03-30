@@ -2,10 +2,14 @@
 #include <Shlwapi.h>
 #include <strsafe.h>
 
+#include <pathcch.h>
+
 // #include "resource.h"
 // #include "../../Include/Customizer/settings.h"
 #include <string>
 #include <vector>
+
+#include <fstream>
 
 #pragma comment(lib, "shlwapi.lib")
 
@@ -13,6 +17,27 @@ extern HINSTANCE g_hInst;
 extern long g_cDllRef;
 
 #define IDM_DISPLAY 0  // The command's identifier offset
+
+#include <windows.h>
+
+HBITMAP CreateHBITMAPFromFile(const wchar_t* filePath) {
+    // Gdiplus::Bitmap* bitmap = new Gdiplus::Bitmap(filePath);
+    // HBITMAP hBitmap;
+    // bitmap->GetHBITMAP(NULL, &hBitmap);
+    // delete bitmap;
+    // return hBitmap;
+
+    Gdiplus::Bitmap* original = new Gdiplus::Bitmap(filePath);
+    Gdiplus::Bitmap resized(24, 24, original->GetPixelFormat());
+
+    Gdiplus::Graphics graphics(&resized);
+    graphics.DrawImage(original, 0, 0, 24, 24);
+
+    HBITMAP hBitmap;
+    resized.GetHBITMAP(NULL, &hBitmap);
+    delete original;
+    return hBitmap;
+}
 
 FileContextMenuExt::FileContextMenuExt(void)
     : m_cRef(1),
@@ -25,9 +50,14 @@ FileContextMenuExt::FileContextMenuExt(void)
       m_pwszVerbHelpText(L"Display File Name (C++)") {
     InterlockedIncrement(&g_cDllRef);
 
+    Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+
     settings = Settings::getInstance();
 
     int SUBMENU_IDENTIFIER = 0;
+
+    // Write the path to a log file
+    // std::ofstream logFile("debug_log.txt", std::ios::app);
 
     for (int i = 0; i < settings.tones.size(); i++) {
         std::wstring toneWStr =
@@ -37,15 +67,29 @@ FileContextMenuExt::FileContextMenuExt(void)
             std::wstring colorWStr = std::wstring(settings.colors[j].begin(),
                                                   settings.colors[j].end());
 
+            GetModuleFileName(g_hInst, filePath, MAX_PATH);
+
+            // if (i == 0 && j == 0)
+            //     MessageBox(NULL, std::wstring(filePath).c_str(),
+            //                L"Debug: Icon Path", MB_OK);
+
+            PathCchRemoveFileSpec(filePath, MAX_PATH);
+
             std::wstring iconpath =
-                (L"D:\\System\\Coding\\Projects\\folder-customizer\\Icons\\" +
-                 toneWStr + L"\\BMP\\" + colorWStr + L".bmp");
+                (std::wstring(filePath) + L"\\Icons\\" + toneWStr + L"\\ICO\\" +
+                 colorWStr + L".ICO");
 
-            ImagesDump[SUBMENU_IDENTIFIER] = (HBITMAP)LoadImage(
-                g_hInst,
+            // if (i == 0 && j == 0)
+            // MessageBox(NULL, iconpath.c_str(), L"Debug: Icon Path", MB_OK);
 
-                iconpath.c_str(), IMAGE_BITMAP, 0, 0,
-                LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_LOADTRANSPARENT);
+            // ImagesDump[SUBMENU_IDENTIFIER] = (HBITMAP)LoadImage(
+            //     g_hInst,
+
+            //     iconpath.c_str(), IMAGE_BITMAP, 0, 0,
+            //     LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_LOADTRANSPARENT);
+
+            ImagesDump[SUBMENU_IDENTIFIER] =
+                CreateHBITMAPFromFile(iconpath.c_str());
 
             SUBMENU_IDENTIFIER++;
         }
@@ -72,6 +116,8 @@ FileContextMenuExt::~FileContextMenuExt(void) {
     }
 
     InterlockedDecrement(&g_cDllRef);
+
+    Gdiplus::GdiplusShutdown(gdiplusToken);
 }
 
 void FileContextMenuExt::OnVerbDisplayFileName(HWND hWnd) {
@@ -99,14 +145,16 @@ void FileContextMenuExt::OnSubMenuItemSelected(HWND hWnd, int itemId) {
                (wToneStr + L" " + wColorStr + L" " + m_szSelectedFile).c_str(),
                L"Test", MB_OK);
 
-    std::wstring command =
-        L"FolderCustomizer.exe -F "
-        L"\"";
+    std::wstring command = std::wstring(filePath) +
+                           L"\\FolderCustomizer.exe -F "
+                           L"\"";
     command += m_szSelectedFile;
     command += L"\" -T ";
     command += wToneStr;
     command += L" -C ";
     command += wColorStr;
+
+    MessageBox(hWnd, command.c_str(), L"Command", MB_OK);
 
     // Execute the command
     STARTUPINFO si = {sizeof(si)};
@@ -251,7 +299,7 @@ IFACEMETHODIMP FileContextMenuExt::QueryContextMenu(HMENU hMenu,
     }
 
     InsertMenu(hMenu, indexMenu, MF_BYPOSITION | MF_POPUP, (UINT_PTR)rootMenu,
-               L"Folder Colorizer 1");
+               L"Folder Customizer 2");
 
     // Set the icon for the menu item
     MENUITEMINFO mii = {sizeof(MENUITEMINFO)};

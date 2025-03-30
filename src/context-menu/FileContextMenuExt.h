@@ -20,6 +20,9 @@ of the .cpp file. */
 
 #include "Customizer/settings.h"
 
+#include <gdiplus.h>
+#pragma comment(lib, "gdiplus.lib")
+
 class FileContextMenuExt : public IShellExtInit, public IContextMenu {
    public:
     // IUnknown
@@ -74,4 +77,9 @@ class FileContextMenuExt : public IShellExtInit, public IContextMenu {
     PCWSTR m_pwszVerbCanonicalName;
     PCSTR m_pszVerbHelpText;
     PCWSTR m_pwszVerbHelpText;
+
+    Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+    ULONG_PTR gdiplusToken;
+
+    wchar_t filePath[MAX_PATH];
 };

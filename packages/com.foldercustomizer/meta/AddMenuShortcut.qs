@@ -9,6 +9,22 @@ Component.prototype.isDefault = function()
     return true;
 }
 
+Component.prototype.createPage = function() {
+    var page = installer.addWizardPage("DynamicPage", "Component Version Page");
+
+    page.setTitle("Version Information");
+    page.setDescription("Below is the version information of selected components.");
+
+    var componentList = installer.components();
+    var versionModel = page.registerQmlObject("componentVersions");
+
+    componentList.forEach(function(component) {
+        versionModel.append({ name: component.name, version: component.version });
+    });
+
+    return page;
+}
+
 Component.prototype.createOperations = function()
 {
     // call default implementation to actually install README.txt!
@@ -18,6 +34,7 @@ Component.prototype.createOperations = function()
         component.addOperation("CreateShortcut", "@TargetDir@/bin/Printing Rates.exe", "@StartMenuDir@/Printing Rates.lnk",
             "workingDirectory=@TargetDir@", "description=Open Printing Rates");
     }
+    gui.pageWidget().insertPage(component, "ComponentVersionPage.qml");
 }
 
 Component.prototype.setDescription = function()

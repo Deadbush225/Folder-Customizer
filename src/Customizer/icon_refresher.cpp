@@ -1,5 +1,7 @@
 #include "Customizer/icon_refresher.h"
 
+#include <QtCore/QCoreApplication>
+
 wchar_t* str_to_lpwstr_st(std::string string) {
     std::cout << "Function called" << std::endl;
 
@@ -20,8 +22,8 @@ void changeIcon(QString folder_path, QString tone, QString color) {
      * [3] - color
      */
 
-    QString program_path = "C:\\Program Files\\Folder Customizer";
-    QString strin = program_path + "\\Icons\\" + tone + "\\" + color + ".ico";
+    QString program_path = QCoreApplication::applicationDirPath();
+    QString strin = program_path + "/Icons/" + tone + "/" + color + ".ico";
 
     // const wchar_t* wchar_t_folder_path = folder_path.toStdWString().c_str();
     // qDebug() << "wchar_t" << wchar_t_folder_path;

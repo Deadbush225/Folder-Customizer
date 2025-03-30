@@ -29,8 +29,10 @@ const CLSID CLSID_FileContextMenuExt = {
     0x48A4,
     {0x98, 0xE2, 0x13, 0xD2, 0x09, 0xE3, 0xEE, 0x4F}};
 
-HINSTANCE g_hInst = NULL;
+extern HINSTANCE g_hInst = NULL;
 long g_cDllRef = 0;
+
+extern HMODULE g_hModule = NULL;
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved) {
     switch (dwReason) {

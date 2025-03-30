@@ -16,3 +16,8 @@
         </Repository>
     </RemoteRepositories>
 </Installer>
+<Configuration>
+<WizardPages>
+        <WizardPage component="DynamicPage"/>
+    </WizardPages>
+</Configuration>

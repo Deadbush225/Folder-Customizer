@@ -11,6 +11,8 @@ Combine these icons using `icobundl.exe`
 
 just call the `bundle.ps1`
 
-There's `BMP` folder that is used exclusively for windows context menu api since it deals with `.bmp`. We need to convert the 16px ico so you can use the first ico in the root dir (`image.png[0]`) or the `-16` ico in the `ICO` dir
+~~There's `BMP` folder that is used exclusively for windows context menu api since it deals with `.bmp`. We need to convert the 16px ico so you can use the first ico in the root dir (`image.png[0]`) or the `-16` ico in the `ICO` dir~~
 
-just call the `toBmp.ps1`
+~just call the `toBmp.ps1`~
+
+We can just use the icon in the context menu by loading it as BMP
