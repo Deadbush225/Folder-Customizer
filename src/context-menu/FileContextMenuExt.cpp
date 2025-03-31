@@ -75,9 +75,8 @@ FileContextMenuExt::FileContextMenuExt(void)
 
             PathCchRemoveFileSpec(filePath, MAX_PATH);
 
-            std::wstring iconpath =
-                (std::wstring(filePath) + L"\\Icons\\" + toneWStr + L"\\ICO\\" +
-                 colorWStr + L".ICO");
+            std::wstring iconpath = (std::wstring(filePath) + L"\\Icons\\" +
+                                     toneWStr + L"\\" + colorWStr + L".ico");
 
             // if (i == 0 && j == 0)
             // MessageBox(NULL, iconpath.c_str(), L"Debug: Icon Path", MB_OK);
@@ -98,11 +97,9 @@ FileContextMenuExt::FileContextMenuExt(void)
     // Load the bitmap for the menu item.
     // If you want the menu item bitmap to be transparent, the color depth of
     // the bitmap must not be greater than 8bpp.
-    m_hMenuBmp = (HBITMAP)LoadImage(
-        g_hInst,
-        L"D:\\System\\Coding\\Projects\\folder-"
-        L"customizer\\Icons\\Normal\\BMP\\Orange.bmp",
-        IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+    std::wstring iconpath =
+        (std::wstring(filePath) + L"\\Icons\\Folder Customizer.ico");
+    m_hMenuBmp = CreateHBITMAPFromFile(iconpath.c_str());
 
     // m_hMenuBmp = LoadImage(g_hInst, MAKEINTRESOURCE(L"OK.bmp"), IMAGE_BITMAP,
     // 0,
@@ -299,7 +296,7 @@ IFACEMETHODIMP FileContextMenuExt::QueryContextMenu(HMENU hMenu,
     }
 
     InsertMenu(hMenu, indexMenu, MF_BYPOSITION | MF_POPUP, (UINT_PTR)rootMenu,
-               L"Folder Customizer 2");
+               L"Folder Customizer");
 
     // Set the icon for the menu item
     MENUITEMINFO mii = {sizeof(MENUITEMINFO)};

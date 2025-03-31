@@ -75,7 +75,21 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Core Logger Utils Customizer UserI
 # installer
 install(TARGETS ${PROJECT_NAME} BUNDLE DESTINATION . RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}) # move the executable
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Icons DESTINATION ${CMAKE_INSTALL_BINDIR}) # move directory
+# Install .ico files from Icons/Dark (non-recursive)
+file(GLOB ICONS_DARK_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Dark/*.ico")
+install(FILES ${ICONS_DARK_FILES}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Dark)
+
+file(GLOB ICONS_LIGHT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Light/*.ico")
+install(FILES ${ICONS_LIGHT_FILES}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Light)
+
+file(GLOB ICONS_NORMAL_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Normal/*.ico")
+install(FILES ${ICONS_NORMAL_FILES}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Normal)
+
+file(GLOB ROOT_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Folder Customizer.ico")
+install(FILES ${ROOT_ICON} DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons)
 
 # Move DLL to the installation folder
 install(TARGETS FCContextMenuHandler DESTINATION ${CMAKE_INSTALL_BINDIR})

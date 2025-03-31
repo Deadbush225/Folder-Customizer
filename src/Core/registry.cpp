@@ -3,6 +3,24 @@
 
 #include <QtCore/QDebug>
 
+void executeCommand(const std::string& command) {
+    STARTUPINFOA si = {sizeof(STARTUPINFOA)};
+    PROCESS_INFORMATION pi = {};
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;  // Hide the window
+
+    if (CreateProcessA(NULL, const_cast<char*>(command.c_str()), NULL, NULL,
+                       FALSE, 0, NULL, NULL, &si, &pi)) {
+        // Wait for the process to complete
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    } else {
+        // Log: Error
+        qDebug() << "Failed to execute command.";
+    }
+}
+
 RegistryManipulator::RegistryManipulator() {
     char executableFullPath[MAX_PATH];
     GetModuleFileNameA(NULL, executableFullPath, MAX_PATH);
@@ -20,11 +38,9 @@ RegistryManipulator::RegistryManipulator() {
 }
 
 void RegistryManipulator::installRegistry() {
-    std::string command = "regsvr32.exe " + directory;
-    system(command.c_str());
+    executeCommand("regsvr32.exe " + directory);
 }
 
 void RegistryManipulator::uninstallRegistry() {
-    std::string command = "regsvr32.exe /u " + directory;
-    system(command.c_str());
+    executeCommand("regsvr32.exe /u " + directory);
 }
