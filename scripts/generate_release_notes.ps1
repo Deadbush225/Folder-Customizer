@@ -1,13 +1,17 @@
 # ━━━━━━━━━━━━━━━━━━━━ UPDATE repository FOLDER ━━━━━━━━━━━━━━━━━━━━ #
 # Run the update_repository.ps1 script
-& "./scripts/update_repository.ps1"
+# & "./scripts/update_repository.ps1"
 # ━━━━━━━━━━━━━━━━━━━━━━━ BUILD RELEASE NOTES ━━━━━━━━━━━━━━━━━━━━━━ #
 
 # Define the paths to the installer file and the markdown file
 $installerPath = "./FolderCustomizerSetup-x64.exe"
 $release_template = "./scripts/release_template.md"
 $release_notes = "./release_notes.md"
-$version = (Get-Content -Path "./scripts/version.txt").Trim()
+
+# Read the version from a JSON file
+$jsonFilePath = "./manifest.json"
+$jsonContent = Get-Content -Path $jsonFilePath -Raw | ConvertFrom-Json
+$version = $jsonContent.version
 
 # Calculate the SHA256 hash of the installer file
 $hash = Get-FileHash -Path $installerPath -Algorithm SHA256 | Select-Object -ExpandProperty Hash

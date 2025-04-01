@@ -6,4 +6,4 @@
 
 ## Highlights
 
-- Add windows explorer context menu
+- Port installation mechanism to inno setup
