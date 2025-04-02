@@ -10,7 +10,7 @@
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{D9F1A460-D3DB-452A-B7F7-0ABE78DF0DF7}
+AppId={{D9F1A460-D3DB-452A-B7F7-0ABE78DF0DF7}}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
@@ -29,7 +29,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
 ; up
-LicenseFile=D:\System\Coding\Projects\folder-customizer\packages\com.mainprogram\meta\license.txt
+LicenseFile=.\packages\com.mainprogram\meta\license.txt
 ; Uncomment the following line to run in non administrative install mode (install for current user only).
 ;PrivilegesRequired=lowest
 DisableDirPage=no
@@ -39,7 +39,7 @@ PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir={#SourcePath}
 OutputBaseFilename=FolderCustomizerSetup-x64
-SetupIconFile=D:\System\Coding\Projects\folder-customizer\packages\com.mainprogram\data\bin\Icons\Folder Customizer.ico
+SetupIconFile=.\packages\com.mainprogram\data\bin\Icons\Folder Customizer.ico
 SolidCompression=yes
 WizardStyle=modern
 
@@ -51,7 +51,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 ; Source: "D:\System\Coding\Projects\folder-customizer\packages\com.mainprogram\data\bin\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "D:\System\Coding\Projects\folder-customizer\packages\com.mainprogram\data\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: ".\packages\com.mainprogram\data\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

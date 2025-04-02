@@ -10,7 +10,7 @@ AppVersion={#MyAppVersion}
 DefaultDirName={autopf}\{#AppName}
 DisableProgramGroupPage=yes
 OutputBaseFilename=Updater
-SetupIconFile=D:\System\Coding\Projects\folder-customizer\packages\com.mainprogram\data\bin\Icons\Folder Customizer.ico
+SetupIconFile=.\packages\com.mainprogram\data\bin\Icons\Folder Customizer.ico
 SolidCompression=yes
 WizardStyle=modern
 OutputDir={#SourcePath}
@@ -23,7 +23,7 @@ var
 begin
     TempFilePath := ExtractFileName(URL);
     DownloadResult := DownloadTemporaryFile(URL, TempFilePath, '', nil);
-    MsgBox(ExpandConstant('{tmp}'), mbInformation, MB_OK);
+    // MsgBox(ExpandConstant('{tmp}'), mbInformation, MB_OK);
     if DownloadResult > 0 then
         Result := ExpandConstant('{tmp}') + '\' + TempFilePath
     else
@@ -99,8 +99,7 @@ begin
         if InstallerPath <> '' then
         begin
             // Run the installer
-            if Exec(InstallerPath, '', '', SW_SHOWNORMAL, ewWaitUntilTerminated, ResultCode) then
-                MsgBox('Update installed successfully!', mbInformation, MB_OK)
+            if Exec(InstallerPath, '', '', SW_SHOWNORMAL, ewNoWait, ResultCode) then
             else
                 MsgBox('Failed to run the installer.', mbError, MB_OK);
         end
