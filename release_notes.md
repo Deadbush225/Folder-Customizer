@@ -2,7 +2,7 @@
 
 | Description                         | Filename                                                                                                                                  | sha256 hash |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Machine wide Online Installer - x64 | [FolderCustomizerSetup-x64.exe](https://github.com/Deadbush225/Folder-Customizer/releases/download/0.0.5/FolderCustomizerSetup-x64.exe) | C06610F28A18C304EA7D60E51F2014433B47000A32F34093C7513D66B311A593      |
+| Machine wide Online Installer - x64 | [FolderCustomizerSetup-x64.exe](https://github.com/Deadbush225/Folder-Customizer/releases/download/0.0.5/FolderCustomizerSetup-x64.exe) | 8ECD10618D5DA76CE2B904E5E33B97084098C6BDFB258D81D13D85F35011901A      |
 
 ## Highlights
 

@@ -1,4 +1,5 @@
-these scripts are meant to be ran at the root path
+- these scripts are meant to be ran at the root path
+- build files first
 
 1. Edit release template
 2. `bump_version.ps1`

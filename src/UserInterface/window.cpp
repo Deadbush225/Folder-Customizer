@@ -130,6 +130,7 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     customization_layout->addWidget(show_more);
     customization_layout->addWidget(install_key_btn);
     customization_layout->addWidget(uninstall_key_btn);
+    customization_layout->addWidget(check_updates_btn);
     customization_layout->addWidget(new QHSeparationLine());
 
     customization_layout->addWidget(this->yes_icon_chkbx);
