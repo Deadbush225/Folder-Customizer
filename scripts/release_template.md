@@ -6,4 +6,4 @@
 
 ## Highlights
 
-- Port installation mechanism to inno setup
+- Removed debug messages

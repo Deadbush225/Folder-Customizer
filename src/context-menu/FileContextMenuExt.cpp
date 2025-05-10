@@ -119,11 +119,11 @@ FileContextMenuExt::~FileContextMenuExt(void) {
 
 void FileContextMenuExt::OnVerbDisplayFileName(HWND hWnd) {
     wchar_t szMessage[300];
-    if (SUCCEEDED(StringCchPrintf(szMessage, ARRAYSIZE(szMessage),
-                                  L"The selected file is:\r\n\r\n%s",
-                                  this->m_szSelectedFile))) {
-        MessageBox(hWnd, szMessage, L"CppShellExtContextMenuHandler", MB_OK);
-    }
+    // if (SUCCEEDED(StringCchPrintf(szMessage, ARRAYSIZE(szMessage),
+    //                               L"The selected file is:\r\n\r\n%s",
+    //                               this->m_szSelectedFile))) {
+    //     MessageBox(hWnd, szMessage, L"CppShellExtContextMenuHandler", MB_OK);
+    // }
 }
 
 void FileContextMenuExt::OnSubMenuItemSelected(HWND hWnd, int itemId) {
@@ -138,9 +138,9 @@ void FileContextMenuExt::OnSubMenuItemSelected(HWND hWnd, int itemId) {
     std::wstring wToneStr(toneStr.begin(), toneStr.end());
     std::wstring wColorStr(colorStr.begin(), colorStr.end());
 
-    MessageBox(hWnd,
-               (wToneStr + L" " + wColorStr + L" " + m_szSelectedFile).c_str(),
-               L"Test", MB_OK);
+    // MessageBox(hWnd,
+    //            (wToneStr + L" " + wColorStr + L" " +
+    //            m_szSelectedFile).c_str(), L"Test", MB_OK);
 
     std::wstring command = std::wstring(filePath) +
                            L"\\FolderCustomizer.exe -F "
@@ -151,7 +151,7 @@ void FileContextMenuExt::OnSubMenuItemSelected(HWND hWnd, int itemId) {
     command += L" -C ";
     command += wColorStr;
 
-    MessageBox(hWnd, command.c_str(), L"Command", MB_OK);
+    // MessageBox(hWnd, command.c_str(), L"Command", MB_OK);
 
     // Execute the command
     STARTUPINFO si = {sizeof(si)};

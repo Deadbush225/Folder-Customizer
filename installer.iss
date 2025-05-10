@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Folder Customizer"
-#define MyAppVersion "0.0.3"
+#define MyAppVersion "$currentVersion"
 #define MyAppPublisher "Deadbush225."
 ; #define MyAppURL "https://www.example.com/"
 #define MyAppExeName "FolderCustomizer.exe"
@@ -60,5 +60,6 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 
 [Run]
 Filename: "{app}\bin\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+
 
 
