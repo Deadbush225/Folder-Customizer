@@ -180,6 +180,7 @@ void FolderCustomizerWindow::clearAll() {
 void FolderCustomizerWindow::hide_show_advanced_settings() {
     this->install_key_btn->setHidden(!this->install_key_btn->isHidden());
     this->uninstall_key_btn->setHidden(!this->uninstall_key_btn->isHidden());
+    this->check_updates_btn->setHidden(!this->check_updates_btn->isHidden());
     // this->separator_horizontal->setHidden(
     //     !this->separator_horizontal->isHidden());
 }
