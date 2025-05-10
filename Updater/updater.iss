@@ -10,7 +10,7 @@ AppVersion={#MyAppVersion}
 DefaultDirName={autopf}\{#AppName}
 DisableProgramGroupPage=yes
 OutputBaseFilename=Updater
-SetupIconFile=.\packages\com.mainprogram\data\bin\Icons\Folder Customizer.ico
+SetupIconFile=..\Icons\Folder Customizer.ico
 SolidCompression=yes
 WizardStyle=modern
 OutputDir={#SourcePath}
@@ -106,8 +106,8 @@ begin
         else
             MsgBox('Failed to download the latest installer.', mbError, MB_OK);
     end
-    // else
-        // MsgBox('You already have the latest version: ' + LocalVersion, mbInformation, MB_OK);
+    else
+        MsgBox('You already have the latest version: ' + LocalVersion, mbInformation, MB_OK);
 end;
 
 function InitializeSetup(): Boolean;
@@ -118,6 +118,7 @@ end;
 
 [Run]
 Filename: "{app}\Updater.exe"; Description: "Check for Updates"; Flags: postinstall skipifsilent
+
 
 
 

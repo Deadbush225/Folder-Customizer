@@ -5,6 +5,6 @@
 2. `bump_version.ps1`
 3. `Update Updater`
 4. Install first using `cmake --install build_folder`
-5. `update_intaller.ps1` (if changes are made in src)
+5. `update_installer.ps1` (if changes are made in src)
 6. `generate_release_notes.ps1`
 7. commit and push
