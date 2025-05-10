@@ -52,6 +52,13 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
                      [this]() { registryManipulator->uninstallRegistry(); });
     uninstall_key_btn->setHidden(true);
 
+    check_updates_btn = new QPushButton("Check Updates");
+    QObject::connect(check_updates_btn, &QPushButton::clicked, this, [this]() {
+        QProcess::startDetached(QCoreApplication::applicationDirPath() +
+                                "/Updater.exe");
+    });
+    check_updates_btn->setHidden(true);
+
     separator_horizontal = new QHSeparationLine();
     separator_horizontal->setHidden(true);
 

@@ -6,4 +6,4 @@
 
 ## Highlights
 
-- Removed debug messages
+- add ui option to update

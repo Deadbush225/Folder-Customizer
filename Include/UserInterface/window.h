@@ -44,6 +44,7 @@ class FolderCustomizerWindow : public QWidget {
 
     QPushButton* install_key_btn;
     QPushButton* uninstall_key_btn;
+    QPushButton* check_updates_btn;
     QHSeparationLine* separator_horizontal;
 
     QComboBox* tone_comboBox;
