@@ -4,6 +4,6 @@ these scripts are meant to be ran at the root path
 2. `bump_version.ps1`
 3. `Update Updater`
 4. Install first using `cmake --install build_folder`
-5. `update_intaller.ps1` (if changes are made)
+5. `update_intaller.ps1` (if changes are made in src)
 6. `generate_release_notes.ps1`
 7. commit and push
