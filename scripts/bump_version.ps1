@@ -17,7 +17,7 @@ foreach ($filePath in $filePaths) {
     $fileContent = Get-Content -Path $filePath -Raw
     
     # Replace the version between <Version> tags
-    $updatedContent = $fileContent -replace 'MyAppVersion ".*"', 'MyAppVersion "$currentVersion"'
+    $updatedContent = $fileContent -replace 'MyAppVersion ".*"', "MyAppVersion `"$currentVersion`""
     
     # Write the updated content back to the file
     Set-Content -Path $filePath -Value $updatedContent

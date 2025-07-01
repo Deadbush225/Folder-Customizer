@@ -1,5 +1,5 @@
 #define AppName "Folder Customizer"
-#define MyAppVersion "$currentVersion"
+#define MyAppVersion "0.0.6"
 #define LocalManifestFile "{src}\manifest.json"
 #define RemoteManifestURL "https://raw.githubusercontent.com/Deadbush225/Folder-Customizer/main/manifest.json"
 #define LatestInstallerURL "https://github.com/Deadbush225/Folder-Customizer/releases/latest/download/FolderCustomizerSetup-x64.exe"
@@ -118,6 +118,7 @@ end;
 
 [Run]
 Filename: "{app}\Updater.exe"; Description: "Check for Updates"; Flags: postinstall skipifsilent
+
 
 
 
