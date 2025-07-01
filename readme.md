@@ -1,24 +1,63 @@
-<p align="center" width="100%">
-<img src="./src/Icons/Folder Customizer.png" alt="logo" height="50px" width="60px"/>
-</p>
+<a id="readme-top"></a>
 
-# Folder Customizer
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![License][license-shield]][license-url]
 
-- for modifying folder's icon and tag in windows 10 and 11
+<!-- [![LinkedIn][linkedin-shield]][linkedin-url] -->
 
-## Compatibility
+<br />
+<div align="center">
+  <a href="https://github.com/Deadbush225/RePhrase">
+    <img src="./Icons/Folder Customizer.png" alt="Logo" width="80" height="80">
+  </a>
+  <h3 style="font-size: 1.5em" align="center">Folder Customizer</h3>
+
+  <p align="center">
+    Modify folder's icon and tag in windows 10 and 11
+    <br />
+    <br />
+    <a href="./docs/docs.md"><strong>Explore the docs »</strong></a>
+    <br />
+    <a href="https://github.com/Deadbush225/RePhrase#Demo">View Demo</a>
+    &middot;
+    <a href="https://github.com/Deadbush225/RePhrase/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    &middot;
+    <a href="https://github.com/Deadbush225/RePhrase/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+  </p>
+</div>
+
+## About The Project
+
+You can use this to customize colors of your folders and apply tags on them to group them together
+
+## Features
+
+📦 Drag and drop folders <br>
+⬇️ Reset folder icon/tag to default <br>
+⚡ File explorer integration <br>
+💻 Cli support <br>
+
+<!-- ### Demo -->
+<!-- <div align="center"><img src="./docs/demo.gif" width="650"></img></div> -->
+
+## Installation:
+
+### Compatibility
 
 - Windows 11
 - Windows 10
 
-## Features
+1. Go to releases and download `Folder_Customizer-Installer.exe`
+2. Run it and follow the installation procedures
 
-📦 drag and drop folders
-⬇️ reset folder icon/tag to default
-⚡ file explorer integration
-💻 cli supported
+### Updates
 
-## How to use?
+1. Under advanced settings, click "Check Updates"
+
+### Usage
 
 1. Drag and drop the folder you want to customize
 
@@ -30,15 +69,19 @@
 
 > The option for installing context menu is under the advanced settings
 
-## Installation
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
-1. Go to releases and download `Folder_Customizer-Installer.exe`
-2. Run it and follow the installation procedures
-
-## Updates
-
-1. Under advanced settings, click "Check Updates"
-
-## Documentation
-
-- you can view the detailed documentation <a href="./docs/docs.md">here</a>
+[contributors-shield]: https://img.shields.io/github/contributors/Deadbush225/Folder-Customizer?style=for-the-badge
+[contributors-url]: https://github.com/Deadbush225/Folder-Customizer/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/Deadbush225/Folder-Customizer?style=for-the-badge
+[forks-url]: https://github.com/Deadbush225/Folder-Customizer/forks
+[stars-shield]: https://img.shields.io/github/stars/Deadbush225/Folder-Customizer?style=for-the-badge
+[stars-url]: https://github.com/Deadbush225/Folder-Customizer/stargazers
+[issues-shield]: https://img.shields.io/github/issues/Deadbush225/Folder-Customizer?style=for-the-badge
+[issues-url]: https://github.com/Deadbush225/Folder-Customizer/issues
+[license-shield]: https://img.shields.io/github/license/Deadbush225/Folder-Customizer?style=for-the-badge
+[license-url]: https://github.com/Deadbush225/Folder-Customizer/blob/master/LICENSE.txt
+[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
+[linkedin-url]: https://www.linkedin.com/in/eliazar-inso-0342b7210/
+[product-screenshot]: images/screenshot.png
