@@ -4,14 +4,18 @@
 #include <iostream>
 
 #include <QtCore/QString>
+#include <QtGui/QAction>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QComboBox>
+#include <QtWidgets/QDockWidget>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QListView>
+#include <QtWidgets/QMainWindow>
+#include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
@@ -24,14 +28,16 @@
 #include "Logger/logger.h"
 #include "subclass.h"
 
-class FolderCustomizerWindow : public QWidget {
+class FolderCustomizerWindow : public QMainWindow {
    public:
     FolderCustomizerWindow();
     RegistryManipulator* registryManipulator = new RegistryManipulator();
     Settings* settings = new Settings();
 
-    void hide_show_advanced_settings();  // LATER
+    void applyStylesheet();
+
     void deleteSelectedItem();
+    void setupToolBar();
     void clearAll();
 
     void apply();
@@ -42,9 +48,9 @@ class FolderCustomizerWindow : public QWidget {
 
     ListBoxwidget* listview;
 
-    QPushButton* install_key_btn;
-    QPushButton* uninstall_key_btn;
-    QPushButton* check_updates_btn;
+    // QPushButton* install_key_act;
+    // QPushButton* uninstall_key_btn;
+    // QPushButton* check_updates_btn;
     QHSeparationLine* separator_horizontal;
 
     QComboBox* tone_comboBox;

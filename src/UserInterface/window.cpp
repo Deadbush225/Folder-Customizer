@@ -37,27 +37,29 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     dnd_layout->addWidget(this->listview);
 
     // + Customization Layout
+    auto settings_menu = this->menuBar()->addMenu("&Settings");
 
-    auto show_more = new QPushButton("Show Advanced Settings");
-    QObject::connect(show_more, QPushButton::clicked, this,
-                     &hide_show_advanced_settings);
-
-    install_key_btn = new QPushButton("Add to context menu");
-    QObject::connect(install_key_btn, &QPushButton::clicked, this,
+    auto install_key_act = new QAction("Add to context menu", this);
+    QObject::connect(install_key_act, &QAction::triggered, this,
                      [this]() { registryManipulator->installRegistry(); });
-    install_key_btn->setHidden(true);
+    settings_menu->addAction(install_key_act);
 
-    uninstall_key_btn = new QPushButton("Remove from context menu");
-    QObject::connect(uninstall_key_btn, &QPushButton::clicked, this,
+    auto uninstall_key_act = new QAction("Remove from context menu", this);
+    QObject::connect(uninstall_key_act, &QAction::triggered, this,
                      [this]() { registryManipulator->uninstallRegistry(); });
-    uninstall_key_btn->setHidden(true);
+    settings_menu->addAction(uninstall_key_act);
 
-    check_updates_btn = new QPushButton("Check Updates");
-    QObject::connect(check_updates_btn, &QPushButton::clicked, this, [this]() {
+    auto check_updates_act = new QAction("Check Updates", this);
+    QObject::connect(check_updates_act, &QAction::triggered, this, [this]() {
         QProcess::startDetached(QCoreApplication::applicationDirPath() +
                                 "/Updater.exe");
     });
-    check_updates_btn->setHidden(true);
+    settings_menu->addAction(check_updates_act);
+
+    auto reset_stylesheets_act = new QAction("Reset Stylesheet", this);
+    QObject::connect(reset_stylesheets_act, &QAction::triggered, this,
+                     this->applyStylesheet);
+    settings_menu->addAction(reset_stylesheets_act);
 
     separator_horizontal = new QHSeparationLine();
     separator_horizontal->setHidden(true);
@@ -126,12 +128,10 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     QObject::connect(reset_button, QPushButton::clicked, this, &reset);
 
     // + CUSTOMIZATION Layout
+    QDockWidget* customizationDock = new QDockWidget("Customize");
+    QWidget* widget = new QWidget(customizationDock);
+
     auto customization_layout = new QVBoxLayout();
-    customization_layout->addWidget(show_more);
-    customization_layout->addWidget(install_key_btn);
-    customization_layout->addWidget(uninstall_key_btn);
-    customization_layout->addWidget(check_updates_btn);
-    customization_layout->addWidget(new QHSeparationLine());
 
     customization_layout->addWidget(this->yes_icon_chkbx);
     // customization_layout->addLayout(combo_layout);  // referred 2 times
@@ -144,16 +144,27 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     customization_layout->addWidget(new QHSeparationLine());
     customization_layout->addLayout(resetCheckBoxLayout);
     customization_layout->addWidget(reset_button);
+    widget->setLayout(customization_layout);
+    customizationDock->setWidget(widget);
+    customizationDock->setFeatures(QDockWidget::DockWidgetMovable |
+                                   QDockWidget::DockWidgetFloatable);
+
+    this->addDockWidget(Qt::DockWidgetArea::RightDockWidgetArea,
+                        customizationDock);
 
     // customization_layout->addStretch();
 
     // + MAIN Layout
     QHBoxLayout* mainLayout = new QHBoxLayout();
     mainLayout->addLayout(dnd_layout, 7);
-    mainLayout->addLayout(customization_layout);
 
-    this->setLayout(mainLayout);
+    QWidget* centralWidget = new QWidget();
+    centralWidget->setLayout(mainLayout);
+
+    this->setCentralWidget(centralWidget);
 }
+
+void FolderCustomizerWindow::setupToolBar() {}
 
 void FolderCustomizerWindow::deleteSelectedItem() {
     QModelIndexList selected = this->listview->selectedIndexes();
@@ -175,14 +186,6 @@ void FolderCustomizerWindow::deleteSelectedItem() {
 
 void FolderCustomizerWindow::clearAll() {
     this->listview->clear();
-}
-
-void FolderCustomizerWindow::hide_show_advanced_settings() {
-    this->install_key_btn->setHidden(!this->install_key_btn->isHidden());
-    this->uninstall_key_btn->setHidden(!this->uninstall_key_btn->isHidden());
-    this->check_updates_btn->setHidden(!this->check_updates_btn->isHidden());
-    // this->separator_horizontal->setHidden(
-    //     !this->separator_horizontal->isHidden());
 }
 
 void FolderCustomizerWindow::apply() {
@@ -225,6 +228,17 @@ void FolderCustomizerWindow::reset() {
     }
 }
 
+void FolderCustomizerWindow::applyStylesheet() {
+    QFile styleFile("style.qss");
+    qDebug() << "Style file full path:"
+             << QFileInfo(styleFile).absoluteFilePath();
+    if (styleFile.open(QFile::ReadOnly | QFile::Text)) {
+        QString styleSheet = styleFile.readAll();
+        qApp->setStyleSheet(styleSheet);
+        styleFile.close();
+    }
+}
+
 void FolderCustomizerWindow::setDarkTheme() {
     QApplication::setStyle("Fusion");
 
@@ -252,4 +266,24 @@ void FolderCustomizerWindow::setDarkTheme() {
     dark_palette->setColor(QPalette::Disabled, QPalette::Light,
                            QColor(53, 53, 53));
     QApplication::setPalette(*dark_palette);
+
+    qApp->setStyleSheet(R"(
+            QGroupBox { 
+    border: 1px solid #2f2f2f;
+    border-radius: 3px;
+    margin-top: 0.6em; 
+    padding: 0.3em;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    margin-left: 0em;
+}
+
+QFrame[frameShape="4"] { /* QFrame::HLine */
+    border: none;
+    border-top: 1px solid #2f2f2f;
+    background: #2f2f2f;
+    margin: 0.5em 0;
+})");
 }

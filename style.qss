@@ -1,0 +1,18 @@
+QGroupBox { 
+    border: 1px solid #2f2f2f;
+    border-radius: 3px;
+    margin-top: 0.6em; 
+    padding: 0.3em;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    margin-left: 0em;
+}
+
+QFrame[frameShape="4"] { /* QFrame::HLine */
+    border: none;
+    border-top: 1px solid #2f2f2f;
+    background: #2f2f2f;
+    margin: 0.5em 0;
+}
