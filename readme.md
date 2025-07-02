@@ -61,7 +61,8 @@ You can use this to customize colors of your folders and apply tags on them to g
 
 1. Drag and drop the folder you want to customize
 
-<img src="./docs/drag-and-drop.png">
+<div align="center"><img src="https://github.com/user-attachments/assets/8d5329ed-1b35-43a3-be1a-a49d7340519c" width="650"></img></div>
+
 
 2. Choose the `Tone` and `Color`, if you want to customize the icon
 3. Fill up the `Custom Tag` if you want to set a custom tag (by default a tag will be set equal to the `${Tone} ${Color}` sequence)
