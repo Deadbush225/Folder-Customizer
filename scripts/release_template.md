@@ -6,4 +6,6 @@
 
 ## Highlights
 
-- add ui option to update
+- Port from QWidget to QMainWidget
+- Add dockable window for customization area
+- Added MenuBar for Options

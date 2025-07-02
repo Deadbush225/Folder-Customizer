@@ -4,8 +4,9 @@ if(POLICY CMP0167)
     cmake_policy(SET CMP0167 NEW)
 endif()
 
-# set(CMAKE_BUILD_TYPE "Release")
-set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_BUILD_TYPE "Release")
+
+# set(CMAKE_BUILD_TYPE "Debug")
 set(Boost_ROOT D:/Dev/boost_1_87_0/stage)
 set(CMAKE_PREFIX_PATH ${Boost_ROOT})
 

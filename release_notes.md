@@ -2,9 +2,11 @@
 
 | Description                         | Filename                                                                                                                                  | sha256 hash |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| Machine wide Online Installer - x64 | [FolderCustomizerSetup-x64.exe](https://github.com/Deadbush225/Folder-Customizer/releases/download/0.0.6/FolderCustomizerSetup-x64.exe) | A57F026A018FD1860FBBA7CB32EEF8D3C5631E270999568C777E7C48A0E4D213      |
+| Machine wide Online Installer - x64 | [FolderCustomizerSetup-x64.exe](https://github.com/Deadbush225/Folder-Customizer/releases/download/0.0.7/FolderCustomizerSetup-x64.exe) | EBD71826DAA2025A8F96767D535420EFD46BEBBAE0A1C0CD79D379B87641AAC8      |
 
 ## Highlights
 
-- add ui option to update
+- Port from QWidget to QMainWidget
+- Add dockable window for customization area
+- Added MenuBar for Options
 
