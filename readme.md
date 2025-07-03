@@ -50,7 +50,7 @@ You can use this to customize colors of your folders and apply tags on them to g
 - Windows 11
 - Windows 10
 
-1. Go to releases and download `Folder_Customizer-Installer.exe`
+1. Go to releases and download [`Folder_Customizer-Installer.exe`](https://github.com/Deadbush225/Folder-Customizer/releases/)
 2. Run it and follow the installation procedures
 
 ### Updates
