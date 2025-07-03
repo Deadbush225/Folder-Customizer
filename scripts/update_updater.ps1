@@ -1,1 +1,0 @@
-Start-Process "ISCC.exe" -ArgumentList "./Updater/updater.iss" -NoNewWindow -Wait

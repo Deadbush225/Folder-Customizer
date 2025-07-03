@@ -6,6 +6,4 @@
 
 ## Highlights
 
-- Port from QWidget to QMainWidget
-- Add dockable window for customization area
-- Added MenuBar for Options
+- Move Updater source code from pascal to c++
