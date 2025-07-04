@@ -1,33 +1,32 @@
-# Define the file path and the current version
-$filePaths = @(
-    # "./config/config.xml",
-    # "./packages/com.mainprogram/meta/package.xml"
-    "./installer.iss"
-    # "./Updater/updater.iss"
-)
-
 # Read the version from a JSON file
 $jsonFilePath = "./manifest.json"
 $jsonContent = Get-Content -Path $jsonFilePath -Raw | ConvertFrom-Json
 $currentVersion = $jsonContent.version
 
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━ Installer.iss ━━━━━━━━━━━━━━━━━━━━━━━━━ #
-$fileContent = Get-Content -Path "./installer.iss" -Raw
+# Define a dictionary of files and their version replacement patterns
+$versionUpdates = @{
+    "./installer.iss"       = @(
+        @{ Pattern      = 'MyAppVersion ".*"';
+            Replacement = { "MyAppVersion `"$currentVersion`"" } 
+        }
+    )
+    "./Updater/updater.cpp" = @(
+        @{ Pattern      = 'appVersion = ".*"';
+            Replacement = { "appVersion = `"$currentVersion`"" } 
+        }
+    )
+}
 
-# Replace the version between <Version> tags
-$updatedContent = $fileContent -replace 'MyAppVersion ".*"', "MyAppVersion `"$currentVersion`""
-
-# Write the updated content back to the file
-Set-Content -Path "./installer.iss" -Value $updatedContent
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━ updater.cpp ━━━━━━━━━━━━━━━━━━━━━━━━━━ #
-$fileContent = Get-Content -Path "./Updater/updater.cpp" -Raw
-
-# Replace the version between <Version> tags
-$updatedContent = $fileContent -replace 'appVersion = ".*"', "appVersion = `"$currentVersion`""
-
-# Write the updated content back to the file
-Set-Content -Path "./Updater/updater.cpp" -Value $updatedContent
+# Iterate through each file and apply the replacements
+foreach ($filePath in $versionUpdates.Keys) {
+    if (Test-Path $filePath) {
+        $fileContent = Get-Content -Path $filePath -Raw
+        foreach ($rule in $versionUpdates[$filePath]) {
+            $fileContent = $fileContent -replace $rule.Pattern, ($rule.Replacement.Invoke())
+        }
+        Set-Content -Path $filePath -Value $fileContent
+    }
+}
 
 
 Write-Host "Version updated to $currentVersion"
