@@ -83,37 +83,57 @@ jobs:
         Write-Host "Found vcpkg at: $env:VCPKG_INSTALLATION_ROOT"
       } else {
         Write-Host "vcpkg not found in expected location"
-        exit 1
+        Write-Host "Installing Boost via Chocolatey as fallback..."
+        choco install boost-msvc-14.3 -y
+        echo "BOOST_FALLBACK=true" >> $env:GITHUB_ENV
       }
 
    - name: Install Boost (program_options) with vcpkg
      shell: pwsh
      run: |
-      Write-Host "Installing boost-program-options..."
-      & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install boost-program-options:x64-windows
-      Write-Host "Verifying Boost installation..."
-      & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" list | Select-String "boost"
+      if ($env:BOOST_FALLBACK -eq "true") {
+        Write-Host "Skipping vcpkg Boost installation - using Chocolatey fallback"
+      } else {
+        Write-Host "Installing boost-program-options..."
+        & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install boost-program-options:x64-windows
+        Write-Host "Verifying Boost installation..."
+        & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" list | Select-String "boost"
+      }
 
    - name: Build application (MSVC)
      shell: pwsh
      run: |
       Write-Host "=== Build Environment Debug ==="
       Write-Host "VCPKG_INSTALLATION_ROOT: $env:VCPKG_INSTALLATION_ROOT"
-      $toolchainFile = "$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
-      Write-Host "Toolchain file: $toolchainFile"
-      Write-Host "Toolchain file exists: $(Test-Path $toolchainFile)"
+      Write-Host "BOOST_FALLBACK: $env:BOOST_FALLBACK"
       
-      if (Test-Path $toolchainFile) {
-        Write-Host "Building with vcpkg toolchain..."
-        cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}" -DCMAKE_TOOLCHAIN_FILE="$toolchainFile" -DVCPKG_TARGET_TRIPLET=x64-windows --debug-output
-      } else {
-        Write-Host "ERROR: vcpkg toolchain file not found!"
-        Write-Host "Available files in vcpkg root:"
-        if (Test-Path "$env:VCPKG_INSTALLATION_ROOT") {
-          Get-ChildItem "$env:VCPKG_INSTALLATION_ROOT" | Select-Object Name, Mode
+      if ($env:BOOST_FALLBACK -eq "true") {
+        Write-Host "Using Chocolatey Boost installation..."
+        $boostRoot = "C:\local\boost_1_82_0"
+        if (Test-Path $boostRoot) {
+          Write-Host "Found Boost at: $boostRoot"
+          cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }};$boostRoot" -DBOOST_ROOT="$boostRoot" --debug-output
+        } else {
+          Write-Host "Chocolatey Boost not found, trying without Boost hints..."
+          cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}" --debug-output
         }
-        Write-Host "Falling back to build without vcpkg..."
-        cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}" --debug-output
+      } else {
+        $toolchainFile = "$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
+        Write-Host "Toolchain file: $toolchainFile"
+        Write-Host "Toolchain file exists: $(Test-Path $toolchainFile)"
+        
+        if (Test-Path $toolchainFile) {
+          Write-Host "Building with vcpkg toolchain..."
+          cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}" -DCMAKE_TOOLCHAIN_FILE="$toolchainFile" -DVCPKG_TARGET_TRIPLET=x64-windows --debug-output
+        } else {
+          Write-Host "ERROR: vcpkg toolchain file not found!"
+          Write-Host "Available files in vcpkg root:"
+          if (Test-Path "$env:VCPKG_INSTALLATION_ROOT") {
+            Get-ChildItem "$env:VCPKG_INSTALLATION_ROOT" | Select-Object Name, Mode
+          }
+          Write-Host "Falling back to build without vcpkg..."
+          cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}" --debug-output
+        }
       }
       cmake --build build --config Release -j 4
 
