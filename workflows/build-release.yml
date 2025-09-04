@@ -25,7 +25,7 @@ jobs:
       sudo apt update
       sudo apt install -y qt6-base-dev qt6-tools-dev cmake build-essential
       sudo apt install -y libgl1-mesa-dev libxkbcommon-dev libxkbcommon-x11-dev libx11-xcb-dev libxcb1-dev libxcb-util-dev libxcb-xkb-dev
-          sudo apt install -y libboost-program-options-dev
+          sudo apt install -y libboost-program-options-dev libboost-dev
 
    - name: Install UPX
      run: |
@@ -33,7 +33,7 @@ jobs:
 
    - name: Build application
      run: |
-      cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBoost_NO_BOOST_CMAKE=ON -DBoost_USE_STATIC_LIBS=OFF
       cmake --build build
       cmake --build build --target install_local
 
