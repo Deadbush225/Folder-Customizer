@@ -2,8 +2,6 @@
 #define ICON_REFRESHER_H
 
 #include <iostream>
-// #include <windows.h>
-#include <Shlobj.h>
 #include <string>
 
 #include <QtCore/QDebug>
@@ -28,7 +26,13 @@
 //     )";
 // };
 
+#ifdef _WIN32
+#include <Shlobj.h>
 wchar_t* str_to_lpwstr_st(std::string string);
 void changeIcon(QString folder_path, QString tone, QString color);
+#else
+// On non-Windows platforms, provide a no-op declaration so callers can compile
+inline void changeIcon(QString, QString, QString) {}
+#endif
 
 #endif

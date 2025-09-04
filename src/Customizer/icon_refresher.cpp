@@ -1,6 +1,7 @@
 #include "Customizer/icon_refresher.h"
-
 #include <QtCore/QCoreApplication>
+
+#ifdef _WIN32
 
 wchar_t* str_to_lpwstr_st(std::string string) {
     std::cout << "Function called" << std::endl;
@@ -54,3 +55,7 @@ void changeIcon(QString folder_path, QString tone, QString color) {
     delete LPWSTR_folder_path;
     delete LPWSTR_icon_path;
 }
+
+#else
+// Non-Windows: no implementation required; inline stub declared in header.
+#endif

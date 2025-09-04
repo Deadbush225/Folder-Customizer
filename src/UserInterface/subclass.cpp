@@ -36,7 +36,8 @@ MessageBoxwLabel::MessageBoxwLabel(QString folder) {
     mainlayout->addWidget(lineEdit);
 
     QPushButton* button = new QPushButton("Done");
-    QObject::connect(button, QPushButton::clicked, this, &click);
+    QObject::connect(button, &QPushButton::clicked, this,
+                     &MessageBoxwLabel::click);
     mainlayout->addWidget(button);
 
     this->setLayout(mainlayout);

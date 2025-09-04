@@ -51,7 +51,10 @@ add_subdirectory(src/Customizer)
 add_subdirectory(src/Utils)
 add_subdirectory(src/UserInterface)
 
-add_subdirectory(src/context-menu)
+# Windows-only shell extension
+if(WIN32)
+    add_subdirectory(src/context-menu)
+endif()
 add_subdirectory(Updater)
 
 set(SOURCE_FILES ${PROJECT_SOURCE}/main.cpp)
@@ -94,6 +97,17 @@ file(GLOB ICONS_NORMAL_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Normal/*.ico")
 install(FILES ${ICONS_NORMAL_FILES}
     DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Normal)
 
+# Also install PNG icons for Linux .directory support
+file(GLOB ICONS_PNG_DARK "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Dark/PNG/*.png")
+file(GLOB ICONS_PNG_LIGHT "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Light/PNG/*.png")
+file(GLOB ICONS_PNG_NORMAL "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Normal/PNG/*.png")
+install(FILES ${ICONS_PNG_DARK}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Dark/PNG)
+install(FILES ${ICONS_PNG_LIGHT}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Light/PNG)
+install(FILES ${ICONS_PNG_NORMAL}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Normal/PNG)
+
 # Install the Updater executable
 install(TARGETS Updater DESTINATION ${CMAKE_INSTALL_BINDIR})
 
@@ -108,3 +122,25 @@ qt_generate_deploy_app_script(
 ) # create deploy script
 
 install(SCRIPT ${deploy_script}) # run deploy script
+
+# --- Convenience install targets -------------------------------------------
+# install_local: Build app + Updater (+ context menu on Windows), then remove
+# ./install and perform an installation into ./install using cmake --install.
+set(INSTALL_LOCAL_DIR "${CMAKE_SOURCE_DIR}/install")
+
+add_custom_target(install_local
+    COMMAND ${CMAKE_COMMAND} -E echo "Cleaning ${INSTALL_LOCAL_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${INSTALL_LOCAL_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${INSTALL_LOCAL_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E echo "Installing to ${INSTALL_LOCAL_DIR}"
+    COMMAND ${CMAKE_COMMAND} --install "${CMAKE_BINARY_DIR}" --config $<IF:$<BOOL:$<CONFIG>>,$<CONFIG>,Release> --prefix "${INSTALL_LOCAL_DIR}"
+    USES_TERMINAL
+    COMMENT "Build + local install to ${INSTALL_LOCAL_DIR}"
+)
+
+add_dependencies(install_local ${PROJECT_NAME} Updater)
+if (TARGET FCContextMenuHandler)
+    add_dependencies(install_local FCContextMenuHandler)
+endif()
+
+# Note: Previous 'reinstall' target removed; use 'install_local' and package from ./install

@@ -3,6 +3,7 @@
 
 #include <QtCore/QDebug>
 
+#ifdef _WIN32
 void executeCommand(const std::string& command) {
     STARTUPINFOA si = {sizeof(STARTUPINFOA)};
     PROCESS_INFORMATION pi = {};
@@ -40,7 +41,13 @@ RegistryManipulator::RegistryManipulator() {
 void RegistryManipulator::installRegistry() {
     executeCommand("regsvr32.exe " + directory);
 }
-
 void RegistryManipulator::uninstallRegistry() {
     executeCommand("regsvr32.exe /u " + directory);
 }
+
+#else
+// Non-Windows: no-op implementations
+RegistryManipulator::RegistryManipulator() {}
+void RegistryManipulator::installRegistry() {}
+void RegistryManipulator::uninstallRegistry() {}
+#endif

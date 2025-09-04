@@ -25,11 +25,13 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     QHBoxLayout* buttonLayout = new QHBoxLayout();
 
     auto btn_Del = new QPushButton(QString("Delete"));
-    QObject::connect(btn_Del, QPushButton::clicked, this, &deleteSelectedItem);
+    QObject::connect(btn_Del, &QPushButton::clicked, this,
+                     &FolderCustomizerWindow::deleteSelectedItem);
     buttonLayout->addWidget(btn_Del);
 
     auto btn_ClearAll = new QPushButton("Clear All");
-    QObject::connect(btn_ClearAll, QPushButton::clicked, this, &clearAll);
+    QObject::connect(btn_ClearAll, &QPushButton::clicked, this,
+                     &FolderCustomizerWindow::clearAll);
     buttonLayout->addWidget(btn_ClearAll);
 
     auto dnd_layout = new QVBoxLayout();
@@ -58,7 +60,7 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
 
     auto reset_stylesheets_act = new QAction("Reset Stylesheet", this);
     QObject::connect(reset_stylesheets_act, &QAction::triggered, this,
-                     this->applyStylesheet);
+                     &FolderCustomizerWindow::applyStylesheet);
     settings_menu->addAction(reset_stylesheets_act);
 
     separator_horizontal = new QHSeparationLine();
@@ -121,11 +123,13 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
 
     // + apply button
     auto apply_button = new QPushButton("Apply");
-    QObject::connect(apply_button, QPushButton::clicked, this, &apply);
+    QObject::connect(apply_button, &QPushButton::clicked, this,
+                     &FolderCustomizerWindow::apply);
 
     // + reset button
     auto reset_button = new QPushButton("Reset");
-    QObject::connect(reset_button, QPushButton::clicked, this, &reset);
+    QObject::connect(reset_button, &QPushButton::clicked, this,
+                     &FolderCustomizerWindow::reset);
 
     // + CUSTOMIZATION Layout
     QDockWidget* customizationDock = new QDockWidget("Customize");

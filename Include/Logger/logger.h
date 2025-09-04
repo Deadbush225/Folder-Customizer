@@ -8,7 +8,7 @@
 
 #include <QtCore/QDataStream>
 #include <QtCore/QFileInfo>
-#include <String>
+#include <string>
 
 #include <boost/format.hpp>
 

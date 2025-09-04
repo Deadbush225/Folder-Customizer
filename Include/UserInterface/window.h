@@ -20,7 +20,9 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
+#ifdef _WIN32
 #include <windows.h>
+#endif
 
 #include "Core/registry.h"
 #include "Customizer/folderCustomizer.h"

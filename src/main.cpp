@@ -8,7 +8,9 @@
 #include <QtWidgets/QWidget>
 
 #include <stdio.h>
+#ifdef _WIN32
 #include <windows.h>
+#endif
 #include <boost/program_options.hpp>
 
 #include "UserInterface/cli.h"
@@ -17,7 +19,7 @@
 namespace po = boost::program_options;
 
 int main(int argc, char* argv[]) {
-#if (defined(Q_OS_WIN) && defined(NDEBUG))
+#if (defined(_WIN32) && !defined(_DEBUG))
     ::ShowWindow(::GetConsoleWindow(), SW_HIDE);  // hide console window
 #endif
 
@@ -48,8 +50,7 @@ int main(int argc, char* argv[]) {
         cli = new CLI(vm);
     } else {
         QApplication::setWindowIcon(QIcon(":/icons/Folder Customizer.png"));
-
-        FolderCustomizerWindow* window = new FolderCustomizerWindow();
+        window = new FolderCustomizerWindow();
         window->show();
     }
 

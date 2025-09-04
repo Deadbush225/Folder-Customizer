@@ -2,7 +2,9 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Folder Customizer"
-#define MyAppVersion "0.0.8"
+#ifndef MyAppVersion
+	#define MyAppVersion "0.0.8"
+#endif
 #define MyAppPublisher "Deadbush225."
 ; #define MyAppURL "https://www.example.com/"
 #define MyAppExeName "FolderCustomizer.exe"
@@ -18,7 +20,7 @@ AppPublisher={#MyAppPublisher}
 ; AppPublisherURL={#MyAppURL}
 ; AppSupportURL={#MyAppURL}
 ; AppUpdatesURL={#MyAppURL}
-UninstallDisplayIcon={app}\{#MyAppExeName}
+UninstallDisplayIcon={app}\bin\{#MyAppExeName}
 ; "ArchitecturesAllowed=x64compatible" specifies that Setup cannot run
 ; on anything but x64 and Windows 11 on Arm.
 ArchitecturesAllowed=x64compatible
@@ -29,7 +31,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
 ; up
-LicenseFile=.\packages\com.mainprogram\meta\license.txt
+LicenseFile=.\LICENSE.txt
 ; Uncomment the following line to run in non administrative install mode (install for current user only).
 ;PrivilegesRequired=lowest
 DisableDirPage=no
@@ -39,7 +41,7 @@ PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir={#SourcePath}
 OutputBaseFilename=FolderCustomizerSetup-x64
-SetupIconFile=.\packages\com.mainprogram\data\bin\Icons\Folder Customizer.ico
+SetupIconFile=.\install\bin\Icons\Folder Customizer.ico
 SolidCompression=yes
 WizardStyle=modern
 
@@ -50,13 +52,13 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; Source: "D:\System\Coding\Projects\folder-customizer\packages\com.mainprogram\data\bin\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: ".\packages\com.mainprogram\data\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Package the already-installed files from ./install (produced by the CMake target install_local)
+Source: ".\install\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\bin\{#MyAppExeName}"
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\bin\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\bin\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
