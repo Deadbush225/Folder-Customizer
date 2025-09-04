@@ -7,11 +7,11 @@ endif()
 set(CMAKE_BUILD_TYPE "Release")
 
 # set(CMAKE_BUILD_TYPE "Debug")
-# Use Windows-specific Boost hint only on Windows; don't pollute Linux CI
-if (WIN32)
+# Use Windows-specific Boost hint only on developer machines without toolchains; don't pollute CI
+if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(Boost_ROOT D:/Dev/boost_1_87_0/stage)
     list(APPEND CMAKE_PREFIX_PATH ${Boost_ROOT})
-else()
+elseif(NOT WIN32)
     # Force FindBoost module instead of a BoostConfig.cmake on Linux
     set(Boost_NO_BOOST_CMAKE ON)
 endif()
@@ -30,6 +30,7 @@ set(CMAKE_AUTORCC ON)
 # set(Boost_USE_STATIC_LIBS OFF)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 qt_standard_project_setup()
+message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
 find_package(Boost REQUIRED COMPONENTS program_options)
 message(STATUS "Boost_FOUND=${Boost_FOUND}")
 message(STATUS "Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}")
