@@ -8,7 +8,7 @@ set(CMAKE_BUILD_TYPE "Release")
 
 # set(CMAKE_BUILD_TYPE "Debug")
 # Use Windows-specific Boost hint only on developer machines without toolchains; don't pollute CI
-if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+if(WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(Boost_ROOT D:/Dev/boost_1_87_0/stage)
     list(APPEND CMAKE_PREFIX_PATH ${Boost_ROOT})
 elseif(NOT WIN32)
@@ -31,11 +31,21 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 qt_standard_project_setup()
 message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
-find_package(Boost REQUIRED COMPONENTS program_options)
+
+# Try to find Boost, with fallback to module mode if config mode fails
+find_package(Boost QUIET COMPONENTS program_options)
+
+if(NOT Boost_FOUND)
+    message(STATUS "Boost config mode failed, trying module mode...")
+    set(Boost_NO_BOOST_CMAKE ON)
+    find_package(Boost REQUIRED COMPONENTS program_options)
+endif()
+
 message(STATUS "Boost_FOUND=${Boost_FOUND}")
 message(STATUS "Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}")
 message(STATUS "Boost_LIBRARY_DIRS=${Boost_LIBRARY_DIRS}")
-if (Boost_FOUND)
+
+if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
@@ -68,6 +78,7 @@ add_subdirectory(src/UserInterface)
 if(WIN32)
     add_subdirectory(src/context-menu)
 endif()
+
 add_subdirectory(Updater)
 
 set(SOURCE_FILES ${PROJECT_SOURCE}/main.cpp)
@@ -152,7 +163,8 @@ add_custom_target(install_local
 )
 
 add_dependencies(install_local ${PROJECT_NAME} Updater)
-if (TARGET FCContextMenuHandler)
+
+if(TARGET FCContextMenuHandler)
     add_dependencies(install_local FCContextMenuHandler)
 endif()
 
