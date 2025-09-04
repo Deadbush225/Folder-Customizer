@@ -95,9 +95,56 @@ jobs:
         Write-Host "Skipping vcpkg Boost installation - using Chocolatey fallback"
       } else {
         Write-Host "Installing boost-program-options..."
-        & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install boost-program-options:x64-windows
-        Write-Host "Verifying Boost installation..."
-        & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" list | Select-String "boost"
+        
+        # Install with verbose output and error checking
+        $installResult = & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install boost-program-options:x64-windows 2>&1
+        Write-Host "=== VCPKG INSTALL OUTPUT ==="
+        Write-Host $installResult
+        
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "ERROR: vcpkg install failed with exit code $LASTEXITCODE"
+          echo "BOOST_FALLBACK=true" >> $env:GITHUB_ENV
+        } else {
+          Write-Host "=== VERIFYING BOOST INSTALLATION ==="
+          
+          # List all installed packages
+          Write-Host "All installed vcpkg packages:"
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" list
+          
+          # Check specifically for boost packages
+          Write-Host "Boost packages found:"
+          $boostPackages = & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" list | Select-String "boost"
+          if ($boostPackages) {
+            $boostPackages | ForEach-Object { Write-Host $_ }
+          } else {
+            Write-Host "NO BOOST PACKAGES FOUND!"
+            echo "BOOST_FALLBACK=true" >> $env:GITHUB_ENV
+          }
+          
+          # Check if the actual files exist
+          $vcpkgInstalled = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          Write-Host "Checking vcpkg installed directory: $vcpkgInstalled"
+          
+          if (Test-Path "$vcpkgInstalled\include\boost") {
+            Write-Host "✓ Found Boost headers at: $vcpkgInstalled\include\boost"
+            Get-ChildItem "$vcpkgInstalled\include\boost" -Name | Select-Object -First 10 | ForEach-Object { Write-Host "  - $_" }
+          } else {
+            Write-Host "✗ Boost headers NOT found at: $vcpkgInstalled\include\boost"
+          }
+          
+          if (Test-Path "$vcpkgInstalled\lib") {
+            Write-Host "Libraries in vcpkg lib directory:"
+            Get-ChildItem "$vcpkgInstalled\lib" -Name | Where-Object { $_ -match "boost" } | ForEach-Object { Write-Host "  - $_" }
+          }
+          
+          # Check for CMake config files
+          if (Test-Path "$vcpkgInstalled\share\boost*") {
+            Write-Host "Boost CMake config directories found:"
+            Get-ChildItem "$vcpkgInstalled\share" -Name | Where-Object { $_ -match "boost" } | ForEach-Object { Write-Host "  - $_" }
+          } else {
+            Write-Host "✗ No Boost CMake config directories found in $vcpkgInstalled\share"
+          }
+        }
       }
 
    - name: Build application (MSVC)
@@ -123,6 +170,26 @@ jobs:
         Write-Host "Toolchain file exists: $(Test-Path $toolchainFile)"
         
         if (Test-Path $toolchainFile) {
+          Write-Host "=== VCPKG ENVIRONMENT CHECK ==="
+          Write-Host "VCPKG_INSTALLATION_ROOT: $env:VCPKG_INSTALLATION_ROOT"
+          Write-Host "Expected Boost location: $env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          
+          # Show what CMake variables the toolchain will set
+          Write-Host "Testing vcpkg toolchain with a simple CMake check..."
+          $testCmake = @"
+cmake_minimum_required(VERSION 3.16)
+project(BoostTest)
+find_package(Boost QUIET COMPONENTS program_options)
+message(STATUS "VCPKG_TEST: Boost_FOUND=`${Boost_FOUND}")
+message(STATUS "VCPKG_TEST: Boost_VERSION=`${Boost_VERSION}")
+message(STATUS "VCPKG_TEST: CMAKE_PREFIX_PATH=`${CMAKE_PREFIX_PATH}")
+"@
+          
+          $testCmake | Out-File -FilePath "test_boost.cmake" -Encoding UTF8
+          
+          Write-Host "Running CMake test to check Boost detection..."
+          cmake -P test_boost.cmake -DCMAKE_TOOLCHAIN_FILE="$toolchainFile" -DVCPKG_TARGET_TRIPLET=x64-windows
+          
           Write-Host "Building with vcpkg toolchain..."
           cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}" -DCMAKE_TOOLCHAIN_FILE="$toolchainFile" -DVCPKG_TARGET_TRIPLET=x64-windows --debug-output
         } else {
