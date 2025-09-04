@@ -7,8 +7,14 @@ endif()
 set(CMAKE_BUILD_TYPE "Release")
 
 # set(CMAKE_BUILD_TYPE "Debug")
-set(Boost_ROOT D:/Dev/boost_1_87_0/stage)
-set(CMAKE_PREFIX_PATH ${Boost_ROOT})
+# Use Windows-specific Boost hint only on Windows; don't pollute Linux CI
+if (WIN32)
+    set(Boost_ROOT D:/Dev/boost_1_87_0/stage)
+    list(APPEND CMAKE_PREFIX_PATH ${Boost_ROOT})
+else()
+    # Force FindBoost module instead of a BoostConfig.cmake on Linux
+    set(Boost_NO_BOOST_CMAKE ON)
+endif()
 
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/packages/com.mainprogram/data)
 
@@ -25,6 +31,12 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 qt_standard_project_setup()
 find_package(Boost REQUIRED COMPONENTS program_options)
+message(STATUS "Boost_FOUND=${Boost_FOUND}")
+message(STATUS "Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}")
+message(STATUS "Boost_LIBRARY_DIRS=${Boost_LIBRARY_DIRS}")
+if (Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+endif()
 
 # utility functions
 function(u_include_header_only_boost SUBDIR_NAME)
