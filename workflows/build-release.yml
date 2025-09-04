@@ -75,18 +75,32 @@ jobs:
       arch: x64
 
    - name: Set up vcpkg
-     uses: microsoft/vcpkg-action@v1
-     with:
-      triplet: x64-windows
+     shell: pwsh
+     run: |
+      Write-Host "Checking for existing vcpkg installation..."
+      Write-Host "VCPKG_INSTALLATION_ROOT: $env:VCPKG_INSTALLATION_ROOT"
+      if (Test-Path "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe") {
+        Write-Host "Found vcpkg at: $env:VCPKG_INSTALLATION_ROOT"
+      } else {
+        Write-Host "vcpkg not found in expected location"
+        exit 1
+      }
 
    - name: Install Boost (program_options) with vcpkg
      shell: pwsh
      run: |
+      Write-Host "Installing boost-program-options..."
       & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install boost-program-options:x64-windows
+      Write-Host "Verifying Boost installation..."
+      & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" list | Select-String "boost"
 
    - name: Build application (MSVC)
+     shell: pwsh
      run: |
-      cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}" -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_INSTALLATION_ROOT }}\\scripts\\buildsystems\\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows --debug-output
+      Write-Host "Building with vcpkg toolchain..."
+      $toolchainFile = "$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake"
+      Write-Host "Toolchain file: $toolchainFile"
+      cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}" -DCMAKE_TOOLCHAIN_FILE="$toolchainFile" -DVCPKG_TARGET_TRIPLET=x64-windows --debug-output
       cmake --build build --config Release -j 4
 
    - name: Debug Qt paths
