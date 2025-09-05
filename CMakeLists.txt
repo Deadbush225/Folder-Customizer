@@ -33,6 +33,11 @@ qt_standard_project_setup()
 message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
 
 # Try to find Boost, with fallback to module mode if config mode fails
+message(STATUS "CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
+message(STATUS "CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}")
+message(STATUS "BOOST_ROOT=${BOOST_ROOT}")
+message(STATUS "Boost_DIR=${Boost_DIR}")
+
 find_package(Boost QUIET COMPONENTS program_options)
 
 if(NOT Boost_FOUND)

@@ -94,10 +94,10 @@ jobs:
       if ($env:BOOST_FALLBACK -eq "true") {
         Write-Host "Skipping vcpkg Boost installation - using Chocolatey fallback"
       } else {
-        Write-Host "Installing boost-program-options..."
+        Write-Host "Installing boost packages..."
         
-        # Install with verbose output and error checking
-        $installResult = & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install boost-program-options:x64-windows 2>&1
+        # Install both base boost and program-options with verbose output and error checking
+        $installResult = & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install boost:x64-windows boost-program-options:x64-windows --recurse 2>&1
         Write-Host "=== VCPKG INSTALL OUTPUT ==="
         Write-Host $installResult
         
@@ -180,10 +180,40 @@ jobs:
           $boostIncludeDir = "$vcpkgInstalled\include"
           $boostLibraryDir = "$vcpkgInstalled\lib"
           
+          # Look for Boost CMake config directory
+          $boostConfigDirs = @()
+          if (Test-Path "$vcpkgInstalled\share") {
+            $boostConfigDirs = Get-ChildItem "$vcpkgInstalled\share" -Directory | Where-Object { $_.Name -match "boost" } | ForEach-Object { $_.FullName }
+          }
+          
+          $boostDir = ""
+          if ($boostConfigDirs) {
+            # Try to find the main boost config directory
+            $mainBoostConfig = $boostConfigDirs | Where-Object { $_ -match "\\boost$" } | Select-Object -First 1
+            if ($mainBoostConfig) {
+              $boostDir = $mainBoostConfig
+            } else {
+              $boostDir = $boostConfigDirs[0]
+            }
+          }
+          
           Write-Host "Setting Boost paths:"
           Write-Host "  BOOST_ROOT: $boostRoot"
           Write-Host "  Boost_INCLUDE_DIR: $boostIncludeDir" 
           Write-Host "  Boost_LIBRARY_DIR: $boostLibraryDir"
+          Write-Host "  Boost_DIR: $boostDir"
+          
+          # List what's actually in the share directory
+          Write-Host "Contents of vcpkg share directory:"
+          if (Test-Path "$vcpkgInstalled\share") {
+            Get-ChildItem "$vcpkgInstalled\share" -Directory | ForEach-Object { 
+              Write-Host "  - $($_.Name)"
+              if ($_.Name -match "boost") {
+                Write-Host "    CMake files:"
+                Get-ChildItem $_.FullName -Filter "*.cmake" | ForEach-Object { Write-Host "      - $($_.Name)" }
+              }
+            }
+          }
           
           # Show what CMake variables the toolchain will set
           Write-Host "Testing vcpkg toolchain with a simple CMake check..."
@@ -201,17 +231,36 @@ jobs:
           $testCmake | Out-File -FilePath "test_boost.cmake" -Encoding UTF8
           
           Write-Host "Running CMake test to check Boost detection..."
-          cmake -P test_boost.cmake -DCMAKE_TOOLCHAIN_FILE="$toolchainFile" -DVCPKG_TARGET_TRIPLET=x64-windows -DBOOST_ROOT="$boostRoot" -DBoost_INCLUDE_DIR="$boostIncludeDir" -DBoost_LIBRARY_DIR="$boostLibraryDir"
+          $cmakeTestArgs = @(
+            "-P", "test_boost.cmake"
+            "-DCMAKE_TOOLCHAIN_FILE=$toolchainFile"
+            "-DVCPKG_TARGET_TRIPLET=x64-windows"
+            "-DBOOST_ROOT=$boostRoot"
+            "-DBoost_INCLUDE_DIR=$boostIncludeDir"
+            "-DBoost_LIBRARY_DIR=$boostLibraryDir"
+          )
+          if ($boostDir) {
+            $cmakeTestArgs += "-DBoost_DIR=$boostDir"
+          }
+          cmake @cmakeTestArgs
           
           Write-Host "Building with vcpkg toolchain and explicit Boost paths..."
-          cmake -B build -G "Visual Studio 17 2022" -A x64 `
-            -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }};$vcpkgInstalled" `
-            -DCMAKE_TOOLCHAIN_FILE="$toolchainFile" `
-            -DVCPKG_TARGET_TRIPLET=x64-windows `
-            -DBOOST_ROOT="$boostRoot" `
-            -DBoost_INCLUDE_DIR="$boostIncludeDir" `
-            -DBoost_LIBRARY_DIR="$boostLibraryDir" `
-            --debug-output
+          $cmakeBuildArgs = @(
+            "-B", "build"
+            "-G", "Visual Studio 17 2022"
+            "-A", "x64"
+            "-DCMAKE_PREFIX_PATH=$($env:Qt6_DIR);$vcpkgInstalled"
+            "-DCMAKE_TOOLCHAIN_FILE=$toolchainFile"
+            "-DVCPKG_TARGET_TRIPLET=x64-windows"
+            "-DBOOST_ROOT=$boostRoot"
+            "-DBoost_INCLUDE_DIR=$boostIncludeDir"
+            "-DBoost_LIBRARY_DIR=$boostLibraryDir"
+            "--debug-output"
+          )
+          if ($boostDir) {
+            $cmakeBuildArgs += "-DBoost_DIR=$boostDir"
+          }
+          cmake @cmakeBuildArgs
         } else {
           Write-Host "ERROR: vcpkg toolchain file not found!"
           Write-Host "Available files in vcpkg root:"
