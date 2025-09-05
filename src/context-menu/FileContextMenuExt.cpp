@@ -18,6 +18,7 @@ extern long g_cDllRef;
 
 #define IDM_DISPLAY 0  // The command's identifier offset
 
+#include <shellapi.h>  // DragQueryFile, HDROP, SEE_MASK_UNICODE
 #include <windows.h>
 
 HBITMAP CreateHBITMAPFromFile(const wchar_t* filePath) {

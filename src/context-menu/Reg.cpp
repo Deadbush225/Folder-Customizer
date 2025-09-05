@@ -9,6 +9,7 @@ UnregisterShellExtContextMenuHandler - unregister the context menu handler.
 */
 
 #include "Reg.h"
+#include <objbase.h>  // StringFromGUID2
 #include <strsafe.h>
 
 #pragma region Registry Helper Functions
