@@ -1,221 +1,217 @@
 name: Build and Release
 
 on:
- push:
-  name: Build and Release
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
 
-  on:
-    push:
-      tags:
-        - "v*"
-    workflow_dispatch:
+permissions:
+  contents: write
 
-  permissions:
-    contents: write
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
 
-  jobs:
-    build-linux:
-      runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      steps:
-        - uses: actions/checkout@v4
+      - name: Read version
+        id: ver
+        run: echo "version=$(jq -r .version manifest.json)" >> $GITHUB_OUTPUT
 
-        - name: Read version
-          id: ver
-          run: echo "version=$(jq -r .version manifest.json)" >> $GITHUB_OUTPUT
+      - name: Install Qt6 & deps
+        run: |
+          sudo apt update
+          sudo apt install -y qt6-base-dev qt6-tools-dev cmake build-essential
+          sudo apt install -y libgl1-mesa-dev libxkbcommon-dev libxkbcommon-x11-dev libx11-xcb-dev libxcb1-dev libxcb-util-dev libxcb-xkb-dev
+          # Boost for program_options
+          sudo apt install -y libboost-program-options-dev libboost-dev
 
-        - name: Install Qt6 & deps
-          run: |
-            sudo apt update
-            sudo apt install -y qt6-base-dev qt6-tools-dev cmake build-essential
-            sudo apt install -y libgl1-mesa-dev libxkbcommon-dev libxkbcommon-x11-dev libx11-xcb-dev libxcb1-dev libxcb-util-dev libxcb-xkb-dev
-            # Boost for program_options
-            sudo apt install -y libboost-program-options-dev libboost-dev
+      - name: Install UPX
+        run: |
+          sudo apt install -y upx-ucl
 
-        - name: Install UPX
-          run: |
-            sudo apt install -y upx-ucl
+      - name: Build application
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -- -j 2
+          cmake --install build --config Release --prefix packages/com.mainprogram/data
 
-        - name: Build application
-          run: |
-            cmake -B build -DCMAKE_BUILD_TYPE=Release
-            cmake --build build -- -j 2
-            cmake --install build --config Release --prefix packages/com.mainprogram/data
+      - name: Verify install output
+        run: |
+          echo "Listing installed files under packages/com.mainprogram/data"
+          ls -la packages/com.mainprogram/data || true
+          echo "Listing bin directory"
+          ls -la packages/com.mainprogram/data/bin || true
+          echo "Tree (maxdepth 3)"
+          find packages/com.mainprogram/data -maxdepth 3 -printf '%y %p\n' || true
 
-        - name: Verify install output
-          run: |
-            echo "Listing installed files under packages/com.mainprogram/data"
-            ls -la packages/com.mainprogram/data || true
-            echo "Listing bin directory"
-            ls -la packages/com.mainprogram/data/bin || true
-            echo "Tree (maxdepth 3)"
-            find packages/com.mainprogram/data -maxdepth 3 -printf '%y %p\n' || true
+      - name: Install packaging tools
+        run: |
+          sudo apt install -y rpm dpkg-dev
 
-        - name: Install packaging tools
-          run: |
-            sudo apt install -y rpm dpkg-dev
+      - name: Create packages
+        run: |
+          FORCE_RPM_TARBALL=1 bash ./scripts/deploy.sh linux
 
-        - name: Create packages
-          run: |
-            FORCE_RPM_TARBALL=1 bash ./scripts/deploy.sh linux
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages
+          path: |
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.rpm
+            dist/*.tar.gz
 
-        - name: Upload Linux artifacts
-          uses: actions/upload-artifact@v4
-          with:
-            name: linux-packages
-            path: |
-              dist/*.AppImage
-              dist/*.deb
-              dist/*.rpm
-              dist/*.tar.gz
+  build-windows:
+    runs-on: windows-latest
 
-    build-windows:
-      runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      steps:
-        - uses: actions/checkout@v4
+      - name: Install Qt6 (MSVC)
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: "6.7.3"
+          host: "windows"
+          target: "desktop"
+          arch: "win64_msvc2019_64"
 
-        - name: Install Qt6 (MSVC)
-          uses: jurplel/install-qt-action@v3
-          with:
-            version: "6.7.3"
-            host: "windows"
-            target: "desktop"
-            arch: "win64_msvc2019_64"
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
 
-        - name: Set up MSVC environment
-          uses: ilammy/msvc-dev-cmd@v1
-          with:
-            arch: x64
+      - name: Build application (MSVC)
+        run: |
+          cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}" --debug-output
+          cmake --build build --config Release -j 4
 
-        - name: Build application (MSVC)
-          run: |
-            cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}" --debug-output
-            cmake --build build --config Release -j 4
+      - name: Install and deploy Qt dependencies
+        run: |
+          cmake --build build --target install_local --config Release -j 2 --verbose
 
-        - name: Install and deploy Qt dependencies
-          run: |
-            cmake --build build --target install_local --config Release -j 2 --verbose
+      - name: Verify Qt deployment
+        shell: pwsh
+        run: |
+          Write-Host "=== Checking Qt deployment success ==="
+          $qtDlls = @("Qt6Core.dll", "Qt6Gui.dll", "Qt6Widgets.dll")
+          $deploymentSuccess = $true
 
-        - name: Verify Qt deployment
-          shell: pwsh
-          run: |
-            Write-Host "=== Checking Qt deployment success ==="
-            $qtDlls = @("Qt6Core.dll", "Qt6Gui.dll", "Qt6Widgets.dll")
-            $deploymentSuccess = $true
-
-            foreach ($dll in $qtDlls) {
-              $matches = Get-ChildItem -Path "./install" -Filter $dll -Recurse -ErrorAction SilentlyContinue
-              if ($matches) {
-                foreach ($match in $matches) {
-                  $size = [math]::Round($match.Length / 1MB, 2)
-                  $relativePath = $match.FullName.Replace((Resolve-Path "./install").Path, "").TrimStart('\')
-                  Write-Host "✓ Found: $relativePath (${size}MB)"
-                }
-              } else {
-                Write-Host "✗ Missing: $dll"
-                $deploymentSuccess = $false
-              }
-            }
-
-            if (-not $deploymentSuccess) {
-              Write-Host "`nQt deployment failed - enabling windeployqt fallback"
-              exit 1
-            } else {
-              Write-Host "`nQt deployment successful!"
-            }
-
-        - name: Fallback Qt deployment (if previous step failed)
-          if: failure()
-          shell: pwsh
-          run: |
-            Write-Host "=== Running windeployqt fallback ==="
-            $qtDir = "${{ env.Qt6_DIR }}"
-            $windeploy = Join-Path $qtDir "bin/windeployqt.exe"
-            $mainExe = "./install/FolderCustomizer.exe"
-            $updaterExe = "./install/Updater.exe"
-
-            if (Test-Path $windeploy) {
-              Write-Host "Running windeployqt for main application..."
-              & $windeploy --release --dir "./install" $mainExe
-              if (Test-Path $updaterExe) {
-                Write-Host "Running windeployqt for updater..."
-                & $windeploy --release --dir "./install" $updaterExe
+          foreach ($dll in $qtDlls) {
+            $matches = Get-ChildItem -Path "./install" -Filter $dll -Recurse -ErrorAction SilentlyContinue
+            if ($matches) {
+              foreach ($match in $matches) {
+                $size = [math]::Round($match.Length / 1MB, 2)
+                $relativePath = $match.FullName.Replace((Resolve-Path "./install").Path, "").TrimStart('\')
+                Write-Host "✓ Found: $relativePath (${size}MB)"
               }
             } else {
-              Write-Host "windeployqt not found at $windeploy"
-              exit 1
+              Write-Host "✗ Missing: $dll"
+              $deploymentSuccess = $false
             }
+          }
 
-        - name: Install Inno Setup
-          run: |
-            choco install innosetup
+          if (-not $deploymentSuccess) {
+            Write-Host "`nQt deployment failed - enabling windeployqt fallback"
+            exit 1
+          } else {
+            Write-Host "`nQt deployment successful!"
+          }
 
-        - name: Create Windows installer
-          run: |
-            pwsh -ExecutionPolicy Bypass -File "./scripts/update_installer.ps1"
+      - name: Fallback Qt deployment (if previous step failed)
+        if: failure()
+        shell: pwsh
+        run: |
+          Write-Host "=== Running windeployqt fallback ==="
+          $qtDir = "${{ env.Qt6_DIR }}"
+          $windeploy = Join-Path $qtDir "bin/windeployqt.exe"
+          $mainExe = "./install/FolderCustomizer.exe"
+          $updaterExe = "./install/Updater.exe"
 
-        - name: Upload Windows artifacts
-          uses: actions/upload-artifact@v4
-          with:
-            name: windows-installer
-            path: windows-installer/*.exe
-            if-no-files-found: error
+          if (Test-Path $windeploy) {
+            Write-Host "Running windeployqt for main application..."
+            & $windeploy --release --dir "./install" $mainExe
+            if (Test-Path $updaterExe) {
+              Write-Host "Running windeployqt for updater..."
+              & $windeploy --release --dir "./install" $updaterExe
+            }
+          } else {
+            Write-Host "windeployqt not found at $windeploy"
+            exit 1
+          }
 
-    release:
-      needs: [build-linux, build-windows]
-      runs-on: ubuntu-latest
-      if: startsWith(github.ref, 'refs/tags/')
+      - name: Install Inno Setup
+        run: |
+          choco install innosetup
 
-      steps:
-        - uses: actions/checkout@v4
-          with:
-            fetch-depth: 0
-            fetch-tags: true
+      - name: Create Windows installer
+        run: |
+          pwsh -ExecutionPolicy Bypass -File "./scripts/update_installer.ps1"
 
-        - name: Read version
-          id: ver
-          run: echo "version=$(jq -r .version manifest.json)" >> $GITHUB_OUTPUT
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: windows-installer/*.exe
+          if-no-files-found: error
 
-        - name: Download all artifacts
-          uses: actions/download-artifact@v4
+  release:
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
 
-        - name: Compute previous tag
-          id: prev
-          shell: bash
-          run: |
-            git fetch --tags --force
-            current="${GITHUB_REF_NAME}"
-            prev=$(git tag --sort=-v:refname | grep -E '^v[0-9]+' | grep -v "^${current}$" | head -n1)
-            echo "prev_tag=${prev}" >> $GITHUB_OUTPUT
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
-        - name: Render release body
-          id: body
-          shell: bash
-          run: |
-            BODY_TEMPLATE="scripts/release_template.md"
-            BODY_OUT="scripts/release_body.md"
-            cp "$BODY_TEMPLATE" "$BODY_OUT"
-            echo "" >> "$BODY_OUT"
-            if [ -n "${{ steps.prev.outputs.prev_tag }}" ]; then
-              echo "Full Changelog: https://github.com/${{ github.repository }}/compare/${{ steps.prev.outputs.prev_tag }}...${{ github.ref_name }}" >> "$BODY_OUT"
-            else
-              echo "Full Changelog: https://github.com/${{ github.repository }}/commits/${{ github.ref_name }}" >> "$BODY_OUT"
-            fi
+      - name: Read version
+        id: ver
+        run: echo "version=$(jq -r .version manifest.json)" >> $GITHUB_OUTPUT
 
-        - name: Create Release
-          uses: softprops/action-gh-release@v1
-          with:
-            name: Folder Customizer v${{ steps.ver.outputs.version }}
-            tag_name: ${{ github.ref_name }}
-            body_path: scripts/release_body.md
-            files: |
-              linux-packages/*
-              windows-installer/*
-            draft: false
-            prerelease: false
-            generate_release_notes: false
-            token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Compute previous tag
+        id: prev
+        shell: bash
+        run: |
+          git fetch --tags --force
+          current="${GITHUB_REF_NAME}"
+          prev=$(git tag --sort=-v:refname | grep -E '^v[0-9]+' | grep -v "^${current}$" | head -n1)
+          echo "prev_tag=${prev}" >> $GITHUB_OUTPUT
+
+      - name: Render release body
+        id: body
+        shell: bash
+        run: |
+          BODY_TEMPLATE="scripts/release_template.md"
+          BODY_OUT="scripts/release_body.md"
+          cp "$BODY_TEMPLATE" "$BODY_OUT"
+          echo "" >> "$BODY_OUT"
+          if [ -n "${{ steps.prev.outputs.prev_tag }}" ]; then
+            echo "Full Changelog: https://github.com/${{ github.repository }}/compare/${{ steps.prev.outputs.prev_tag }}...${{ github.ref_name }}" >> "$BODY_OUT"
+          else
+            echo "Full Changelog: https://github.com/${{ github.repository }}/commits/${{ github.ref_name }}" >> "$BODY_OUT"
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Folder Customizer v${{ steps.ver.outputs.version }}
+          tag_name: ${{ github.ref_name }}
+          body_path: scripts/release_body.md
+          files: |
+            linux-packages/*
+            windows-installer/*
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+          token: ${{ secrets.GITHUB_TOKEN }}
       $unwantedFolders = @("sqldrivers", "multimedia", "qmltooling", "quick", "scenegraph", "designer", "gamepads")
       foreach ($folder in $unwantedFolders) {
         $path = "./install/$folder"
