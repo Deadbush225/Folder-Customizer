@@ -89,7 +89,9 @@ if(WIN32 AND DEFINED BOOST_ROOT)
 
     set(BOOST_AVAILABLE TRUE)
 else()
-    # Use system Boost on Linux
+    # Use system Boost on Linux (or non-Windows). Try regular find_package first,
+    # then fall back to a manual search for headers/libs so CI systems with
+    # non-standard layouts get clearer diagnostics.
     find_package(Boost QUIET COMPONENTS program_options)
 
     if(Boost_FOUND)
@@ -97,8 +99,38 @@ else()
         set(BOOST_AVAILABLE TRUE)
         message(STATUS "Using system Boost: ${Boost_VERSION}")
     else()
-        set(BOOST_AVAILABLE FALSE)
-        message(WARNING "Boost not found - program_options features disabled")
+        # Fallback: try to locate the program_options header and library manually
+        message(STATUS "find_package(Boost) failed; attempting manual detection...")
+        find_path(Boost_INCLUDE_DIRS NAMES boost/program_options.hpp
+            PATHS /usr/include /usr/local/include /opt/local/include ${CMAKE_SYSTEM_PREFIX_PATH}
+            NO_DEFAULT_PATH)
+
+        if(Boost_INCLUDE_DIRS)
+            include_directories(${Boost_INCLUDE_DIRS})
+            message(STATUS "Found Boost headers at: ${Boost_INCLUDE_DIRS}")
+
+            # Try to find the program_options library
+            find_library(Boost_PROGRAM_OPTIONS_LIBRARY
+                NAMES boost_program_options boost_program_options-mt
+                PATHS /usr/lib /usr/local/lib /usr/lib64 /usr/local/lib64
+                NO_DEFAULT_PATH)
+
+            if(Boost_PROGRAM_OPTIONS_LIBRARY)
+                message(STATUS "Found Boost program_options library: ${Boost_PROGRAM_OPTIONS_LIBRARY}")
+                set(BOOST_AVAILABLE TRUE)
+
+                # expose variables similar to FindBoost
+                set(Boost_INCLUDE_DIRS ${Boost_INCLUDE_DIRS})
+                set(Boost_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY})
+            else()
+                message(WARNING "Boost headers found but program_options library not found; program_options will be disabled")
+                set(BOOST_AVAILABLE FALSE)
+            endif()
+        else()
+            set(BOOST_AVAILABLE FALSE)
+            message(WARNING "Boost not found - program_options features disabled")
+            message(STATUS "Searched include paths: /usr/include /usr/local/include /opt/local/include and CMAKE_SYSTEM_PREFIX_PATH")
+        endif()
     endif()
 endif()
 
@@ -233,13 +265,41 @@ install(TARGETS Updater DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Generate and run Qt deploy script (guarded for older Qt and can be disabled)
 if(ENABLE_QT_DEPLOY_SCRIPT)
-    if(COMMAND qt_generate_deploy_app_script)
-        qt_generate_deploy_app_script(
-            TARGET ${PROJECT_NAME} OUTPUT_SCRIPT deploy_script
-        ) # create deploy script
-        install(SCRIPT ${deploy_script}) # run deploy script
+    if(APPLE)
+        if(COMMAND qt_generate_deploy_app_script)
+            # Only run the Qt deploy script generator on macOS (the helper's
+            # signature has varied between Qt versions and some platforms don't
+            # provide it). This avoids the "Unexpected arguments" error on other
+            # platforms.
+            qt_generate_deploy_app_script(
+                TARGET ${PROJECT_NAME} OUTPUT_SCRIPT deploy_script
+            ) # create deploy script
+            install(SCRIPT ${deploy_script}) # run deploy script
+        else()
+            message(STATUS "qt_generate_deploy_app_script not available on this Qt build; skipping deploy script generation on macOS")
+        endif()
+    elseif(WIN32)
+        # On Windows, prefer to run windeployqt (if available) after install.
+        find_program(WINDEPLOYQT_EXECUTABLE
+            NAMES windeployqt.exe windeployqt
+            HINTS $ENV{Qt6_DIR} PATH_SUFFIXES bin
+        )
+
+        if(WINDEPLOYQT_EXECUTABLE)
+            message(STATUS "windeployqt found: ${WINDEPLOYQT_EXECUTABLE}; adding install-time invocation")
+
+            # Run windeployqt as part of the install step so the ./install tree
+            # gets populated with Qt runtime artifacts. Use install(CODE ...) so
+            # it runs at install time.
+            install(CODE "execute_process(COMMAND \"${WINDEPLOYQT_EXECUTABLE}\" --release --dir \"${CMAKE_INSTALL_PREFIX}\" \"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/${PROJECT_NAME}.exe\"\n)")
+        else()
+            message(STATUS "windeployqt not found; skipping automatic windeployqt invocation on Windows")
+        endif()
     else()
-        message(STATUS "qt_generate_deploy_app_script not available; skipping deploy script generation")
+        # Linux and other platforms: do not call the Qt deploy script here. On
+        # Linux we package via separate scripts (deb/rpm/AppImage) and calling
+        # the Qt deployment generator may be unsupported or unnecessary.
+        message(STATUS "Skipping qt_generate_deploy_app_script on this platform (not macOS)")
     endif()
 else()
     message(STATUS "ENABLE_QT_DEPLOY_SCRIPT=OFF; skipping Qt deploy script generation")
