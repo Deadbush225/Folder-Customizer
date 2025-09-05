@@ -74,7 +74,7 @@ jobs:
       ls -la ./install || true
       ls -la ./install/bin || true
       echo "--- invoking deploy.sh with tracing ---"
-  FORCE_RPM_TARBALL=1 KEEP_OLD_DIST=0 bash -x ./scripts/deploy.sh linux
+      FORCE_RPM_TARBALL=1 KEEP_OLD_DIST=0 bash -x ./scripts/deploy.sh linux
 
    - name: Upload Linux artifacts
      uses: actions/upload-artifact@v4
