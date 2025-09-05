@@ -50,8 +50,40 @@ message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
 # Simple Boost setup - only need program_options
 if(WIN32 AND DEFINED BOOST_ROOT)
     message(STATUS "Using BOOST_ROOT: ${BOOST_ROOT}")
-    include_directories("${BOOST_ROOT}/include")
-    link_directories("${BOOST_ROOT}/lib")
+
+    # Candidate include directories
+    set(_BOOST_INC_DIRS)
+
+    if(EXISTS "${BOOST_ROOT}/include/boost")
+        list(APPEND _BOOST_INC_DIRS "${BOOST_ROOT}/include")
+    endif()
+
+    if(EXISTS "${BOOST_ROOT}/boost")
+        list(APPEND _BOOST_INC_DIRS "${BOOST_ROOT}")
+    endif()
+
+    if(NOT _BOOST_INC_DIRS)
+        message(WARNING "Could not find Boost headers under ${BOOST_ROOT}")
+    else()
+        foreach(_inc IN LISTS _BOOST_INC_DIRS)
+            include_directories("${_inc}")
+            message(STATUS "Boost includes: ${_inc}")
+        endforeach()
+    endif()
+
+    # Candidate library directories
+    foreach(_cand IN ITEMS
+        "${BOOST_ROOT}/lib"
+        "${BOOST_ROOT}/stage/lib"
+        "${BOOST_ROOT}/lib64-msvc-14.3"
+        "${BOOST_ROOT}/lib64-msvc-14.2"
+    )
+        if(EXISTS "${_cand}")
+            link_directories("${_cand}")
+            message(STATUS "Boost libs: ${_cand}")
+        endif()
+    endforeach()
+
     set(BOOST_AVAILABLE TRUE)
 else()
     # Use system Boost on Linux
@@ -73,7 +105,13 @@ function(u_include_header_only_boost SUBDIR_NAME)
         message("Including Boost Headers for ${SUBDIR_NAME}...")
 
         if(WIN32 AND DEFINED BOOST_ROOT)
-            target_include_directories(${SUBDIR_NAME} PRIVATE "${BOOST_ROOT}/include")
+            if(EXISTS "${BOOST_ROOT}/include/boost")
+                target_include_directories(${SUBDIR_NAME} PRIVATE "${BOOST_ROOT}/include")
+            endif()
+
+            if(EXISTS "${BOOST_ROOT}/boost")
+                target_include_directories(${SUBDIR_NAME} PRIVATE "${BOOST_ROOT}")
+            endif()
         else()
             target_include_directories(${SUBDIR_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
         endif()
@@ -85,7 +123,14 @@ function(u_include_and_link_compiled_boost SUBDIR_NAME BOOST_COMPONENT)
         message("Linking Boost program_options for ${SUBDIR_NAME}...")
 
         if(WIN32 AND DEFINED BOOST_ROOT)
-            target_include_directories(${SUBDIR_NAME} PRIVATE "${BOOST_ROOT}/include")
+            if(EXISTS "${BOOST_ROOT}/include/boost")
+                target_include_directories(${SUBDIR_NAME} PRIVATE "${BOOST_ROOT}/include")
+            endif()
+
+            if(EXISTS "${BOOST_ROOT}/boost")
+                target_include_directories(${SUBDIR_NAME} PRIVATE "${BOOST_ROOT}")
+            endif()
+
             target_link_libraries(${SUBDIR_NAME} PUBLIC "boost_program_options")
         else()
             target_include_directories(${SUBDIR_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
