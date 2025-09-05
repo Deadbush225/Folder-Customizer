@@ -32,42 +32,80 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 qt_standard_project_setup()
 message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
 
-# Try to find Boost, with fallback to module mode if config mode fails
+# Manual Boost setup - skip find_package and link directly
 message(STATUS "CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
 message(STATUS "CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}")
 message(STATUS "BOOST_ROOT=${BOOST_ROOT}")
-message(STATUS "Boost_DIR=${Boost_DIR}")
 
-find_package(Boost QUIET COMPONENTS program_options)
+# Set up Boost paths manually
+if(WIN32 AND DEFINED BOOST_ROOT)
+    set(BOOST_INCLUDE_DIR "${BOOST_ROOT}/include")
+    set(BOOST_LIBRARY_DIR "${BOOST_ROOT}/lib")
+    message(STATUS "Using manual Boost setup:")
+    message(STATUS "  BOOST_INCLUDE_DIR=${BOOST_INCLUDE_DIR}")
+    message(STATUS "  BOOST_LIBRARY_DIR=${BOOST_LIBRARY_DIR}")
 
-if(NOT Boost_FOUND)
-    message(STATUS "Boost config mode failed, trying module mode...")
-    set(Boost_NO_BOOST_CMAKE ON)
-    find_package(Boost REQUIRED COMPONENTS program_options)
-endif()
+    # Add include directory
+    if(EXISTS "${BOOST_INCLUDE_DIR}")
+        include_directories("${BOOST_INCLUDE_DIR}")
+        message(STATUS "✓ Boost include directory found")
+    else()
+        message(WARNING "✗ Boost include directory not found: ${BOOST_INCLUDE_DIR}")
+    endif()
 
-message(STATUS "Boost_FOUND=${Boost_FOUND}")
-message(STATUS "Boost_INCLUDE_DIRS=${Boost_INCLUDE_DIRS}")
-message(STATUS "Boost_LIBRARY_DIRS=${Boost_LIBRARY_DIRS}")
+    # Add library directory
+    if(EXISTS "${BOOST_LIBRARY_DIR}")
+        link_directories("${BOOST_LIBRARY_DIR}")
+        message(STATUS "✓ Boost library directory found")
+    else()
+        message(WARNING "✗ Boost library directory not found: ${BOOST_LIBRARY_DIR}")
+    endif()
 
-if(Boost_FOUND)
-    include_directories(${Boost_INCLUDE_DIRS})
+    set(BOOST_AVAILABLE TRUE)
+else()
+    # Fallback to system Boost on Linux or if BOOST_ROOT not set
+    find_package(Boost QUIET COMPONENTS program_options)
+
+    if(Boost_FOUND)
+        include_directories(${Boost_INCLUDE_DIRS})
+        set(BOOST_AVAILABLE TRUE)
+        message(STATUS "Using system Boost: ${Boost_VERSION}")
+    else()
+        set(BOOST_AVAILABLE FALSE)
+        message(WARNING "Boost not found - some features may be disabled")
+    endif()
 endif()
 
 # utility functions
 function(u_include_header_only_boost SUBDIR_NAME)
-    if(Boost_FOUND)
-        message("Including Boost Headers ...")
-        target_include_directories(${SUBDIR_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
+    if(BOOST_AVAILABLE)
+        message("Including Boost Headers for ${SUBDIR_NAME}...")
+
+        if(WIN32 AND DEFINED BOOST_ROOT)
+            target_include_directories(${SUBDIR_NAME} PRIVATE "${BOOST_INCLUDE_DIR}")
+        else()
+            target_include_directories(${SUBDIR_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
+        endif()
     endif()
 endfunction()
 
 function(u_include_and_link_compiled_boost SUBDIR_NAME BOOST_COMPONENT)
-    if(Boost_FOUND)
-        message("Including Boost Headers ...")
-        target_include_directories(${SUBDIR_NAME} PRIVATE ${Boost_INCLUDE_DIRS}) # ? try to check if this is actually needed for compiled
-        message("Linking Boost Libraries ...")
-        target_link_libraries(${SUBDIR_NAME} PUBLIC ${BOOST_COMPONENT})
+    if(BOOST_AVAILABLE)
+        message("Including Boost Headers and linking ${BOOST_COMPONENT} for ${SUBDIR_NAME}...")
+
+        if(WIN32 AND DEFINED BOOST_ROOT)
+            target_include_directories(${SUBDIR_NAME} PRIVATE "${BOOST_INCLUDE_DIR}")
+
+            # For Windows with vcpkg, link the library directly by name
+            if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+                target_link_libraries(${SUBDIR_NAME} PUBLIC "boost_program_options")
+            else()
+                target_link_libraries(${SUBDIR_NAME} PUBLIC "boost_program_options")
+            endif()
+        else()
+            target_include_directories(${SUBDIR_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
+            target_link_libraries(${SUBDIR_NAME} PUBLIC ${BOOST_COMPONENT})
+        endif()
     endif()
 endfunction()
 

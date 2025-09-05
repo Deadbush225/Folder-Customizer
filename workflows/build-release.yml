@@ -197,70 +197,60 @@ jobs:
             }
           }
           
-          Write-Host "Setting Boost paths:"
+          Write-Host "Setting Boost paths for manual linking:"
           Write-Host "  BOOST_ROOT: $boostRoot"
-          Write-Host "  Boost_INCLUDE_DIR: $boostIncludeDir" 
-          Write-Host "  Boost_LIBRARY_DIR: $boostLibraryDir"
-          Write-Host "  Boost_DIR: $boostDir"
           
-          # List what's actually in the share directory
-          Write-Host "Contents of vcpkg share directory:"
-          if (Test-Path "$vcpkgInstalled\share") {
-            Get-ChildItem "$vcpkgInstalled\share" -Directory | ForEach-Object { 
-              Write-Host "  - $($_.Name)"
-              if ($_.Name -match "boost") {
-                Write-Host "    CMake files:"
-                Get-ChildItem $_.FullName -Filter "*.cmake" | ForEach-Object { Write-Host "      - $($_.Name)" }
-              }
+          # Just verify the basic structure exists
+          if (Test-Path "$boostRoot\include\boost") {
+            Write-Host "✓ Boost headers found"
+          } else {
+            Write-Host "✗ Boost headers missing"
+          }
+          
+          if (Test-Path "$boostRoot\lib") {
+            Write-Host "✓ Boost lib directory found"
+            $boostLibs = Get-ChildItem "$boostRoot\lib" -Name | Where-Object { $_ -match "boost.*program_options" }
+            if ($boostLibs) {
+              Write-Host "✓ Boost program_options library found:"
+              $boostLibs | ForEach-Object { Write-Host "  - $_" }
+            } else {
+              Write-Host "✗ Boost program_options library not found"
             }
+          } else {
+            Write-Host "✗ Boost lib directory missing"
           }
           
           # Show what CMake variables the toolchain will set
-          Write-Host "Testing vcpkg toolchain with a simple CMake check..."
+          Write-Host "Testing manual Boost setup with a simple CMake check..."
           $testCmake = @"
             cmake_minimum_required(VERSION 3.16)
             project(BoostTest)
-            find_package(Boost QUIET COMPONENTS program_options)
-            message(STATUS "VCPKG_TEST: Boost_FOUND=`${Boost_FOUND}")
-            message(STATUS "VCPKG_TEST: Boost_VERSION=`${Boost_VERSION}")
-            message(STATUS "VCPKG_TEST: CMAKE_PREFIX_PATH=`${CMAKE_PREFIX_PATH}")
-            message(STATUS "VCPKG_TEST: Boost_INCLUDE_DIRS=`${Boost_INCLUDE_DIRS}")
-            message(STATUS "VCPKG_TEST: Boost_LIBRARY_DIRS=`${Boost_LIBRARY_DIRS}")
+            message(STATUS "BOOST_TEST: BOOST_ROOT=`${BOOST_ROOT}")
+            message(STATUS "BOOST_TEST: CMAKE_PREFIX_PATH=`${CMAKE_PREFIX_PATH}")
+            if(EXISTS "`${BOOST_ROOT}/include/boost")
+              message(STATUS "BOOST_TEST: ✓ Boost headers found")
+            else()
+              message(STATUS "BOOST_TEST: ✗ Boost headers missing")
+            endif()
+            if(EXISTS "`${BOOST_ROOT}/lib")
+              message(STATUS "BOOST_TEST: ✓ Boost lib directory found") 
+            else()
+              message(STATUS "BOOST_TEST: ✗ Boost lib directory missing")
+            endif()
             "@
           
           $testCmake | Out-File -FilePath "test_boost.cmake" -Encoding UTF8
           
-          Write-Host "Running CMake test to check Boost detection..."
-          $cmakeTestArgs = @(
-            "-P", "test_boost.cmake"
-            "-DCMAKE_TOOLCHAIN_FILE=$toolchainFile"
-            "-DVCPKG_TARGET_TRIPLET=x64-windows"
-            "-DBOOST_ROOT=$boostRoot"
-            "-DBoost_INCLUDE_DIR=$boostIncludeDir"
-            "-DBoost_LIBRARY_DIR=$boostLibraryDir"
-          )
-          if ($boostDir) {
-            $cmakeTestArgs += "-DBoost_DIR=$boostDir"
-          }
-          cmake @cmakeTestArgs
+          Write-Host "Running CMake test to check manual Boost setup..."
+          cmake -P test_boost.cmake -DBOOST_ROOT="$boostRoot"
           
-          Write-Host "Building with vcpkg toolchain and explicit Boost paths..."
-          $cmakeBuildArgs = @(
-            "-B", "build"
-            "-G", "Visual Studio 17 2022"
-            "-A", "x64"
-            "-DCMAKE_PREFIX_PATH=$($env:Qt6_DIR);$vcpkgInstalled"
-            "-DCMAKE_TOOLCHAIN_FILE=$toolchainFile"
-            "-DVCPKG_TARGET_TRIPLET=x64-windows"
-            "-DBOOST_ROOT=$boostRoot"
-            "-DBoost_INCLUDE_DIR=$boostIncludeDir"
-            "-DBoost_LIBRARY_DIR=$boostLibraryDir"
-            "--debug-output"
-          )
-          if ($boostDir) {
-            $cmakeBuildArgs += "-DBoost_DIR=$boostDir"
-          }
-          cmake @cmakeBuildArgs
+          Write-Host "Building with vcpkg toolchain and manual Boost linking..."
+          cmake -B build -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }};$vcpkgInstalled" `
+            -DCMAKE_TOOLCHAIN_FILE="$toolchainFile" `
+            -DVCPKG_TARGET_TRIPLET=x64-windows `
+            -DBOOST_ROOT="$boostRoot" `
+            --debug-output
         } else {
           Write-Host "ERROR: vcpkg toolchain file not found!"
           Write-Host "Available files in vcpkg root:"
