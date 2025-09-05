@@ -11,6 +11,9 @@ endif()
 
 set(CMAKE_BUILD_TYPE "Release")
 
+# Allow disabling Qt deploy script generation (useful for older distro Qt packages or CI)
+option(ENABLE_QT_DEPLOY_SCRIPT "Generate and run Qt deploy script during install" ON)
+
 # set(CMAKE_BUILD_TYPE "Debug")
 # Use Windows-specific Boost hint only on developer machines without toolchains; don't pollute CI
 if(WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
@@ -99,6 +102,13 @@ else()
     endif()
 endif()
 
+# Expose Boost availability to all targets as a macro
+if(BOOST_AVAILABLE)
+    add_compile_definitions(HAVE_BOOST_PROGRAM_OPTIONS=1)
+else()
+    add_compile_definitions(HAVE_BOOST_PROGRAM_OPTIONS=0)
+endif()
+
 # utility functions
 function(u_include_header_only_boost SUBDIR_NAME)
     if(BOOST_AVAILABLE)
@@ -174,6 +184,13 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Core Logger Utils Customizer UserInterface Qt6::Widgets Qt6::Core)
 
+# Propagate Boost availability to the app target too
+if(BOOST_AVAILABLE)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_BOOST_PROGRAM_OPTIONS=1)
+else()
+    target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_BOOST_PROGRAM_OPTIONS=0)
+endif()
+
 # installer
 install(CODE "file(REMOVE_RECURSE \"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}\")")
 
@@ -214,11 +231,19 @@ install(FILES ${ROOT_ICON} DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons)
 # Move DLL to the installation folder
 install(TARGETS Updater DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-qt_generate_deploy_app_script(
-    TARGET ${PROJECT_NAME} OUTPUT_SCRIPT deploy_script NO_TRANSLATIONS
-) # create deploy script
-
-install(SCRIPT ${deploy_script}) # run deploy script
+# Generate and run Qt deploy script (guarded for older Qt and can be disabled)
+if(ENABLE_QT_DEPLOY_SCRIPT)
+    if(COMMAND qt_generate_deploy_app_script)
+        qt_generate_deploy_app_script(
+            TARGET ${PROJECT_NAME} OUTPUT_SCRIPT deploy_script
+        ) # create deploy script
+        install(SCRIPT ${deploy_script}) # run deploy script
+    else()
+        message(STATUS "qt_generate_deploy_app_script not available; skipping deploy script generation")
+    endif()
+else()
+    message(STATUS "ENABLE_QT_DEPLOY_SCRIPT=OFF; skipping Qt deploy script generation")
+endif()
 
 # --- Convenience install targets -------------------------------------------
 # install_local: Build app + Updater (+ context menu on Windows), then remove

@@ -33,7 +33,7 @@ jobs:
 
    - name: Build application
      run: |
-      cmake -B build -DCMAKE_BUILD_TYPE=Release -DBoost_NO_BOOST_CMAKE=ON -DBoost_USE_STATIC_LIBS=OFF
+  cmake -B build -DCMAKE_BUILD_TYPE=Release -DBoost_NO_BOOST_CMAKE=ON -DBoost_USE_STATIC_LIBS=OFF -DENABLE_QT_DEPLOY_SCRIPT=OFF
       cmake --build build
       cmake --build build --target install_local
 

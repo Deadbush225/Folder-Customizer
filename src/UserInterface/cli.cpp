@@ -1,5 +1,6 @@
 #include "UserInterface/cli.h"
 
+#if HAVE_BOOST_PROGRAM_OPTIONS
 namespace po = boost::program_options;
 
 CLI::CLI(po::variables_map vm) {
@@ -29,3 +30,6 @@ CLI::CLI(po::variables_map vm) {
     QApplication::quit();
     exit(0);
 }
+#else
+// No Boost - no CLI implementation.
+#endif
