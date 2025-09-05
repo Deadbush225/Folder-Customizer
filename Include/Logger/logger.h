@@ -10,8 +10,6 @@
 #include <QtCore/QFileInfo>
 #include <string>
 
-#include <boost/format.hpp>
-
 #include <map>
 
 namespace LOGGER {

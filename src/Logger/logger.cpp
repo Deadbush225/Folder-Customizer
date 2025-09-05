@@ -46,10 +46,10 @@ void Logger::write(QVariant message,
     std::string t_priority =
         LOGGER::priority_table[priority].toStdString().c_str();
 
-    QString line = QString((boost::format("[%1%][%2%][%3%]: ") % t_chronology %
-                            t_status % t_priority)
-                               .str()
-                               .c_str());
+    QString line = QString("[%1][%2][%3]: ")
+                       .arg(QString::fromStdString(t_chronology))
+                       .arg(QString::fromStdString(t_status))
+                       .arg(QString::fromStdString(t_priority));
 
     line.append(message.toString());
 

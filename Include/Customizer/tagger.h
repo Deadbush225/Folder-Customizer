@@ -9,8 +9,8 @@
 
 #include <QtCore/QSettings>
 
-#include <experimental/type_traits>
 #include <iostream>
+#include <type_traits>
 
 #ifdef _WIN32
 #include <errhandlingapi.h>

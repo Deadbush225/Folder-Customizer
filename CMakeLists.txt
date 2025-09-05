@@ -32,38 +32,14 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 qt_standard_project_setup()
 message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
 
-# Manual Boost setup - skip find_package and link directly
-message(STATUS "CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
-message(STATUS "CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}")
-message(STATUS "BOOST_ROOT=${BOOST_ROOT}")
-
-# Set up Boost paths manually
+# Simple Boost setup - only need program_options
 if(WIN32 AND DEFINED BOOST_ROOT)
-    set(BOOST_INCLUDE_DIR "${BOOST_ROOT}/include")
-    set(BOOST_LIBRARY_DIR "${BOOST_ROOT}/lib")
-    message(STATUS "Using manual Boost setup:")
-    message(STATUS "  BOOST_INCLUDE_DIR=${BOOST_INCLUDE_DIR}")
-    message(STATUS "  BOOST_LIBRARY_DIR=${BOOST_LIBRARY_DIR}")
-
-    # Add include directory
-    if(EXISTS "${BOOST_INCLUDE_DIR}")
-        include_directories("${BOOST_INCLUDE_DIR}")
-        message(STATUS "✓ Boost include directory found")
-    else()
-        message(WARNING "✗ Boost include directory not found: ${BOOST_INCLUDE_DIR}")
-    endif()
-
-    # Add library directory
-    if(EXISTS "${BOOST_LIBRARY_DIR}")
-        link_directories("${BOOST_LIBRARY_DIR}")
-        message(STATUS "✓ Boost library directory found")
-    else()
-        message(WARNING "✗ Boost library directory not found: ${BOOST_LIBRARY_DIR}")
-    endif()
-
+    message(STATUS "Using BOOST_ROOT: ${BOOST_ROOT}")
+    include_directories("${BOOST_ROOT}/include")
+    link_directories("${BOOST_ROOT}/lib")
     set(BOOST_AVAILABLE TRUE)
 else()
-    # Fallback to system Boost on Linux or if BOOST_ROOT not set
+    # Use system Boost on Linux
     find_package(Boost QUIET COMPONENTS program_options)
 
     if(Boost_FOUND)
@@ -72,7 +48,7 @@ else()
         message(STATUS "Using system Boost: ${Boost_VERSION}")
     else()
         set(BOOST_AVAILABLE FALSE)
-        message(WARNING "Boost not found - some features may be disabled")
+        message(WARNING "Boost not found - program_options features disabled")
     endif()
 endif()
 
@@ -82,7 +58,7 @@ function(u_include_header_only_boost SUBDIR_NAME)
         message("Including Boost Headers for ${SUBDIR_NAME}...")
 
         if(WIN32 AND DEFINED BOOST_ROOT)
-            target_include_directories(${SUBDIR_NAME} PRIVATE "${BOOST_INCLUDE_DIR}")
+            target_include_directories(${SUBDIR_NAME} PRIVATE "${BOOST_ROOT}/include")
         else()
             target_include_directories(${SUBDIR_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
         endif()
@@ -91,17 +67,11 @@ endfunction()
 
 function(u_include_and_link_compiled_boost SUBDIR_NAME BOOST_COMPONENT)
     if(BOOST_AVAILABLE)
-        message("Including Boost Headers and linking ${BOOST_COMPONENT} for ${SUBDIR_NAME}...")
+        message("Linking Boost program_options for ${SUBDIR_NAME}...")
 
         if(WIN32 AND DEFINED BOOST_ROOT)
-            target_include_directories(${SUBDIR_NAME} PRIVATE "${BOOST_INCLUDE_DIR}")
-
-            # For Windows with vcpkg, link the library directly by name
-            if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-                target_link_libraries(${SUBDIR_NAME} PUBLIC "boost_program_options")
-            else()
-                target_link_libraries(${SUBDIR_NAME} PUBLIC "boost_program_options")
-            endif()
+            target_include_directories(${SUBDIR_NAME} PRIVATE "${BOOST_ROOT}/include")
+            target_link_libraries(${SUBDIR_NAME} PUBLIC "boost_program_options")
         else()
             target_include_directories(${SUBDIR_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
             target_link_libraries(${SUBDIR_NAME} PUBLIC ${BOOST_COMPONENT})
