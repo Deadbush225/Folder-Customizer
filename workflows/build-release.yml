@@ -22,10 +22,10 @@ jobs:
 
    - name: Install Qt6
      run: |
-  sudo apt update
-  sudo apt install -y qt6-base-dev qt6-tools-dev cmake build-essential
-  sudo apt install -y libgl1-mesa-dev libxkbcommon-dev libxkbcommon-x11-dev libx11-xcb-dev libxcb1-dev libxcb-util-dev libxcb-xkb-dev
-  sudo apt install -y libboost-program-options-dev libboost-dev
+      sudo apt update
+      sudo apt install -y qt6-base-dev qt6-tools-dev cmake build-essential
+      sudo apt install -y libgl1-mesa-dev libxkbcommon-dev libxkbcommon-x11-dev libx11-xcb-dev libxcb1-dev libxcb-util-dev libxcb-xkb-dev
+      sudo apt install -y libboost-program-options-dev libboost-dev
 
    - name: Install UPX
      run: |
@@ -33,9 +33,9 @@ jobs:
 
    - name: Build application
      run: |
-  cmake -B build -DCMAKE_BUILD_TYPE=Release -DBoost_NO_BOOST_CMAKE=ON -DBoost_USE_STATIC_LIBS=OFF
-  cmake --build build
-  cmake --build build --target install_local
+      cmake -B build -DCMAKE_BUILD_TYPE=Release -DBoost_NO_BOOST_CMAKE=ON -DBoost_USE_STATIC_LIBS=OFF
+      cmake --build build
+      cmake --build build --target install_local
 
    - name: Install packaging tools
      run: |
@@ -153,7 +153,7 @@ jobs:
       Write-Host "=== Build Environment Debug ==="
       Write-Host "VCPKG_INSTALLATION_ROOT: $env:VCPKG_INSTALLATION_ROOT"
       Write-Host "BOOST_FALLBACK: $env:BOOST_FALLBACK"
-      
+
       if ($env:BOOST_FALLBACK -eq "true") {
         Write-Host "Using Chocolatey Boost installation..."
         $boostRoot = "C:\local\boost_1_82_0"
@@ -172,26 +172,46 @@ jobs:
         if (Test-Path $toolchainFile) {
           Write-Host "=== VCPKG ENVIRONMENT CHECK ==="
           Write-Host "VCPKG_INSTALLATION_ROOT: $env:VCPKG_INSTALLATION_ROOT"
-          Write-Host "Expected Boost location: $env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          $vcpkgInstalled = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          Write-Host "Expected Boost location: $vcpkgInstalled"
+          
+          # Add vcpkg paths to CMAKE_PREFIX_PATH and set Boost hints
+          $boostRoot = "$vcpkgInstalled"
+          $boostIncludeDir = "$vcpkgInstalled\include"
+          $boostLibraryDir = "$vcpkgInstalled\lib"
+          
+          Write-Host "Setting Boost paths:"
+          Write-Host "  BOOST_ROOT: $boostRoot"
+          Write-Host "  Boost_INCLUDE_DIR: $boostIncludeDir" 
+          Write-Host "  Boost_LIBRARY_DIR: $boostLibraryDir"
           
           # Show what CMake variables the toolchain will set
           Write-Host "Testing vcpkg toolchain with a simple CMake check..."
           $testCmake = @"
-cmake_minimum_required(VERSION 3.16)
-project(BoostTest)
-find_package(Boost QUIET COMPONENTS program_options)
-message(STATUS "VCPKG_TEST: Boost_FOUND=`${Boost_FOUND}")
-message(STATUS "VCPKG_TEST: Boost_VERSION=`${Boost_VERSION}")
-message(STATUS "VCPKG_TEST: CMAKE_PREFIX_PATH=`${CMAKE_PREFIX_PATH}")
-"@
+            cmake_minimum_required(VERSION 3.16)
+            project(BoostTest)
+            find_package(Boost QUIET COMPONENTS program_options)
+            message(STATUS "VCPKG_TEST: Boost_FOUND=`${Boost_FOUND}")
+            message(STATUS "VCPKG_TEST: Boost_VERSION=`${Boost_VERSION}")
+            message(STATUS "VCPKG_TEST: CMAKE_PREFIX_PATH=`${CMAKE_PREFIX_PATH}")
+            message(STATUS "VCPKG_TEST: Boost_INCLUDE_DIRS=`${Boost_INCLUDE_DIRS}")
+            message(STATUS "VCPKG_TEST: Boost_LIBRARY_DIRS=`${Boost_LIBRARY_DIRS}")
+            "@
           
           $testCmake | Out-File -FilePath "test_boost.cmake" -Encoding UTF8
           
           Write-Host "Running CMake test to check Boost detection..."
-          cmake -P test_boost.cmake -DCMAKE_TOOLCHAIN_FILE="$toolchainFile" -DVCPKG_TARGET_TRIPLET=x64-windows
+          cmake -P test_boost.cmake -DCMAKE_TOOLCHAIN_FILE="$toolchainFile" -DVCPKG_TARGET_TRIPLET=x64-windows -DBOOST_ROOT="$boostRoot" -DBoost_INCLUDE_DIR="$boostIncludeDir" -DBoost_LIBRARY_DIR="$boostLibraryDir"
           
-          Write-Host "Building with vcpkg toolchain..."
-          cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}" -DCMAKE_TOOLCHAIN_FILE="$toolchainFile" -DVCPKG_TARGET_TRIPLET=x64-windows --debug-output
+          Write-Host "Building with vcpkg toolchain and explicit Boost paths..."
+          cmake -B build -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }};$vcpkgInstalled" `
+            -DCMAKE_TOOLCHAIN_FILE="$toolchainFile" `
+            -DVCPKG_TARGET_TRIPLET=x64-windows `
+            -DBOOST_ROOT="$boostRoot" `
+            -DBoost_INCLUDE_DIR="$boostIncludeDir" `
+            -DBoost_LIBRARY_DIR="$boostLibraryDir" `
+            --debug-output
         } else {
           Write-Host "ERROR: vcpkg toolchain file not found!"
           Write-Host "Available files in vcpkg root:"
