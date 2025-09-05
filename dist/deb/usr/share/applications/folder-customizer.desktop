@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Folder Customizer
+Comment=Customize folder icons and tags
+Exec=folder-customizer
+Icon=folder-customizer
+Type=Application
+Categories=Utility;FileManager;

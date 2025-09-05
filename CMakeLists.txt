@@ -243,6 +243,9 @@ install(FILES ${ROOT_ICON} DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons)
 # Move DLL to the installation folder
 install(TARGETS Updater DESTINATION ${CMAKE_INSTALL_BINDIR})
 
+# Install the main application executable so install_local populates ./install/bin
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
+
 # Generate and run Qt deploy script (guarded for older Qt and can be disabled)
 if(ENABLE_QT_DEPLOY_SCRIPT)
     if(APPLE)

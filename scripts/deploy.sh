@@ -49,17 +49,70 @@ log_error() {
 
 # Check if build exists
 check_build() {
-    if [ -f "$INSTALL_DIR/FolderCustomizer" ]; then
-        BIN_NAME="FolderCustomizer"
-    elif [ -f "$INSTALL_DIR/Folder Customizer" ]; then
-        BIN_NAME="Folder Customizer"
-    else
-        log_error "Build not found. Please build the project first:"
-        echo "  cmake -B build -DCMAKE_BUILD_TYPE=Release"
-        echo "  cmake --build build"
-        echo "  cmake --build build --target install_local"
+    log_info "Checking for build artifacts in: $INSTALL_DIR"
+    if [ ! -d "$INSTALL_DIR" ]; then
+        log_error "Install directory '$INSTALL_DIR' does not exist. Please run the install_local target first."
         exit 1
     fi
+
+    # Show what's in the install directory to help CI debugging
+    echo "--- ls -la output ---"
+    ls -la "$INSTALL_DIR" || true
+    echo "--- find -maxdepth 1 -printf ---"
+    find "$INSTALL_DIR" -maxdepth 1 -printf '%M %u %g %s %p\n' || true
+
+    # Prefer exact expected names first
+    if [ -f "$INSTALL_DIR/FolderCustomizer" ]; then
+        BIN_NAME="FolderCustomizer"
+        log_info "Found exact match: $BIN_NAME"
+        return
+    fi
+
+    if [ -f "$INSTALL_DIR/Folder Customizer" ]; then
+        BIN_NAME="Folder Customizer"
+        log_info "Found exact match with space: $BIN_NAME"
+        return
+    fi
+
+    # Fallback: look for any executable file in the install dir
+    # Try explicit name patterns (exact, with space, with extension)
+    shopt -s nullglob 2>/dev/null || true
+    candidates=("$INSTALL_DIR/FolderCustomizer" "$INSTALL_DIR/Folder Customizer" "$INSTALL_DIR/FolderCustomizer.exe" "$INSTALL_DIR/Folder Customizer.exe")
+    for c in "${candidates[@]}"; do
+        if [ -f "$c" ]; then
+            BIN_NAME="$(basename "$c")"
+            log_info "Found candidate by name: $BIN_NAME"
+            return
+        fi
+    done
+
+    # Look for any file starting with FolderCustomizer or Folder
+    for c in "$INSTALL_DIR"/FolderCustomizer* "$INSTALL_DIR"/Folder*; do
+        if [ -e "$c" ] && [ -f "$c" ]; then
+            BIN_NAME="$(basename "$c")"
+            if [ -x "$c" ]; then
+                log_info "Found executable candidate: $BIN_NAME"
+            else
+                log_warning "Found candidate without +x: $BIN_NAME (will use anyway)"
+            fi
+            return
+        fi
+    done
+
+    # Fallback: any regular file
+    for f in "$INSTALL_DIR"/*; do
+        if [ -f "$f" ]; then
+            BIN_NAME="$(basename "$f")"
+            log_warning "Using first regular file fallback: $BIN_NAME"
+            return
+        fi
+    done
+
+    log_error "Build not found after searching $INSTALL_DIR. Please build the project first:"
+    echo "  cmake -B build -DCMAKE_BUILD_TYPE=Release"
+    echo "  cmake --build build"
+    echo "  cmake --build build --target install_local"
+    exit 1
 }
 
 # Create AppImage (Universal Linux)

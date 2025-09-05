@@ -43,9 +43,27 @@ jobs:
       echo "Tree (maxdepth 3)"
       find ./install -maxdepth 3 -printf '%y %p\n' || true
 
+   - name: Debug install tree (detailed)
+     run: |
+      echo "PWD: $(pwd)"
+      echo "USER: $(whoami)"
+      echo "Stat ./install:" || true
+      stat ./install || true
+      echo "Detailed find:" 
+      find ./install -maxdepth 4 -ls || true
+      echo "File types:" 
+      file ./install/* || true
+
    - name: Create packages
      run: |
-      FORCE_RPM_TARBALL=1 bash ./scripts/deploy.sh linux
+      set -x
+      echo "--- Environment ---"
+      env
+      echo "--- install directory listing (before deploy) ---"
+      ls -la ./install || true
+      ls -la ./install/bin || true
+      echo "--- invoking deploy.sh with tracing ---"
+      FORCE_RPM_TARBALL=1 bash -x ./scripts/deploy.sh linux
 
    - name: Upload Linux artifacts
      uses: actions/upload-artifact@v4

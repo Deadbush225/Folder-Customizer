@@ -1,0 +1,86 @@
+# Maintainer: Deadbush225 <your-email@example.com>
+pkgname=folder-customizer
+pkgver=0.0.8
+pkgrel=1
+pkgdesc="Customize folder icons and tags"
+arch=('x86_64')
+url="https://github.com/Deadbush225/folder-customizer"
+license=('MIT')
+depends=('qt6-base')
+source=()
+md5sums=()
+
+package() {
+    # Install binary and libraries
+        install -dm755 "/usr/lib/"
+    cp -r "/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/install/bin"/* "/usr/lib//"
+        if [ -f "/usr/lib//FolderCustomizer" ]; then
+                mv "/usr/lib//FolderCustomizer" "/usr/lib//FolderCustomizer"
+        fi
+    
+    # Create wrapper script
+    install -dm755 "/usr/bin"
+        cat > "/usr/bin/" << 'EOFSCRIPT'
+#!/bin/bash
+export LD_LIBRARY_PATH="/usr/lib/folder-customizer:"
+exec "/usr/lib/folder-customizer/FolderCustomizer" ""
+EOFSCRIPT
+    chmod +x "/usr/bin/"
+    
+    # Desktop file
+    install -dm755 "/usr/share/applications"
+        cat > "/usr/share/applications/.desktop" << 'EOFDESKTOP'
+[Desktop Entry]
+Name=Folder Customizer
+Comment=Customize folder icons and tags
+Exec=folder-customizer
+Icon=folder-customizer
+Type=Application
+Categories=Utility;FileManager;
+EOFDESKTOP
+
+        # Helper and icons
+        install -dm755 "/usr/share/folder-customizer/icons"
+        for tone in Dark Light Normal; do
+            if [ -d "/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/Icons/Normal/PNG" ]; then
+                install -dm755 "/usr/share/folder-customizer/icons/Normal"
+                cp "/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/Icons/Normal/PNG"/*.png "/usr/share/folder-customizer/icons/Normal/" 2>/dev/null || true
+            fi
+        done
+        cat > "/usr/bin/fc-directory" << 'EOFH'
+#!/bin/bash
+set -e
+usage() { echo "Usage: fc-directory --folder PATH --tone (Dark|Light|Normal) --color COLOR [--tag TEXT]" >&2; }
+for arg in ""; do
+    case "" in
+        --folder=*) FOLDER="" ;;
+        --tone=*) TONE="" ;;
+        --color=*) COLOR="" ;;
+        --tag=*) TAG="" ;;
+    esac
+done
+[ -z "" ] && usage && exit 2
+[ -z "" ] && usage && exit 2
+[ -z "" ] && usage && exit 2
+ICON_BASE="/usr/share/folder-customizer/icons"
+if [ -f "//.png" ]; then
+    ICON_PATH="//.png"
+else
+    echo "Icon not found: /.png" >&2; exit 3
+fi
+mkdir -p ""
+cat > "/.directory" <<EOD
+[Desktop Entry]
+Icon=
+EOD
+[ -n "" ] && echo "Comment=" >> "/.directory"
+echo "Applied icon to "
+EOFH
+        chmod +x "/usr/bin/fc-directory"
+    
+        # Application icon
+        install -dm755 "/usr/share/icons/hicolor/256x256/apps"
+        if [ -f "/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/Icons/Folder Customizer.png" ]; then
+                cp "/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/Icons/Folder Customizer.png" "/usr/share/icons/hicolor/256x256/apps/folder-customizer.png"
+        fi
+}
