@@ -56,6 +56,27 @@ prepare_dist() {
     fi
 }
 
+# Find manifest.json from common locations and expose as MANIFEST_SRC
+locate_manifest() {
+    MANIFEST_SRC=""
+    if [ -f "$INSTALL_DIR/manifest.json" ]; then
+        MANIFEST_SRC="$INSTALL_DIR/manifest.json"
+    elif [ -f "$PROJECT_ROOT/install/manifest.json" ]; then
+        MANIFEST_SRC="$PROJECT_ROOT/install/manifest.json"
+    elif [ -f "$PROJECT_ROOT/manifest.json" ]; then
+        MANIFEST_SRC="$PROJECT_ROOT/manifest.json"
+    fi
+}
+
+# Ensure manifest.json is present under INSTALL_DIR for uniform packaging
+ensure_manifest_in_install() {
+    locate_manifest
+    if [ -n "$MANIFEST_SRC" ] && [ ! -f "$INSTALL_DIR/manifest.json" ]; then
+        log_info "Including manifest.json from $(basename "$MANIFEST_SRC") into install/bin"
+        cp "$MANIFEST_SRC" "$INSTALL_DIR/manifest.json" 2>/dev/null || true
+    fi
+}
+
 # Check if build exists
 check_build() {
     log_info "Checking for build artifacts in: $INSTALL_DIR"
@@ -127,6 +148,7 @@ check_build() {
 # Create AppImage (Universal Linux)
 create_appimage() {
     log_info "Creating AppImage..."
+    ensure_manifest_in_install
     
         local appdir="$PROJECT_ROOT/dist/FolderCustomizer.AppDir"
     rm -rf "$appdir"
@@ -136,6 +158,10 @@ create_appimage() {
     
     # Copy application
         cp "$INSTALL_DIR/$BIN_NAME" "$appdir/usr/bin/FolderCustomizer"
+    # Include manifest.json (ensured in INSTALL_DIR by check_build)
+    if [ -f "$INSTALL_DIR/manifest.json" ]; then
+        cp "$INSTALL_DIR/manifest.json" "$appdir/usr/bin/manifest.json"
+    fi
     # Copy updater if built
     if [ -f "$INSTALL_DIR/Updater" ]; then
         cp "$INSTALL_DIR/Updater" "$appdir/usr/bin/"
@@ -274,6 +300,7 @@ EOF
 # Create DEB package (Ubuntu/Debian)
 create_deb() {
     log_info "Creating DEB package..."
+    ensure_manifest_in_install
     
         local debdir="$PROJECT_ROOT/dist/deb"
     rm -rf "$debdir"
@@ -286,6 +313,10 @@ create_deb() {
     
     # Copy application and libraries
         cp "$INSTALL_DIR/$BIN_NAME" "$debdir/usr/lib/folder-customizer/FolderCustomizer"
+    # Include manifest.json in the app lib directory if present
+    if [ -f "$INSTALL_DIR/manifest.json" ]; then
+        cp "$INSTALL_DIR/manifest.json" "$debdir/usr/lib/folder-customizer/"
+    fi
     # Copy updater if built
     if [ -f "$INSTALL_DIR/Updater" ]; then
                 cp "$INSTALL_DIR/Updater" "$debdir/usr/lib/folder-customizer/"
@@ -398,6 +429,7 @@ EOF
 # Create RPM package (Fedora/RHEL)
 create_rpm() {
     log_info "Creating RPM package..."
+    ensure_manifest_in_install
 
     # Force tarball on non-RPM distros or when requested
     if [ "${FORCE_RPM_TARBALL:-}" = "1" ]; then
@@ -593,6 +625,7 @@ EOF
 # Create Arch Linux package (for Manjaro)
 create_arch() {
     log_info "Creating Arch Linux package..."
+    ensure_manifest_in_install
     
     local archdir="$PROJECT_ROOT/dist/arch"
     rm -rf "$archdir"

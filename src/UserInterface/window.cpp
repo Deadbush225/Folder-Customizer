@@ -51,12 +51,13 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
                      [this]() { registryManipulator->uninstallRegistry(); });
     settings_menu->addAction(uninstall_key_act);
 
+    auto help_menu = this->menuBar()->addMenu("&Help");
     auto check_updates_act = new QAction("Check Updates", this);
     QObject::connect(check_updates_act, &QAction::triggered, this, [this]() {
         QProcess::startDetached(QCoreApplication::applicationDirPath() +
                                 "/Updater.exe");
     });
-    settings_menu->addAction(check_updates_act);
+    help_menu->addAction(check_updates_act);
 
     auto reset_stylesheets_act = new QAction("Reset Stylesheet", this);
     QObject::connect(reset_stylesheets_act, &QAction::triggered, this,
