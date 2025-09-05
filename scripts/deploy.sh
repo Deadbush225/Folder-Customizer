@@ -47,6 +47,15 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Prepare dist directory (clean unless KEEP_OLD_DIST=1)
+prepare_dist() {
+    mkdir -p "$PROJECT_ROOT/dist"
+    if [ "${KEEP_OLD_DIST:-0}" != "1" ]; then
+        log_info "Cleaning dist/ (set KEEP_OLD_DIST=1 to keep)"
+        rm -f "$PROJECT_ROOT"/dist/folder-customizer-* "$PROJECT_ROOT"/dist/FolderCustomizer-* 2>/dev/null || true
+    fi
+}
+
 # Check if build exists
 check_build() {
     log_info "Checking for build artifacts in: $INSTALL_DIR"
@@ -252,8 +261,14 @@ EOF
         }
     fi
 
-    tar czf "FolderCustomizer-${VERSION}-x86_64.tar.gz" -C "$(dirname "$appdir")" "$(basename "$appdir")"
-    log_success "Archive created: dist/FolderCustomizer-${VERSION}-x86_64.tar.gz"
+    # Standardize fallback tarball name; skip if already present to avoid duplicates
+    STD_TAR="folder-customizer-${VERSION}-x86_64.tar.gz"
+    if [ -f "$STD_TAR" ]; then
+        log_warning "Tarball $STD_TAR already exists; skipping AppImage fallback tar creation"
+    else
+        tar czf "$STD_TAR" -C "$(dirname "$appdir")" "$(basename "$appdir")"
+        log_success "Archive created: dist/$STD_TAR"
+    fi
 }
 
 # Create DEB package (Ubuntu/Debian)
@@ -386,19 +401,29 @@ create_rpm() {
 
     # Force tarball on non-RPM distros or when requested
     if [ "${FORCE_RPM_TARBALL:-}" = "1" ]; then
-        log_warning "FORCE_RPM_TARBALL=1 set; creating tar.gz instead of RPM"
+        log_warning "FORCE_RPM_TARBALL=1 set; creating portable tar.gz instead of RPM"
         cd "$PROJECT_ROOT/dist"
-        tar czf "folder-customizer-${VERSION}-1.x86_64.tar.gz" -C "$INSTALL_DIR" .
-        log_success "Archive created: dist/folder-customizer-${VERSION}-1.x86_64.tar.gz"
+        STD_TAR="folder-customizer-${VERSION}-x86_64.tar.gz"
+        if [ -f "$STD_TAR" ]; then
+            log_warning "Tarball $STD_TAR already exists; skipping RPM fallback tar creation"
+        else
+            tar czf "$STD_TAR" -C "$INSTALL_DIR" .
+            log_success "Archive created: dist/$STD_TAR"
+        fi
         return
     fi
 
     # If rpmbuild not available OR distro is not Fedora/RHEL/SUSE, fallback
     if ! command -v rpmbuild &> /dev/null; then
-        log_warning "rpmbuild not found, creating tar.gz instead"
+        log_warning "rpmbuild not found, creating portable tar.gz instead"
     cd "$PROJECT_ROOT/dist"
-    tar czf "folder-customizer-${VERSION}-1.x86_64.tar.gz" -C "$INSTALL_DIR" .
-    log_success "Archive created: dist/folder-customizer-${VERSION}-1.x86_64.tar.gz"
+    STD_TAR="folder-customizer-${VERSION}-x86_64.tar.gz"
+    if [ -f "$STD_TAR" ]; then
+        log_warning "Tarball $STD_TAR already exists; skipping RPM fallback tar creation"
+    else
+        tar czf "$STD_TAR" -C "$INSTALL_DIR" .
+        log_success "Archive created: dist/$STD_TAR"
+    fi
         return
     fi
 
@@ -407,10 +432,15 @@ create_rpm() {
         case "${ID_LIKE}${ID}" in
             *fedora*|*rhel*|*centos*|*suse*) : ;;
             *)
-                log_warning "Non-RPM-based distro detected (${ID:-unknown}); creating tar.gz instead"
+                log_warning "Non-RPM-based distro detected (${ID:-unknown}); creating portable tar.gz instead"
                                 cd "$PROJECT_ROOT/dist"
-                                tar czf "folder-customizer-${VERSION}-1.x86_64.tar.gz" -C "$INSTALL_DIR" .
-                                log_success "Archive created: dist/folder-customizer-${VERSION}-1.x86_64.tar.gz"
+                                STD_TAR="folder-customizer-${VERSION}-x86_64.tar.gz"
+                                if [ -f "$STD_TAR" ]; then
+                                    log_warning "Tarball $STD_TAR already exists; skipping RPM fallback tar creation"
+                                else
+                                    tar czf "$STD_TAR" -C "$INSTALL_DIR" .
+                                    log_success "Archive created: dist/$STD_TAR"
+                                fi
                 return
                 ;;
         esac
@@ -543,10 +573,15 @@ EOF
     
     # Build RPM
         if ! rpmbuild --define "_topdir $rpmdir" -bb "$rpmdir/SPECS/folder-customizer.spec"; then
-        log_warning "RPM build failed, creating tar.gz"
+        log_warning "RPM build failed, creating portable tar.gz"
         cd "$PROJECT_ROOT/dist"
-                tar czf "folder-customizer-${VERSION}-1.x86_64.tar.gz" -C "$INSTALL_DIR" .
-                log_success "Archive created: dist/folder-customizer-${VERSION}-1.x86_64.tar.gz"
+                STD_TAR="folder-customizer-${VERSION}-x86_64.tar.gz"
+                if [ -f "$STD_TAR" ]; then
+                    log_warning "Tarball $STD_TAR already exists; skipping RPM fallback tar creation"
+                else
+                    tar czf "$STD_TAR" -C "$INSTALL_DIR" .
+                    log_success "Archive created: dist/$STD_TAR"
+                fi
         return
     fi
     
@@ -564,10 +599,15 @@ create_arch() {
     mkdir -p "$archdir"
     
     if ! command -v makepkg &> /dev/null; then
-        log_warning "makepkg not found, creating tar.gz instead"
+        log_warning "makepkg not found, creating portable tar.gz instead of Arch package"
                 cd "$PROJECT_ROOT/dist"
-                tar czf "folder-customizer-${VERSION}-1-x86_64.pkg.tar.gz" -C "$INSTALL_DIR" .
-                log_success "Archive created: dist/folder-customizer-${VERSION}-1-x86_64.pkg.tar.gz"
+                STD_TAR="folder-customizer-${VERSION}-x86_64.tar.gz"
+                if [ -f "$STD_TAR" ]; then
+                    log_warning "Tarball $STD_TAR already exists; skipping Arch fallback tar creation"
+                else
+                    tar czf "$STD_TAR" -C "$INSTALL_DIR" .
+                    log_success "Archive created: dist/$STD_TAR"
+                fi
         return
     fi
     
@@ -679,10 +719,15 @@ EOF
     
     cd "$archdir"
     makepkg -f || {
-        log_warning "makepkg failed, creating tar.gz"
+        log_warning "makepkg failed, creating portable tar.gz instead of Arch package"
         cd "$PROJECT_ROOT/dist"
-        tar czf "folder-customizer-${VERSION}-1-x86_64.pkg.tar.gz" -C "$INSTALL_DIR" .
-        log_success "Archive created: dist/folder-customizer-${VERSION}-1-x86_64.pkg.tar.gz"
+        STD_TAR="folder-customizer-${VERSION}-x86_64.tar.gz"
+        if [ -f "$STD_TAR" ]; then
+            log_warning "Tarball $STD_TAR already exists; skipping Arch fallback tar creation"
+        else
+            tar czf "$STD_TAR" -C "$INSTALL_DIR" .
+            log_success "Archive created: dist/$STD_TAR"
+        fi
         return
     }
     
@@ -695,7 +740,7 @@ EOF
 # Create all Linux packages
 create_linux() {
     log_info "Creating all Linux packages..."
-    mkdir -p "$PROJECT_ROOT/dist"
+    prepare_dist
     
     create_appimage
     create_deb
@@ -719,6 +764,7 @@ create_windows() {
 # Main deployment function
 deploy_all() {
     log_info "Creating all deployment packages..."
+    prepare_dist
     create_linux
     create_windows
     log_success "All packages created in dist/ directory"
