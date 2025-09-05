@@ -50,6 +50,9 @@ void changeIcon(QString folder_path, QString tone, QString color) {
     const HRESULT ret =
         SHGetSetFolderCustomSettings(pfcs, LPWSTR_folder_path, FCS_FORCEWRITE);
 
+    // Notify the system of the folder change to refresh the view
+    SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATH, LPWSTR_folder_path, NULL);
+
     // std::cout << ret << std::endl;
 
     delete LPWSTR_folder_path;
