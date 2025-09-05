@@ -166,6 +166,22 @@ cat > "$FOLDER/.directory" <<EOD
 Icon=$ICON_PATH
 EOD
 [ -n "$TAG" ] && echo "Comment=$TAG" >> "$FOLDER/.directory"
+
+# Refresh mechanism: prefer gio, fall back to gvfs-set-attribute, then touch and force desktop icon update
+if command -v gio >/dev/null 2>&1; then
+    gio set "$FOLDER" metadata::custom-icon "file://$ICON_PATH" >/dev/null 2>&1 || true
+elif command -v gvfs-set-attribute >/dev/null 2>&1; then
+    gvfs-set-attribute -t string "$FOLDER" metadata::custom-icon "file://$ICON_PATH" >/dev/null 2>&1 || true
+fi
+
+# Touch folder to nudge file managers to re-evaluate .directory
+touch "$FOLDER" || true
+
+# Some environments support forcing icon refresh via xdg-desktop-icon
+if command -v xdg-desktop-icon >/dev/null 2>&1; then
+    xdg-desktop-icon forceupdate >/dev/null 2>&1 || true
+fi
+
 echo "Applied icon to $FOLDER"
 EOF
         chmod +x "$appdir/usr/bin/fc-directory"
@@ -289,6 +305,22 @@ cat > "$FOLDER/.directory" <<EOD
 Icon=$ICON_PATH
 EOD
 [ -n "$TAG" ] && echo "Comment=$TAG" >> "$FOLDER/.directory"
+
+# Refresh mechanism: prefer gio, fall back to gvfs-set-attribute, then touch and force desktop icon update
+if command -v gio >/dev/null 2>&1; then
+    gio set "$FOLDER" metadata::custom-icon "file://$ICON_PATH" >/dev/null 2>&1 || true
+elif command -v gvfs-set-attribute >/dev/null 2>&1; then
+    gvfs-set-attribute -t string "$FOLDER" metadata::custom-icon "file://$ICON_PATH" >/dev/null 2>&1 || true
+fi
+
+# Touch folder to nudge file managers to re-evaluate .directory
+touch "$FOLDER" || true
+
+# Some environments support forcing icon refresh via xdg-desktop-icon
+if command -v xdg-desktop-icon >/dev/null 2>&1; then
+    xdg-desktop-icon forceupdate >/dev/null 2>&1 || true
+fi
+
 echo "Applied icon to $FOLDER"
 EOF
         chmod +x "$debdir/usr/bin/fc-directory"
@@ -457,6 +489,22 @@ cat > "$FOLDER/.directory" <<EOD
 Icon=$ICON_PATH
 EOD
 [ -n "$TAG" ] && echo "Comment=$TAG" >> "$FOLDER/.directory"
+
+# Refresh mechanism: prefer gio, fall back to gvfs-set-attribute, then touch and force desktop icon update
+if command -v gio >/dev/null 2>&1; then
+    gio set "$FOLDER" metadata::custom-icon "file://$ICON_PATH" >/dev/null 2>&1 || true
+elif command -v gvfs-set-attribute >/dev/null 2>&1; then
+    gvfs-set-attribute -t string "$FOLDER" metadata::custom-icon "file://$ICON_PATH" >/dev/null 2>&1 || true
+fi
+
+# Touch folder to nudge file managers to re-evaluate .directory
+touch "$FOLDER" || true
+
+# Some environments support forcing icon refresh via xdg-desktop-icon
+if command -v xdg-desktop-icon >/dev/null 2>&1; then
+    xdg-desktop-icon forceupdate >/dev/null 2>&1 || true
+fi
+
 echo "Applied icon to $FOLDER"
 EOFH
 chmod +x %{buildroot}/usr/bin/fc-directory
@@ -601,6 +649,22 @@ cat > "$FOLDER/.directory" <<EOD
 Icon=$ICON_PATH
 EOD
 [ -n "$TAG" ] && echo "Comment=$TAG" >> "$FOLDER/.directory"
+
+# Refresh mechanism: prefer gio, fall back to gvfs-set-attribute, then touch and force desktop icon update
+if command -v gio >/dev/null 2>&1; then
+    gio set "$FOLDER" metadata::custom-icon "file://$ICON_PATH" >/dev/null 2>&1 || true
+elif command -v gvfs-set-attribute >/dev/null 2>&1; then
+    gvfs-set-attribute -t string "$FOLDER" metadata::custom-icon "file://$ICON_PATH" >/dev/null 2>&1 || true
+fi
+
+# Touch folder to nudge file managers to re-evaluate .directory
+touch "$FOLDER" || true
+
+# Some environments support forcing icon refresh via xdg-desktop-icon
+if command -v xdg-desktop-icon >/dev/null 2>&1; then
+    xdg-desktop-icon forceupdate >/dev/null 2>&1 || true
+fi
+
 echo "Applied icon to $FOLDER"
 EOFH
         chmod +x "$pkgdir/usr/bin/fc-directory"
