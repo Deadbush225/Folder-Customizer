@@ -24,7 +24,8 @@ jobs:
      run: |
       sudo apt update
       sudo apt install -y qt6-base-dev qt6-tools-dev cmake build-essential
-      sudo apt install -y libgl1-mesa-dev libxkbcommon-dev libxkbcommon-x11-dev libx11-xcb-dev libxcb1-dev libxcb-util-dev libxcb-xkb-dev# Install Boost development packages required by find_package(Boost COMPONENTS program_options)
+      sudo apt install -y libgl1-mesa-dev libxkbcommon-dev libxkbcommon-x11-dev libx11-xcb-dev libxcb1-dev libxcb-util-dev libxcb-xkb-dev
+      # Install Boost development packages required by find_package(Boost COMPONENTS program_options)
       sudo apt install -y libboost-program-options-dev libboost-dev
 
    - name: Install UPX
