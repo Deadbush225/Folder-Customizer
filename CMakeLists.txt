@@ -223,26 +223,6 @@ else()
     target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_BOOST_PROGRAM_OPTIONS=0)
 endif()
 
-# installer
-install(CODE "file(REMOVE_RECURSE \"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}\")")
-
-install(TARGETS ${PROJECT_NAME} BUNDLE DESTINATION . RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}) # move the executable
-
-install(FILES "./manifest.json" DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-# Install .ico files from Icons/Dark (non-recursive)
-file(GLOB ICONS_DARK_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Dark/*.ico")
-install(FILES ${ICONS_DARK_FILES}
-    DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Dark)
-
-file(GLOB ICONS_LIGHT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Light/*.ico")
-install(FILES ${ICONS_LIGHT_FILES}
-    DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Light)
-
-file(GLOB ICONS_NORMAL_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Normal/*.ico")
-install(FILES ${ICONS_NORMAL_FILES}
-    DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Normal)
-
 # Also install PNG icons for Linux .directory support
 file(GLOB ICONS_PNG_DARK "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Dark/PNG/*.png")
 file(GLOB ICONS_PNG_LIGHT "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Light/PNG/*.png")
