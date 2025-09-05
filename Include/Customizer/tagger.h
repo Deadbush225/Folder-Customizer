@@ -16,6 +16,19 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+// Bridge MSVC architecture macros to Windows SDK expectations if needed
+#if defined(_M_X64) && !defined(_AMD64_)
+#define _AMD64_ 1
+#endif
+#if defined(_M_IX86) && !defined(_X86_)
+#define _X86_ 1
+#endif
+#if defined(_M_ARM64) && !defined(_ARM64_)
+#define _ARM64_ 1
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <errhandlingapi.h>
 #include <fileapi.h>
 #include <windows.h>
