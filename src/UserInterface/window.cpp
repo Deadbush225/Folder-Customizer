@@ -54,8 +54,12 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     auto help_menu = this->menuBar()->addMenu("&Help");
     auto check_updates_act = new QAction("Check Updates", this);
     QObject::connect(check_updates_act, &QAction::triggered, this, [this]() {
+#ifdef Q_OS_WIN
         QProcess::startDetached(QCoreApplication::applicationDirPath() +
                                 "/Updater.exe");
+#else
+            QProcess::startDetached(QCoreApplication::applicationDirPath() + "/Updater");
+#endif
     });
     help_menu->addAction(check_updates_act);
 
