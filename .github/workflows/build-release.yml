@@ -167,8 +167,8 @@ jobs:
       } else { Write-Host "eUpdater not found; skipping windeployqt for eUpdater" }
 
       Write-Host "=== Stripping debug/optional DLLs ==="
-      # Remove obvious debug DLLs (names ending with 'd.dll') and other transient debug artifacts
-      Get-ChildItem -Path $installRoot -Filter '*d.dll' -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+      # Remove actual debug DLLs (names ending with 'd.dll') - use regex to be precise
+      Get-ChildItem -Path $installRoot -Filter '*.dll' -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^.*d\.dll$' } | ForEach-Object {
         Write-Host "Removing debug DLL: $($_.FullName)"; Remove-Item -Force $_.FullName -ErrorAction SilentlyContinue
       }
       # Optionally remove PDB and other debug artifacts
