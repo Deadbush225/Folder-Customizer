@@ -36,19 +36,24 @@ jobs:
       sudo apt update
       sudo apt install -y qt6-base-dev qt6-tools-dev cmake build-essential
       sudo apt install -y libgl1-mesa-dev libxkbcommon-dev libxkbcommon-x11-dev libx11-xcb-dev libxcb1-dev libxcb-util-dev libxcb-xkb-dev
-      # Boost for program_options
-      sudo apt install -y libboost-program-options-dev libboost-dev
+      # Boost for program_options (include both static and dynamic libraries)
+      sudo apt install -y libboost-program-options-dev libboost-dev libboost-all-dev
+      # Additional packaging tools
+      sudo apt install -y dpkg-dev rpm
 
    - name: Install eUpdater
      run: |
-      # Install eUpdater from system package or build from source
+      # Install eUpdater from source (GitHub)
       if ! command -v eUpdater &> /dev/null; then
-        echo "Installing eUpdater..."
-        # For now, create a dummy eUpdater for the build
-        echo '#!/bin/bash' > /tmp/eUpdater
-        echo 'echo "eUpdater stub - update functionality not available"' >> /tmp/eUpdater
-        chmod +x /tmp/eUpdater
-        sudo cp /tmp/eUpdater /usr/local/bin/eUpdater
+        echo "Installing eUpdater from source..."
+        git clone https://github.com/Deadbush225/eUpdater.git /tmp/eUpdater
+        cd /tmp/eUpdater
+        rm -rf build
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        make -j$(nproc)
+        sudo cmake --install .
       fi
 
    - name: Build application

@@ -245,6 +245,7 @@ EOF
 #!/bin/bash
 HERE="$(dirname "$(readlink -f "${0}")")"
 export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
+export PATH="${HERE}/usr/bin:${PATH}"
 exec "${HERE}/usr/bin/FolderCustomizer" "$@"
 EOF
     chmod +x "$appdir/AppRun"
@@ -316,6 +317,19 @@ create_deb() {
     fi
         cp -r "$INSTALL_DIR"/*.so* "$debdir/usr/lib/folder-customizer/" 2>/dev/null || true
     
+    # If Boost libraries are needed and not statically linked, copy them
+    if ldd "$INSTALL_DIR/$BIN_NAME" 2>/dev/null | grep -q "libboost"; then
+        log_info "Boost libraries detected as runtime dependencies, including them in package"
+        # Find and copy boost libraries that the binary depends on
+        boost_libs=$(ldd "$INSTALL_DIR/$BIN_NAME" 2>/dev/null | grep "libboost" | awk '{print $3}' | sort -u)
+        for lib in $boost_libs; do
+            if [ -f "$lib" ]; then
+                cp "$lib" "$debdir/usr/lib/folder-customizer/" || true
+                log_info "Included Boost library: $(basename $lib)"
+            fi
+        done
+    fi
+    
         # Helper and PNG icons
         cat > "$debdir/usr/bin/fc-directory" << 'EOF'
 #!/bin/bash
@@ -373,7 +387,23 @@ EOF
     # Create wrapper script
         cat > "$debdir/usr/bin/folder-customizer" << EOF
 #!/bin/bash
+
+# Debug mode - uncomment to enable troubleshooting
+# export FC_DEBUG=1
+
+if [ "\$FC_DEBUG" = "1" ]; then
+    echo "=== Folder Customizer Debug Mode ==="
+    echo "LD_LIBRARY_PATH: \$LD_LIBRARY_PATH"
+    echo "PATH: \$PATH"
+    echo "Checking dependencies..."
+    ldd "/usr/lib/folder-customizer/FolderCustomizer" 2>/dev/null | grep -E "(boost|not found)" || true
+    echo "Checking eUpdater..."
+    ls -la "/usr/lib/folder-customizer/eUpdater" 2>/dev/null || echo "eUpdater not found in /usr/lib/folder-customizer/"
+    echo "=================================="
+fi
+
 export LD_LIBRARY_PATH="/usr/lib/folder-customizer:\$LD_LIBRARY_PATH"
+export PATH="/usr/lib/folder-customizer:\$PATH"
 exec "/usr/lib/folder-customizer/FolderCustomizer" "\$@"
 EOF
         chmod +x "$debdir/usr/bin/folder-customizer"
@@ -404,9 +434,42 @@ Architecture: amd64
 Maintainer: Deadbush225 <your-email@example.com>
 Description: Folder Customizer - Customize folder icons and tags
  A Qt-based application that helps you customize folder icons and annotate folders.
-Depends: libc6, libqt6core6, libqt6gui6, libqt6widgets6, libqt6network6
+Depends: libc6, libqt6core6, libqt6gui6, libqt6widgets6, libqt6network6, libboost-program-options1.83.0 | libboost-program-options1.82.0 | libboost-program-options1.81.0 | libboost-program-options1.74.0 | libboost-program-options-dev
 EOF
     
+    # Create postinst script to help with troubleshooting
+    cat > "$debdir/DEBIAN/postinst" << 'EOF'
+#!/bin/bash
+set -e
+
+echo "Installing Folder Customizer..."
+
+# Check if the main executable has all required dependencies
+if command -v ldd >/dev/null 2>&1; then
+    echo "Checking dependencies..."
+    missing_libs=""
+    
+    # Check for missing Boost libraries
+    if ldd /usr/lib/folder-customizer/FolderCustomizer 2>/dev/null | grep -q "not found"; then
+        echo "WARNING: Some libraries are missing:"
+        ldd /usr/lib/folder-customizer/FolderCustomizer 2>/dev/null | grep "not found" || true
+        echo ""
+        echo "If you see Boost library errors, try installing:"
+        echo "  sudo apt install libboost-program-options1.83.0"
+        echo "  or: sudo apt install libboost-program-options1.81.0"  
+        echo "  or: sudo apt install libboost-program-options1.74.0"
+    fi
+fi
+
+# Ensure the wrapper script is executable
+chmod +x /usr/bin/folder-customizer
+chmod +x /usr/bin/fc-directory
+
+echo "Folder Customizer installed successfully!"
+echo "Run 'folder-customizer' to start the application."
+EOF
+    chmod +x "$debdir/DEBIAN/postinst"
+
     # Build package
     if command -v dpkg-deb &> /dev/null; then
                 dpkg-deb --build "$debdir" "$PROJECT_ROOT/dist/folder-customizer_${VERSION}_amd64.deb"
@@ -486,7 +549,7 @@ URL:            https://github.com/Deadbush225/folder-customizer
 Source0:        %{name}-%{version}.tar.gz
 
 BuildRequires:  qt6-qtbase-devel
-Requires:       qt6-qtbase qt6-qtbase-gui
+Requires:       qt6-qtbase qt6-qtbase-gui boost-program-options
 
 %description
 A Qt-based application that helps you customize folder icons and annotate folders.
@@ -512,6 +575,7 @@ cp -r * %{buildroot}/usr/lib/%{name}/
 cat > %{buildroot}/usr/bin/%{name} << 'EOFSCRIPT'
 #!/bin/bash
 export LD_LIBRARY_PATH="/usr/lib/folder-customizer:$LD_LIBRARY_PATH"
+export PATH="/usr/lib/folder-customizer:$PATH"
 exec "/usr/lib/folder-customizer/FolderCustomizer" "$@"
 EOFSCRIPT
 chmod +x %{buildroot}/usr/bin/%{name}
@@ -647,7 +711,7 @@ pkgdesc="Customize folder icons and tags"
 arch=('x86_64')
 url="https://github.com/Deadbush225/folder-customizer"
 license=('MIT')
-depends=('qt6-base')
+depends=('qt6-base' 'boost')
 source=()
 md5sums=()
 
@@ -664,6 +728,7 @@ package() {
         cat > "$pkgdir/usr/bin/$pkgname" << 'EOFSCRIPT'
 #!/bin/bash
 export LD_LIBRARY_PATH="/usr/lib/folder-customizer:$LD_LIBRARY_PATH"
+export PATH="/usr/lib/folder-customizer:$PATH"
 exec "/usr/lib/folder-customizer/FolderCustomizer" "$@"
 EOFSCRIPT
     chmod +x "$pkgdir/usr/bin/$pkgname"

@@ -50,7 +50,11 @@ endif()
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-# set(Boost_USE_STATIC_LIBS OFF)
+# Prefer static libs for distribution packages to avoid version conflicts
+if(NOT WIN32)
+    set(Boost_USE_STATIC_LIBS ON)
+endif()
+
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 qt_standard_project_setup()
 
