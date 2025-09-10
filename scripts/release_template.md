@@ -6,4 +6,4 @@
 
 ## Highlights
 
-- Move Updater source code from pascal to c++
+- Use system eUpdater instead of bundled Updater

@@ -10,11 +10,7 @@ $versionUpdates = @{
             Replacement = { "MyAppVersion `"$currentVersion`"" } 
         }
     )
-    "./Updater/updater.cpp" = @(
-        @{ Pattern      = 'appVersion = ".*"';
-            Replacement = { "appVersion = `"$currentVersion`"" } 
-        }
-    )
+
 }
 
 # Iterate through each file and apply the replacements

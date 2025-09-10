@@ -128,8 +128,6 @@ do_install() {
         INSTALL_DIR="$SCRIPT_DIR/install"
     elif [ -f "$SCRIPT_DIR/FolderCustomizer" ] || [ -f "$SCRIPT_DIR/Folder\ Customizer" ]; then
         INSTALL_DIR="$SCRIPT_DIR"
-    elif [ -f "$SCRIPT_DIR/packages/com.mainprogram/data/bin/FolderCustomizer" ]; then
-        INSTALL_DIR="$SCRIPT_DIR/packages/com.mainprogram/data/bin"
     else
         INSTALL_DIR="$SCRIPT_DIR"
     fi
@@ -167,10 +165,10 @@ do_install() {
     cp "$INSTALL_DIR/$BIN_SRC" "$INSTALL_PREFIX/lib/folder-customizer/"
     cp "$INSTALL_DIR/manifest.json" "$INSTALL_PREFIX/lib/folder-customizer/" 2>/dev/null || true
 
-    # Install updater if available
-    if [ -f "$INSTALL_DIR/Updater" ]; then
-        log_info "Installing Updater..."
-        cp "$INSTALL_DIR/Updater" "$INSTALL_PREFIX/lib/folder-customizer/"
+    # Install eUpdater if available
+    if [ -f "$INSTALL_DIR/eUpdater" ] || [ -f "$INSTALL_DIR/eUpdater.exe" ]; then
+        log_info "Installing eUpdater..."
+        cp "$INSTALL_DIR"/eUpdater* "$INSTALL_PREFIX/lib/folder-customizer/" 2>/dev/null || true
     fi
 
     # Copy Qt libraries

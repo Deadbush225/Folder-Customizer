@@ -1,9 +1,0 @@
-Package: folder-customizer
-Version: 0.0.8
-Section: utils
-Priority: optional
-Architecture: amd64
-Maintainer: Deadbush225 <your-email@example.com>
-Description: Folder Customizer - Customize folder icons and tags
- A Qt-based application that helps you customize folder icons and annotate folders.
-Depends: libc6, libqt6core6, libqt6gui6, libqt6widgets6, libqt6network6

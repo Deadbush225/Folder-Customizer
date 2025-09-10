@@ -9,6 +9,11 @@ if(POLICY CMP0128)
     cmake_policy(SET CMP0128 NEW)
 endif()
 
+# Set policy for install path normalization
+if(POLICY CMP0177)
+    cmake_policy(SET CMP0177 NEW)
+endif()
+
 set(CMAKE_BUILD_TYPE "Release")
 
 # Allow disabling Qt deploy script generation (useful for older distro Qt packages or CI)
@@ -24,7 +29,7 @@ elseif(NOT WIN32)
     set(Boost_NO_BOOST_CMAKE ON)
 endif()
 
-set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/packages/com.mainprogram/data)
+set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/install)
 
 project(FolderCustomizer VERSION 0.1.0)
 set(PROJECT_NAME FolderCustomizer)
@@ -48,6 +53,12 @@ set(CMAKE_AUTORCC ON)
 # set(Boost_USE_STATIC_LIBS OFF)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 qt_standard_project_setup()
+
+include(GNUInstallDirs)
+
+# Set CMAKE_INSTALL_BINDIR to "." to match the desired install structure
+set(CMAKE_INSTALL_BINDIR ".")
+
 message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
 
 # Simple Boost setup - only need program_options
@@ -194,8 +205,7 @@ if(WIN32)
     add_subdirectory(src/context-menu)
 endif()
 
-add_subdirectory(Updater)
-
+# eUpdater will be installed as system dependency
 set(SOURCE_FILES ${PROJECT_SOURCE}/main.cpp)
 
 # binary's icon
@@ -234,16 +244,24 @@ install(FILES ${ICONS_PNG_LIGHT}
 install(FILES ${ICONS_PNG_NORMAL}
     DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Normal/PNG)
 
-# Install the Updater executable
-install(TARGETS Updater DESTINATION ${CMAKE_INSTALL_BINDIR})
+# Install system eUpdater if available
+find_program(EUPDATER_EXECUTABLE NAMES eUpdater eUpdater.exe)
+
+if(EUPDATER_EXECUTABLE)
+    get_filename_component(EUPDATER_DIR ${EUPDATER_EXECUTABLE} DIRECTORY)
+    install(PROGRAMS ${EUPDATER_EXECUTABLE} DESTINATION ${CMAKE_INSTALL_BINDIR})
+    message(STATUS "Found eUpdater: ${EUPDATER_EXECUTABLE}")
+else()
+    message(WARNING "eUpdater not found in system PATH. Update functionality may not work.")
+endif()
 
 set(ROOT_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Folder Customizer.ico")
 install(FILES ${ROOT_ICON} DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons)
 
-# Move DLL to the installation folder
-install(TARGETS Updater DESTINATION ${CMAKE_INSTALL_BINDIR})
+# Install manifest.json
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/manifest.json" DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-# Install the main application executable so install_local populates ./install/bin
+# Install the main application executable so install_local populates ./install
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Generate and run Qt deploy script (guarded for older Qt and can be disabled)
@@ -289,7 +307,7 @@ else()
 endif()
 
 # --- Convenience install targets -------------------------------------------
-# install_local: Build app + Updater (+ context menu on Windows), then remove
+# install_local: Build app + eUpdater (+ context menu on Windows), then remove
 # ./install and perform an installation into ./install using cmake --install.
 set(INSTALL_LOCAL_DIR "${CMAKE_SOURCE_DIR}/install")
 
@@ -303,7 +321,7 @@ add_custom_target(install_local
     COMMENT "Build + local install to ${INSTALL_LOCAL_DIR}"
 )
 
-add_dependencies(install_local ${PROJECT_NAME} Updater)
+add_dependencies(install_local ${PROJECT_NAME})
 
 if(TARGET FCContextMenuHandler)
     add_dependencies(install_local FCContextMenuHandler)

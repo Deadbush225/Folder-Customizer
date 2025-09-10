@@ -56,9 +56,9 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     QObject::connect(check_updates_act, &QAction::triggered, this, [this]() {
 #ifdef Q_OS_WIN
         QProcess::startDetached(QCoreApplication::applicationDirPath() +
-                                "/Updater.exe");
+                                "/eUpdater.exe");
 #else
-            QProcess::startDetached(QCoreApplication::applicationDirPath() + "/Updater");
+            QProcess::startDetached(QCoreApplication::applicationDirPath() + "/eUpdater");
 #endif
     });
     help_menu->addAction(check_updates_act);

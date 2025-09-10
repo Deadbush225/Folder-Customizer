@@ -6,15 +6,8 @@ set -e
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="$PROJECT_ROOT/build"
-# Prefer local './install' created by the 'install_local' target
-INSTALL_DIR="$PROJECT_ROOT/install/bin"
-# Fallback to legacy packages path for older workflows that still install there
-if [ ! -d "$INSTALL_DIR" ]; then
-    LEGACY_INSTALL="$PROJECT_ROOT/packages/com.mainprogram/data/bin"
-    if [ -d "$LEGACY_INSTALL" ]; then
-        INSTALL_DIR="$LEGACY_INSTALL"
-    fi
-fi
+# Use './install' created by the 'install_local' target
+INSTALL_DIR="$PROJECT_ROOT/install"
 SCRIPTS_DIR="$PROJECT_ROOT/scripts"
 # Read version from manifest.json
 VERSION=$(grep -o '"version"[^"]*"[0-9.]*"' "$PROJECT_ROOT/manifest.json" | sed 's/.*"\([0-9.]*\)"/\1/')
@@ -162,9 +155,9 @@ create_appimage() {
     if [ -f "$INSTALL_DIR/manifest.json" ]; then
         cp "$INSTALL_DIR/manifest.json" "$appdir/usr/bin/manifest.json"
     fi
-    # Copy updater if built
-    if [ -f "$INSTALL_DIR/Updater" ]; then
-        cp "$INSTALL_DIR/Updater" "$appdir/usr/bin/"
+    # Copy eUpdater if available
+    if [ -f "$INSTALL_DIR/eUpdater" ] || [ -f "$INSTALL_DIR/eUpdater.exe" ]; then
+        cp "$INSTALL_DIR"/eUpdater* "$appdir/usr/bin/" 2>/dev/null || true
     fi
     
     # Copy libraries
@@ -317,9 +310,9 @@ create_deb() {
     if [ -f "$INSTALL_DIR/manifest.json" ]; then
         cp "$INSTALL_DIR/manifest.json" "$debdir/usr/lib/folder-customizer/"
     fi
-    # Copy updater if built
-    if [ -f "$INSTALL_DIR/Updater" ]; then
-                cp "$INSTALL_DIR/Updater" "$debdir/usr/lib/folder-customizer/"
+    # Copy eUpdater if available
+    if [ -f "$INSTALL_DIR/eUpdater" ] || [ -f "$INSTALL_DIR/eUpdater.exe" ]; then
+        cp "$INSTALL_DIR"/eUpdater* "$debdir/usr/lib/folder-customizer/" 2>/dev/null || true
     fi
         cp -r "$INSTALL_DIR"/*.so* "$debdir/usr/lib/folder-customizer/" 2>/dev/null || true
     
