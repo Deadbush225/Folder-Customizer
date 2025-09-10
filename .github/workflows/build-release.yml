@@ -161,10 +161,10 @@ jobs:
       Write-Host "Running windeployqt for main application..."
       & $windeploy --release --dir $installRoot $mainExe
 
-      if (Test-Path $updaterExe) {
-        Write-Host "Running windeployqt for eUpdater..."
-        & $windeploy --release --dir $installRoot $updaterExe
-      } else { Write-Host "eUpdater not found; skipping windeployqt for eUpdater" }
+      # if (Test-Path $updaterExe) {
+        # Write-Host "Running windeployqt for eUpdater..."
+        # & $windeploy --release --dir $installRoot $updaterExe
+      # } else { Write-Host "eUpdater not found; skipping windeployqt # for eUpdater" }
 
       Write-Host "=== Stripping debug/optional DLLs ==="
       # Remove actual debug DLLs (names ending with 'd.dll') - use regex to be precise
