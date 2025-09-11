@@ -263,15 +263,15 @@ endif()
 
 # Install main app icon to /icons (for install package)
 set(ROOT_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Folder Customizer.png")
+set(ROOT_ICON_ICO "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Folder Customizer.ico")
 
 if(EXISTS ${ROOT_ICON})
     install(FILES ${ROOT_ICON} DESTINATION ${CMAKE_INSTALL_ICONDIR})
 endif()
 
-# Also install .ico version to /bin/Icons (used by the program)
-set(ROOT_ICON_ICO "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Folder Customizer.ico")
-
 if(EXISTS ${ROOT_ICON_ICO})
+    # Install ICO to both /icons (for installer) and /bin/Icons (for program use)
+    install(FILES ${ROOT_ICON_ICO} DESTINATION ${CMAKE_INSTALL_ICONDIR})
     install(FILES ${ROOT_ICON_ICO} DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons)
 endif()
 
