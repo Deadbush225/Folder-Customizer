@@ -59,8 +59,8 @@ jobs:
    - name: Build application
      run: |
       cmake -B build -DCMAKE_BUILD_TYPE=Release
-          cmake --build build -- -j 2
-          cmake --build build --target install_local --config Release -j 2 --verbose
+      cmake --build build -- -j 2
+      cmake --build build --target install_local --config Release -j 2
 
    - name: Verify install output
      run: |
@@ -131,14 +131,14 @@ jobs:
 
    - name: Build application (MSVC)
      run: |
-      cmake -B build -G "Visual Studio 17 2022" -A x64 --debug-output
+      cmake -B build -G "Visual Studio 17 2022" -A x64
       cmake --build build --config Release -j 4
 
    - name: Install and deploy Qt dependencies
      shell: pwsh
      run: |
       Write-Host "=== Building and installing to ./install ==="
-      cmake --build build --target install_local --config Release -j 2 --verbose
+      cmake --build build --target install_local --config Release -j 2
 
       Write-Host "=== Locating windeployqt ==="
       $windeploy = Get-Command windeployqt.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -ErrorAction SilentlyContinue
@@ -156,8 +156,8 @@ jobs:
 
       Write-Host "Using windeployqt: $windeploy"
       $installRoot = Join-Path (Get-Location) "install"
-      $mainExe = Join-Path $installRoot "FolderCustomizer.exe"
-      $updaterExe = Join-Path $installRoot "eUpdater.exe"
+      $mainExe = Join-Path $installRoot "bin\FolderCustomizer.exe"
+      $updaterExe = Join-Path $installRoot "bin\eUpdater.exe"
 
       if (-not (Test-Path $mainExe)) {
         Write-Host "Main executable not found at $mainExe"; exit 1
@@ -229,8 +229,8 @@ jobs:
       $qtDir = $env:Qt6_DIR
       $windeploy = Join-Path $qtDir "bin\windeployqt.exe"
       $installRoot = Join-Path (Get-Location) "install"
-      $mainExe = Join-Path $installRoot "FolderCustomizer.exe"
-      $updaterExe = Join-Path $installRoot "eUpdater.exe"
+      $mainExe = Join-Path $installRoot "bin\FolderCustomizer.exe"
+      $updaterExe = Join-Path $installRoot "bin\eUpdater.exe"
 
       if (Test-Path $windeploy) {
         Write-Host "Running windeployqt for main application..."
