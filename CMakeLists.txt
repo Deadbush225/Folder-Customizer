@@ -60,8 +60,10 @@ qt_standard_project_setup()
 
 include(GNUInstallDirs)
 
-# Set CMAKE_INSTALL_BINDIR to "." to match the desired install structure
-set(CMAKE_INSTALL_BINDIR ".")
+# Set custom install directories for the new structure
+set(CMAKE_INSTALL_BINDIR "bin")
+set(CMAKE_INSTALL_LIBDIR "lib")
+set(CMAKE_INSTALL_ICONDIR "icons")
 
 message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
 
@@ -237,7 +239,7 @@ else()
     target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_BOOST_PROGRAM_OPTIONS=0)
 endif()
 
-# Also install PNG icons for Linux .directory support
+# Install PNG icons for Linux .directory support in /bin/Icons (used by the program)
 file(GLOB ICONS_PNG_DARK "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Dark/PNG/*.png")
 file(GLOB ICONS_PNG_LIGHT "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Light/PNG/*.png")
 file(GLOB ICONS_PNG_NORMAL "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Normal/PNG/*.png")
@@ -259,11 +261,32 @@ else()
     message(WARNING "eUpdater not found in system PATH. Update functionality may not work.")
 endif()
 
-set(ROOT_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Folder Customizer.ico")
-install(FILES ${ROOT_ICON} DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons)
+# Install main app icon to /icons (for install package)
+set(ROOT_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Folder Customizer.png")
 
-# Install manifest.json
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/manifest.json" DESTINATION ${CMAKE_INSTALL_BINDIR})
+if(EXISTS ${ROOT_ICON})
+    install(FILES ${ROOT_ICON} DESTINATION ${CMAKE_INSTALL_ICONDIR})
+endif()
+
+# Also install .ico version to /bin/Icons (used by the program)
+set(ROOT_ICON_ICO "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Folder Customizer.ico")
+
+if(EXISTS ${ROOT_ICON_ICO})
+    install(FILES ${ROOT_ICON_ICO} DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons)
+endif()
+
+# Install manifest.json to root
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/manifest.json" DESTINATION .)
+
+# Install install.sh (the generic desktop install script) to root
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generic-desktop-install.sh")
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generic-desktop-install.sh"
+        DESTINATION .
+        RENAME "install.sh")
+
+    # Make install.sh executable during install
+    install(CODE "execute_process(COMMAND chmod +x \"${CMAKE_INSTALL_PREFIX}/install.sh\")")
+endif()
 
 # Install the main application executable so install_local populates ./install
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
