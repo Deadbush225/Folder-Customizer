@@ -1,4 +1,8 @@
 #include "UserInterface/window.h"
+#include <QtCore/QCoreApplication>
+#include <QtCore/QFileInfo>
+#include <QtCore/QProcess>
+#include <QtWidgets/QMessageBox>
 
 QStringList* stdToQStringList(std::vector<std::string> stdStringList) {
     QStringList* tones = new QStringList();
@@ -54,12 +58,38 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     auto help_menu = this->menuBar()->addMenu("&Help");
     auto check_updates_act = new QAction("Check Updates", this);
     QObject::connect(check_updates_act, &QAction::triggered, this, [this]() {
+        QString updaterPath =
+            QCoreApplication::applicationDirPath() + "/eUpdater";
 #ifdef Q_OS_WIN
-        QProcess::startDetached(QCoreApplication::applicationDirPath() +
-                                "/eUpdater.exe");
-#else
-            QProcess::startDetached(QCoreApplication::applicationDirPath() + "/eUpdater");
+        updaterPath += ".exe";
 #endif
+        if (QFileInfo::exists(updaterPath)) {
+            // Pass update source URLs via CLI to avoid hardcoding in updater
+            const QString manifestUrl = QStringLiteral(
+                "https://raw.githubusercontent.com/Deadbush225/"
+                "folder-customizer/main/"
+                "manifest.json");
+            const QString installerTpl = QStringLiteral(
+                "https://github.com/Deadbush225/folder-customizer/releases/"
+                "download/"
+                "%1/folder-customizer-%1.exe");
+
+            QStringList args;
+            args << QStringLiteral("--manifest-url") << manifestUrl
+                 << QStringLiteral("--installer-template") << installerTpl
+                 << QStringLiteral("--package-name")
+                 << QStringLiteral("folder-customizer");
+
+            if (!QProcess::startDetached(updaterPath, args)) {
+                QMessageBox::warning(this, "Update Check",
+                                     "Failed to start the Updater.");
+            }
+        } else {
+            QMessageBox::information(
+                this, "Updater Not Found",
+                "Updater was not found next to the application.\n"
+                "Please download the latest release from GitHub.");
+        }
     });
     help_menu->addAction(check_updates_act);
 
