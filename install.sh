@@ -62,13 +62,16 @@ for arg in "$@"; do
             ACTION="uninstall" ;;
         apply|--apply)
             ACTION="apply" ;;
+        validate|--validate)
+            ACTION="validate" ;;
         -y|--yes)
             AUTO_YES=1 ;;
         -h|--help)
-            echo "Usage: $0 [--uninstall] [--apply] [-y] [--folder PATH --tone T --color C --tag TAG]";
+            echo "Usage: $0 [--uninstall] [--apply] [--validate] [-y] [--folder PATH --tone T --color C --tag TAG]";
             echo "  (no args)   Install Folder Customizer";
             echo "  --uninstall Uninstall Folder Customizer";
             echo "  --apply     Apply an icon to a folder using .directory (Linux)";
+            echo "  --validate  Validate desktop integration is working";
             echo "  --folder    Target folder path for --apply";
             echo "  --tone      Tone for icon (Dark|Light|Normal) for --apply";
             echo "  --color     Color for icon (e.g. Red, Blue, ...) for --apply";
@@ -93,13 +96,20 @@ do_uninstall() {
         fi
     fi
 
+    # Remove binaries and libraries
     rm -f "$INSTALL_PREFIX/bin/folder-customizer" || true
     rm -f "$INSTALL_PREFIX/bin/fc-directory" || true
     rm -rf "$INSTALL_PREFIX/lib/folder-customizer" || true
+    
+    # Remove desktop integration
     rm -f "$INSTALL_PREFIX/share/applications/folder-customizer.desktop" || true
     rm -f "$INSTALL_PREFIX/share/icons/hicolor/256x256/apps/folder-customizer.png" || true
     rm -rf "$INSTALL_PREFIX/share/folder-customizer" || true
+    
+    # Remove any additional icon sizes that might have been installed
+    find "$INSTALL_PREFIX/share/icons" -name "folder-customizer.png" -delete 2>/dev/null || true
 
+    # Update system databases
     if command -v update-desktop-database &> /dev/null; then
         log_info "Updating desktop database..."
         update-desktop-database "$INSTALL_PREFIX/share/applications" 2>/dev/null || true
@@ -107,8 +117,12 @@ do_uninstall() {
 
     if command -v gtk-update-icon-cache &> /dev/null; then
         log_info "Updating icon cache..."
-        gtk-update-icon-cache -t "$INSTALL_PREFIX/share/icons/hicolor" 2>/dev/null || true
+        gtk-update-icon-cache -f -t "$INSTALL_PREFIX/share/icons/hicolor" 2>/dev/null || true
     fi
+
+    # Clean up any remaining empty directories
+    rmdir "$INSTALL_PREFIX/share/folder-customizer" 2>/dev/null || true
+    rmdir "$INSTALL_PREFIX/lib" 2>/dev/null || true
 
     log_success "Folder Customizer uninstalled from $INSTALL_PREFIX"
     exit 0
@@ -181,7 +195,23 @@ do_install() {
     log_info "Creating launcher script..."
         cat > "$INSTALL_PREFIX/bin/folder-customizer" << EOF
 #!/bin/bash
+
+# Debug mode - uncomment to enable troubleshooting
+# export FC_DEBUG=1
+
+if [ "\$FC_DEBUG" = "1" ]; then
+    echo "=== Folder Customizer Debug Mode ==="
+    echo "LD_LIBRARY_PATH: \$LD_LIBRARY_PATH"
+    echo "PATH: \$PATH"
+    echo "Checking dependencies..."
+    ldd "$INSTALL_PREFIX/lib/folder-customizer/$BIN_SRC" 2>/dev/null | grep -E "(boost|not found)" || true
+    echo "Checking eUpdater..."
+    ls -la "$INSTALL_PREFIX/lib/folder-customizer/eUpdater"* 2>/dev/null || echo "eUpdater not found in $INSTALL_PREFIX/lib/folder-customizer/"
+    echo "=================================="
+fi
+
 export LD_LIBRARY_PATH="$INSTALL_PREFIX/lib/folder-customizer:\$LD_LIBRARY_PATH"
+export PATH="$INSTALL_PREFIX/lib/folder-customizer:\$PATH"
 exec "$INSTALL_PREFIX/lib/folder-customizer/$BIN_SRC" "\$@"
 EOF
         chmod +x "$INSTALL_PREFIX/bin/folder-customizer"
@@ -221,18 +251,41 @@ echo "Applied icon to $FOLDER"
 EOF
         chmod +x "$INSTALL_PREFIX/bin/fc-directory"
 
-    # Create desktop file
-    log_info "Creating desktop entry..."
-    cat > "$INSTALL_PREFIX/share/applications/folder-customizer.desktop" << EOF
+    # Install desktop file
+    log_info "Installing desktop entry..."
+    if [ -f "$SCRIPT_DIR/folder-customizer.desktop" ]; then
+        # Use the comprehensive desktop file from the project
+        cp "$SCRIPT_DIR/folder-customizer.desktop" "$INSTALL_PREFIX/share/applications/"
+        # Update the Exec path to use the installed wrapper script
+        sed -i 's|Exec=folder-customizer|Exec=folder-customizer|g' "$INSTALL_PREFIX/share/applications/folder-customizer.desktop"
+    elif [ -f "$INSTALL_DIR/folder-customizer.desktop" ]; then
+        cp "$INSTALL_DIR/folder-customizer.desktop" "$INSTALL_PREFIX/share/applications/"
+        sed -i 's|Exec=folder-customizer|Exec=folder-customizer|g' "$INSTALL_PREFIX/share/applications/folder-customizer.desktop"
+    else
+        # Fallback: create a comprehensive desktop file
+        cat > "$INSTALL_PREFIX/share/applications/folder-customizer.desktop" << EOF
 [Desktop Entry]
-Name=Folder Customizer
-Comment=Customize folder icons and tags
-Exec=folder-customizer
-Icon=folder-customizer
+Version=1.0
 Type=Application
+Name=Folder Customizer
+GenericName=Folder Icon Customizer
+Comment=Customize folder icons and add tags to organize your directories
+Exec=folder-customizer %F
+Icon=folder-customizer
+Terminal=false
+MimeType=inode/directory;
 Categories=Utility;FileManager;Qt;
+Keywords=folder;icon;customize;tag;organize;directory;
 StartupNotify=true
+StartupWMClass=FolderCustomizer
+Actions=NewInstance;
+
+[Desktop Action NewInstance]
+Name=New Instance
+Exec=folder-customizer
 EOF
+    fi
+    chmod 644 "$INSTALL_PREFIX/share/applications/folder-customizer.desktop"
 
     # Install icon if available
         if [ -f "$SCRIPT_DIR/Icons/Folder Customizer.png" ]; then
@@ -266,8 +319,16 @@ EOF
     log_info "You can now run 'folder-customizer' from the command line"
     log_info "Or find it in your application menu under Utilities"
 
+    # Show additional usage information
+    echo ""
+    log_info "Usage examples:"
+    echo "  folder-customizer                    # Open the GUI"
+    echo "  FC_DEBUG=1 folder-customizer         # Debug mode (if issues occur)"
+    echo "  fc-directory --folder /path --tone Dark --color Blue  # CLI icon application"
+
     # Offer to add to PATH for user installs
     if [ "$EUID" -ne 0 ] && [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+        echo ""
         log_warning "~/.local/bin is not in your PATH"
         if [ -n "$ZSH_VERSION" ]; then
             echo "Add this line to your ~/.zprofile or ~/.zshrc:"
@@ -275,9 +336,21 @@ EOF
             echo "Add this line to your ~/.bashrc or ~/.profile:"
         fi
         echo "export PATH=\"$HOME/.local/bin:\$PATH\""
+        echo "Then restart your terminal or run: source ~/.bashrc"
     fi
 
-    log_info "Installation complete!"
+    echo ""
+    log_info "Desktop integration features:"
+    echo "  • Application appears in your applications menu"
+    echo "  • Supports drag & drop of folders"
+    echo "  • Right-click context menu support (if configured)"
+    echo "  • Automatic updates via Help → Check Updates"
+
+    echo ""
+    log_info "To validate the installation, run:"
+    echo "  $0 --validate"
+
+    log_success "Installation complete!"
 }
 
 # Run install when requested
@@ -294,4 +367,91 @@ if [ "$ACTION" = "apply" ]; then
     log_info "Applying icon ($TONE/$COLOR) to $FOLDER"
     "$INSTALL_PREFIX/bin/fc-directory" --folder="$FOLDER" --tone="$TONE" --color="$COLOR" ${TAG:+--tag="$TAG"}
     log_success ".directory icon applied"
+fi
+
+# Validate desktop integration when requested
+if [ "$ACTION" = "validate" ]; then
+    log_info "Validating desktop integration ($INSTALL_USER)"
+    echo ""
+
+    # Check desktop file
+    DESKTOP_FILE="$INSTALL_PREFIX/share/applications/folder-customizer.desktop"
+    if [ -f "$DESKTOP_FILE" ]; then
+        log_success "Desktop file found: $DESKTOP_FILE"
+        
+        # Validate desktop file
+        if command -v desktop-file-validate >/dev/null 2>&1; then
+            if desktop-file-validate "$DESKTOP_FILE" 2>/dev/null; then
+                log_success "Desktop file is valid"
+            else
+                log_warning "Desktop file validation warnings:"
+                desktop-file-validate "$DESKTOP_FILE" 2>&1 || true
+            fi
+        else
+            log_info "desktop-file-validate not available (install desktop-file-utils to validate)"
+        fi
+        
+        # Check if executable exists
+        EXEC_LINE=$(grep "^Exec=" "$DESKTOP_FILE" | head -1)
+        if [ -n "$EXEC_LINE" ]; then
+            EXEC_CMD=$(echo "$EXEC_LINE" | sed 's/Exec=//; s/ %F//; s/ %U//; s/ %f//; s/ %u//')
+            if command -v "$EXEC_CMD" >/dev/null 2>&1; then
+                log_success "Executable is available: $EXEC_CMD"
+            else
+                log_error "Executable not found: $EXEC_CMD"
+            fi
+        fi
+    else
+        log_error "Desktop file not found: $DESKTOP_FILE"
+    fi
+
+    # Check icon
+    ICON_FILE="$INSTALL_PREFIX/share/icons/hicolor/256x256/apps/folder-customizer.png"
+    if [ -f "$ICON_FILE" ]; then
+        log_success "Icon found: $ICON_FILE"
+        
+        # Check icon size
+        if command -v identify >/dev/null 2>&1; then
+            ICON_SIZE=$(identify "$ICON_FILE" 2>/dev/null | awk '{print $3}' | head -1)
+            log_info "Icon size: $ICON_SIZE"
+        fi
+    else
+        log_warning "Icon not found: $ICON_FILE (application will use default icon)"
+    fi
+
+    # Check desktop database
+    echo ""
+    log_info "Desktop database status:"
+    DESKTOP_CACHE="$INSTALL_PREFIX/share/applications/mimeinfo.cache"
+    if [ -f "$DESKTOP_CACHE" ]; then
+        if grep -q "folder-customizer" "$DESKTOP_CACHE" 2>/dev/null; then
+            log_success "Application registered in desktop database"
+        else
+            log_warning "Application not found in desktop database"
+            echo "   Try running: update-desktop-database $INSTALL_PREFIX/share/applications"
+        fi
+    else
+        log_info "Desktop database cache not found (this may be normal)"
+    fi
+
+    # Check icon cache
+    ICON_CACHE="$INSTALL_PREFIX/share/icons/hicolor/icon-theme.cache"
+    if [ -f "$ICON_CACHE" ]; then
+        log_success "Icon cache exists"
+    else
+        log_warning "Icon cache not found"
+        echo "   Try running: gtk-update-icon-cache $INSTALL_PREFIX/share/icons/hicolor"
+    fi
+
+    echo ""
+    log_info "Manual test suggestions:"
+    echo "1. Check if 'Folder Customizer' appears in your application launcher"
+    echo "2. Try searching for 'folder' or 'customize' in your app menu"
+    echo "3. Test drag & drop by dragging a folder onto the app icon"
+    echo "4. Test command line: folder-customizer"
+    if command -v gtk-launch >/dev/null 2>&1; then
+        echo "5. Test desktop launch: gtk-launch folder-customizer"
+    fi
+
+    log_success "Validation complete!"
 fi
