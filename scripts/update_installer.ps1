@@ -7,19 +7,14 @@ if (Test-Path ./build) {
 	} catch {}
 }
 
-# Resolve version from manifest.json if available
-$version = ""
-if (Test-Path ./manifest.json) {
-	try {
-		$json = Get-Content ./manifest.json | ConvertFrom-Json
-		$version = $json.version
-	} catch {}
-}
+# Read values from manifest.json
+$manifest = Get-Content -Raw -Path "./manifest.json" | ConvertFrom-Json
+$version = "$($manifest.version)".Trim()
+$desktopName = "$($manifest.desktop.desktop_name)".Trim()
+Write-Host "Building installer version $version for $desktopName"
 
-$args = "./installer.iss"
-if ($version) { $args = "/DMyAppVersion=$version $args" }
-
-Start-Process "ISCC.exe" -ArgumentList $args -NoNewWindow -Wait
+# Build the Windows installer with Inno Setup, passing values as defines
+Start-Process "ISCC.exe" -ArgumentList @("/DMyAppVersion=$version", "/DMyAppName=`"$desktopName`"", "./installer.iss") -NoNewWindow -Wait
 
 if (!(Test-Path ./windows-installer)) { New-Item -ItemType Directory -Path ./windows-installer | Out-Null }
 Get-ChildItem -Path . -Filter "FolderCustomizerSetup-x64.exe" | ForEach-Object { Move-Item $_.FullName ./windows-installer/ -Force }
