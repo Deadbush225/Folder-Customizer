@@ -11,10 +11,11 @@ if (Test-Path ./build) {
 $manifest = Get-Content -Raw -Path "./manifest.json" | ConvertFrom-Json
 $version = "$($manifest.version)".Trim()
 $desktopName = "$($manifest.desktop.desktop_name)".Trim()
-Write-Host "Building installer version $version for $desktopName"
+$packageId = "$($manifest.desktop.package_id)".Trim()
+Write-Host "Building installer version $version for $desktopName (package: $packageId)"
 
 # Build the Windows installer with Inno Setup, passing values as defines
-Start-Process "ISCC.exe" -ArgumentList @("/DMyAppVersion=$version", "/DMyAppName=`"$desktopName`"", "./installer.iss") -NoNewWindow -Wait
+Start-Process "ISCC.exe" -ArgumentList @("/DMyAppVersion=$version", "/DMyAppName=`"$desktopName`"", "/DMyPackageId=$packageId", "./installer.iss") -NoNewWindow -Wait
 
 if (!(Test-Path ./windows-installer)) { New-Item -ItemType Directory -Path ./windows-installer | Out-Null }
 Get-ChildItem -Path . -Filter "FolderCustomizerSetup-x64.exe" | ForEach-Object { Move-Item $_.FullName ./windows-installer/ -Force }

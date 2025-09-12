@@ -7,6 +7,9 @@
 #ifndef MyAppVersion
   #define MyAppVersion "0.0.15"
 #endif
+#ifndef MyPackageId
+  #define MyPackageId "folder-customizer"
+#endif
 #define MyAppPublisher "Deadbush225."
 ; #define MyAppURL "https://www.example.com/"
 #define MyAppExeName "FolderCustomizer.exe"
@@ -41,8 +44,8 @@ DefaultDirName={autopf}\Folder Customizer
 ; up
 PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
-OutputDir={#SourcePath}
-OutputBaseFilename=FolderCustomizerSetup-x64
+OutputDir=windows-installer
+OutputBaseFilename={#MyPackageId}-{#MyAppVersion}
 SetupIconFile=.\install\icons\Folder Customizer.ico
 SolidCompression=yes
 WizardStyle=modern
