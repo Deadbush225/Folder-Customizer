@@ -41,7 +41,7 @@ PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir={#SourcePath}
 OutputBaseFilename=FolderCustomizerSetup-x64
-SetupIconFile=.\install\icons\Folder Customizer.ico
+SetupIconFile=.\install\icons\Folder Customizer.png
 SolidCompression=yes
 WizardStyle=modern
 
