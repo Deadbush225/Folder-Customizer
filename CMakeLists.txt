@@ -294,12 +294,6 @@ endif()
 # Install the main application executable so install_local populates ./install
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-# Deploy only needed Boost DLLs (if using dynamic linking)
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/BoostDeploy.cmake")
-    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/BoostDeploy.cmake")
-    deploy_boost_program_options()
-endif()
-
 # Generate and run Qt deploy script (guarded for older Qt and can be disabled)
 if(ENABLE_QT_DEPLOY_SCRIPT)
     if(APPLE)
@@ -316,21 +310,25 @@ if(ENABLE_QT_DEPLOY_SCRIPT)
             message(STATUS "qt_generate_deploy_app_script not available on this Qt build; skipping deploy script generation on macOS")
         endif()
     elseif(WIN32)
-        # On Windows, prefer to run windeployqt (if available) after install.
-        find_program(WINDEPLOYQT_EXECUTABLE
-            NAMES windeployqt.exe windeployqt
-            HINTS $ENV{Qt6_DIR} PATH_SUFFIXES bin
-        )
+        # On Windows, use robust windeployqt detection via Qt6::qmake target
+        get_target_property(QT_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
 
-        if(WINDEPLOYQT_EXECUTABLE)
-            message(STATUS "windeployqt found: ${WINDEPLOYQT_EXECUTABLE}; adding install-time invocation")
+        if(QT_QMAKE_EXECUTABLE)
+            get_filename_component(QT_WINDEPLOYQT_EXECUTABLE ${QT_QMAKE_EXECUTABLE} PATH)
+            set(QT_WINDEPLOYQT_EXECUTABLE "${QT_WINDEPLOYQT_EXECUTABLE}/windeployqt.exe")
 
-            # Run windeployqt as part of the install step so the ./install tree
-            # gets populated with Qt runtime artifacts. Use install(CODE ...) so
-            # it runs at install time.
-            install(CODE "execute_process(COMMAND \"${WINDEPLOYQT_EXECUTABLE}\" --release --dir \"${CMAKE_INSTALL_PREFIX}\" \"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/${PROJECT_NAME}.exe\"\n)")
+            if(EXISTS ${QT_WINDEPLOYQT_EXECUTABLE})
+                message(STATUS "windeployqt found: ${QT_WINDEPLOYQT_EXECUTABLE}; adding install-time invocation")
+
+                # Run windeployqt as part of the install step so the ./install tree
+                # gets populated with Qt runtime artifacts. Use install(CODE ...) so
+                # it runs at install time.
+                install(CODE "execute_process(COMMAND \"${QT_WINDEPLOYQT_EXECUTABLE}\" --release --dir \"${CMAKE_INSTALL_PREFIX}\" \"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/${PROJECT_NAME}.exe\")")
+            else()
+                message(WARNING "windeployqt not found at: ${QT_WINDEPLOYQT_EXECUTABLE}")
+            endif()
         else()
-            message(STATUS "windeployqt not found; skipping automatic windeployqt invocation on Windows")
+            message(WARNING "Qt6::qmake target not found, cannot locate windeployqt")
         endif()
     else()
         # Linux and other platforms: do not call the Qt deploy script here. On
@@ -340,6 +338,17 @@ if(ENABLE_QT_DEPLOY_SCRIPT)
     endif()
 else()
     message(STATUS "ENABLE_QT_DEPLOY_SCRIPT=OFF; skipping Qt deploy script generation")
+endif()
+
+# Deploy only needed Boost DLLs (if using dynamic linking) - AFTER Qt deployment
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/BoostDeploy.cmake")
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/BoostDeploy.cmake")
+    deploy_boost_program_options()
+endif()
+
+# Prune optional/banned bits that may remain or from previous installs using a script file
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/PruneInstall.cmake")
+    install(SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/cmake/PruneInstall.cmake")
 endif()
 
 # --- Convenience install targets -------------------------------------------
