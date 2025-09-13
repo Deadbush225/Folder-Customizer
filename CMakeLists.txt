@@ -294,6 +294,12 @@ endif()
 # Install the main application executable so install_local populates ./install
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
 
+# Deploy only needed Boost DLLs (if using dynamic linking)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/BoostDeploy.cmake")
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/BoostDeploy.cmake")
+    deploy_boost_program_options()
+endif()
+
 # Generate and run Qt deploy script (guarded for older Qt and can be disabled)
 if(ENABLE_QT_DEPLOY_SCRIPT)
     if(APPLE)
