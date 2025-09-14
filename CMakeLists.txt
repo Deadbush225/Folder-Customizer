@@ -294,62 +294,26 @@ endif()
 # Install the main application executable so install_local populates ./install
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-# Generate and run Qt deploy script (guarded for older Qt and can be disabled)
+# Enhanced Qt deployment with diagnostics and fallback
 if(ENABLE_QT_DEPLOY_SCRIPT)
     if(APPLE)
         if(COMMAND qt_generate_deploy_app_script)
-            # Only run the Qt deploy script generator on macOS (the helper's
-            # signature has varied between Qt versions and some platforms don't
-            # provide it). This avoids the "Unexpected arguments" error on other
-            # platforms.
             qt_generate_deploy_app_script(
                 TARGET ${PROJECT_NAME} OUTPUT_SCRIPT deploy_script
-            ) # create deploy script
-            install(SCRIPT ${deploy_script}) # run deploy script
+            )
+            install(SCRIPT ${deploy_script})
         else()
             message(STATUS "qt_generate_deploy_app_script not available on this Qt build; skipping deploy script generation on macOS")
         endif()
     elseif(WIN32)
-        # On Windows, use robust windeployqt detection via Qt6::qmake target
-        get_target_property(QT_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
-
-        if(QT_QMAKE_EXECUTABLE)
-            get_filename_component(QT_WINDEPLOYQT_EXECUTABLE ${QT_QMAKE_EXECUTABLE} PATH)
-            set(QT_WINDEPLOYQT_EXECUTABLE "${QT_WINDEPLOYQT_EXECUTABLE}/windeployqt.exe")
-
-            if(EXISTS ${QT_WINDEPLOYQT_EXECUTABLE})
-                message(STATUS "windeployqt found: ${QT_WINDEPLOYQT_EXECUTABLE}; adding install-time invocation")
-
-                # Run windeployqt as part of the install step so the ./install tree
-                # gets populated with Qt runtime artifacts. Use install(CODE ...) so
-                # it runs at install time with proper error handling.
-                install(CODE "
-                    message(STATUS \"Running windeployqt for ${PROJECT_NAME}...\")
-                    execute_process(
-                        COMMAND \"${QT_WINDEPLOYQT_EXECUTABLE}\" --release --no-translations --no-system-d3d-compiler --no-opengl-sw --no-compiler-runtime --dir \"${CMAKE_INSTALL_PREFIX}\" \"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/${PROJECT_NAME}.exe\"
-                        RESULT_VARIABLE DEPLOY_RESULT
-                        OUTPUT_VARIABLE DEPLOY_OUTPUT
-                        ERROR_VARIABLE DEPLOY_ERROR
-                    )
-                    if(DEPLOY_RESULT EQUAL 0)
-                        message(STATUS \"✓ Qt deployment successful for ${PROJECT_NAME}\")
-                        if(DEPLOY_OUTPUT)
-                            message(STATUS \"Deploy output: \${DEPLOY_OUTPUT}\")
-                        endif()
-                    else()
-                        message(FATAL_ERROR \"❌ Qt deployment failed for ${PROJECT_NAME} with code: \${DEPLOY_RESULT}\\nError: \${DEPLOY_ERROR}\\nOutput: \${DEPLOY_OUTPUT}\")
-                    endif()
-                ")
-            else()
-                message(WARNING "windeployqt not found at: ${QT_WINDEPLOYQT_EXECUTABLE}")
-            endif()
+        # Use enhanced Qt deployment with multiple detection methods and fallback
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/EnhancedQtDeploy.cmake")
+            include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/EnhancedQtDeploy.cmake")
+            deploy_qt_enhanced(${PROJECT_NAME})
         else()
-            message(WARNING "Qt6::qmake target not found, cannot locate windeployqt")
+            message(FATAL_ERROR "EnhancedQtDeploy.cmake not found - Qt deployment will fail")
         endif()
     else()
-        # Linux and other platforms: do not call the Qt deploy script here. On
-        # Linux we package via separate scripts (deb/rpm/AppImage) and calling
-        # the Qt deployment generator may be unsupported or unnecessary.
         message(STATUS "Skipping qt_generate_deploy_app_script on this platform (not macOS)")
     endif()
 else()
