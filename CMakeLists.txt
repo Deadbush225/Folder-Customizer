@@ -322,8 +322,24 @@ if(ENABLE_QT_DEPLOY_SCRIPT)
 
                 # Run windeployqt as part of the install step so the ./install tree
                 # gets populated with Qt runtime artifacts. Use install(CODE ...) so
-                # it runs at install time.
-                install(CODE "execute_process(COMMAND \"${QT_WINDEPLOYQT_EXECUTABLE}\" --release --dir \"${CMAKE_INSTALL_PREFIX}\" \"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/${PROJECT_NAME}.exe\")")
+                # it runs at install time with proper error handling.
+                install(CODE "
+                    message(STATUS \"Running windeployqt for ${PROJECT_NAME}...\")
+                    execute_process(
+                        COMMAND \"${QT_WINDEPLOYQT_EXECUTABLE}\" --release --no-translations --no-system-d3d-compiler --no-opengl-sw --no-compiler-runtime --dir \"${CMAKE_INSTALL_PREFIX}\" \"${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/${PROJECT_NAME}.exe\"
+                        RESULT_VARIABLE DEPLOY_RESULT
+                        OUTPUT_VARIABLE DEPLOY_OUTPUT
+                        ERROR_VARIABLE DEPLOY_ERROR
+                    )
+                    if(DEPLOY_RESULT EQUAL 0)
+                        message(STATUS \"✓ Qt deployment successful for ${PROJECT_NAME}\")
+                        if(DEPLOY_OUTPUT)
+                            message(STATUS \"Deploy output: \${DEPLOY_OUTPUT}\")
+                        endif()
+                    else()
+                        message(FATAL_ERROR \"❌ Qt deployment failed for ${PROJECT_NAME} with code: \${DEPLOY_RESULT}\\nError: \${DEPLOY_ERROR}\\nOutput: \${DEPLOY_OUTPUT}\")
+                    endif()
+                ")
             else()
                 message(WARNING "windeployqt not found at: ${QT_WINDEPLOYQT_EXECUTABLE}")
             endif()
