@@ -30,6 +30,12 @@
 
 **Solution**: Changed `DESTINATION ${CMAKE_INSTALL_BINDIR}` to `DESTINATION ${CMAKE_INSTALL_LIBDIR}` in BoostDeploy.cmake
 
+### **Issue 4: CMAKE_INSTALL_PREFIX Variable Scoping in install(CODE)**
+
+**Problem**: Build-time `CMAKE_INSTALL_PREFIX` was being used instead of runtime prefix, causing path resolution failures when using `install_local` target with prefix override.
+
+**Solution**: Changed `${CMAKE_INSTALL_PREFIX}` to `\${CMAKE_INSTALL_PREFIX}` in `install(CODE)` blocks to use runtime-resolved paths.
+
 ---
 
 ## 📋 **Implementation Status Per Project**
