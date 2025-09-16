@@ -24,7 +24,12 @@ endif()
 option(ENABLE_QT_DEPLOY_SCRIPT "Generate and run Qt deploy script during install" ON)
 
 # set(CMAKE_BUILD_TYPE "Debug")
-set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/install)
+# Install directories based on platform
+if(WIN32)
+    set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/dist/windows)
+else()
+    set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/dist/linux)
+endif()
 
 project(FolderCustomizer VERSION 0.1.0)
 set(PROJECT_NAME FolderCustomizer)
@@ -365,8 +370,12 @@ endif()
 
 # --- Convenience install targets -------------------------------------------
 # install_local: Build app + eUpdater (+ context menu on Windows), then remove
-# ./install and perform an installation into ./install using cmake --install.
-set(INSTALL_LOCAL_DIR "${CMAKE_SOURCE_DIR}/install")
+# ./dist/linux or ./dist/windows and perform an installation using cmake --install.
+if(WIN32)
+    set(INSTALL_LOCAL_DIR "${CMAKE_SOURCE_DIR}/dist/windows")
+else()
+    set(INSTALL_LOCAL_DIR "${CMAKE_SOURCE_DIR}/dist/linux")
+endif()
 
 add_custom_target(install_local
     COMMAND ${CMAKE_COMMAND} -E echo "Cleaning ${INSTALL_LOCAL_DIR}"

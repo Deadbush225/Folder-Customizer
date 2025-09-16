@@ -1,6 +1,11 @@
 #!/bin/bash
 # Generic cross-platform deployment script
-# Usage: ./generic-deploy.sh [all|windows|linux|appimage|deb|rpm|arch]
+# Usage: ./eDeployLinux.sh [all|windows|linux|appimage|deb|rpm|arch]
+#
+# Environment variables:
+# - CLEAN_BUILD=1: Force clean build (removes build directory)
+# - KEEP_OLD_DIST=1: Keep old packages in release/ directory
+# - BUILD_TYPE: CMake build type (default: Release)
 #
 # This script expects the following environment variables or config file:
 # - APP_NAME: Display name (e.g., "Folder Customizer", "Download Sorter")
@@ -22,8 +27,8 @@ set -e
 
 # Get the project root (where this script is called from)
 PROJECT_ROOT="$(pwd)"
-BUILD_DIR="$PROJECT_ROOT/build"
-INSTALL_DIR="$PROJECT_ROOT/install"
+BUILD_DIR="$PROJECT_ROOT/build/build-linux"
+INSTALL_DIR="$PROJECT_ROOT/dist/linux"
 SCRIPTS_DIR="$PROJECT_ROOT/scripts"
 
 # Colors for output
@@ -109,12 +114,68 @@ load_config() {
     echo "Project root: $PROJECT_ROOT"
 }
 
-# Check if build exists
+# Build and install project
+build_project() {
+    log_info "Building project..."
+    
+    # Set build configuration
+    BUILD_TYPE="${BUILD_TYPE:-Release}"
+    
+    # Detect source directory (some projects have CMakeLists.txt in src/, others in root)
+    SOURCE_DIR="$PROJECT_ROOT"
+    if [ -f "$PROJECT_ROOT/src/CMakeLists.txt" ]; then
+        SOURCE_DIR="$PROJECT_ROOT/src"
+        log_info "Detected CMakeLists.txt in src/ directory"
+    elif [ -f "$PROJECT_ROOT/CMakeLists.txt" ]; then
+        SOURCE_DIR="$PROJECT_ROOT"
+        log_info "Detected CMakeLists.txt in root directory"
+    else
+        log_error "CMakeLists.txt not found in root or src/ directory"
+        exit 1
+    fi
+    
+    # Clean build directory if requested or if it seems corrupted
+    if [ "${CLEAN_BUILD:-0}" = "1" ] || [ ! -f "$BUILD_DIR/CMakeCache.txt" ]; then
+        log_info "Cleaning build directory..."
+        rm -rf "$BUILD_DIR"
+    fi
+    
+    # Configure with CMake
+    log_info "Configuring with CMake (Build Type: $BUILD_TYPE, Source: $SOURCE_DIR)..."
+    cmake -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE="$BUILD_TYPE" "$SOURCE_DIR"
+    
+    if [ $? -ne 0 ]; then
+        log_error "CMake configuration failed"
+        exit 1
+    fi
+    
+    # Build the project
+    log_info "Building with CMake..."
+    cmake --build "$BUILD_DIR" --config "$BUILD_TYPE"
+    
+    if [ $? -ne 0 ]; then
+        log_error "Build failed"
+        exit 1
+    fi
+    
+    # Install to dist/linux directory
+    log_info "Installing to $INSTALL_DIR..."
+    cmake --install "$BUILD_DIR" --config "$BUILD_TYPE" --prefix "$INSTALL_DIR"
+    
+    if [ $? -ne 0 ]; then
+        log_error "Installation failed"
+        exit 1
+    fi
+    
+    log_success "Build and installation completed successfully"
+}
+
+# Check if build exists and find executables
 check_build() {
     log_info "Checking for build artifacts in: $INSTALL_DIR"
     if [ ! -d "$INSTALL_DIR" ]; then
-        log_error "Install directory '$INSTALL_DIR' does not exist. Please run: cmake --build build --target install_local"
-        exit 1
+        log_info "Install directory '$INSTALL_DIR' does not exist. Building project..."
+        build_project
     fi
 
     # Show what's in the install directory to help debugging
@@ -146,20 +207,23 @@ check_build() {
     fi
     
     if [ -z "$BIN_NAME" ]; then
-        log_error "No executable found in $INSTALL_DIR/bin/. Please build the project first:"
-        echo "  cmake -B build -DCMAKE_BUILD_TYPE=Release"
-        echo "  cmake --build build"
-        echo "  cmake --build build --target install_local"
+        log_error "No executable found in $INSTALL_DIR/bin/ even after building."
         exit 1
     fi
 }
 
-# Prepare release directory
+# Prepare release and pack directories
 prepare_dist() {
     mkdir -p "$PROJECT_ROOT/release"
+    mkdir -p "$PROJECT_ROOT/pack/arch"
+    mkdir -p "$PROJECT_ROOT/pack/deb"
+    mkdir -p "$PROJECT_ROOT/pack/appdir"
+    mkdir -p "$PROJECT_ROOT/pack/rpm"
+    
     if [ "${KEEP_OLD_DIST:-0}" != "1" ]; then
-        log_info "Cleaning release/ (set KEEP_OLD_DIST=1 to keep)"
-        rm -rf "$PROJECT_ROOT/release/package" "$PROJECT_ROOT"/release/${APP_PACKAGE}-* "$PROJECT_ROOT"/release/${APP_BINARY}-* 2>/dev/null || true
+        log_info "Cleaning release/ and pack/ (set KEEP_OLD_DIST=1 to keep)"
+        rm -rf "$PROJECT_ROOT/pack/arch"/* "$PROJECT_ROOT/pack/deb"/* "$PROJECT_ROOT/pack/appdir"/* "$PROJECT_ROOT/pack/rpm"/* 2>/dev/null || true
+        rm -rf "$PROJECT_ROOT"/release/${APP_PACKAGE}-* "$PROJECT_ROOT"/release/${APP_BINARY}-* 2>/dev/null || true
     fi
 }
 
@@ -196,7 +260,7 @@ copy_icon() {
 create_appimage() {
     log_info "Creating AppImage..."
     
-    local appdir="$PROJECT_ROOT/release/${APP_BINARY}.AppDir"
+    local appdir="$PROJECT_ROOT/pack/appdir/${APP_BINARY}.AppDir"
     rm -rf "$appdir"
     mkdir -p "$appdir/usr/bin"
     mkdir -p "$appdir/usr/lib"
@@ -257,10 +321,10 @@ EOF
     fi
 
     mkdir -p "$PROJECT_ROOT/release"
-    cd "$PROJECT_ROOT/release"
+    cd "$PROJECT_ROOT/pack/appdir"
 
     # Try to run appimagetool normally (requires FUSE)
-    if "$SCRIPTS_DIR/appimagetool" "$appdir" "${APP_BINARY}-${VERSION}-x86_64.AppImage" 2>appimage.err; then
+    if "$SCRIPTS_DIR/appimagetool" "$appdir" "$PROJECT_ROOT/release/${APP_BINARY}-${VERSION}-x86_64.AppImage" 2>appimage.err; then
         log_success "AppImage created: release/${APP_BINARY}-${VERSION}-x86_64.AppImage"
         return
     fi
@@ -280,6 +344,7 @@ EOF
     fi
 
     # Fallback to tarball
+    cd "$PROJECT_ROOT/release"
     tar czf "${APP_PACKAGE}-${VERSION}-x86_64.tar.gz" -C "$(dirname "$appdir")" "$(basename "$appdir")"
     log_success "Archive created: release/${APP_PACKAGE}-${VERSION}-x86_64.tar.gz"
 }
@@ -288,7 +353,7 @@ EOF
 create_deb() {
     log_info "Creating DEB package..."
     
-    local debdir="$PROJECT_ROOT/release/deb"
+    local debdir="$PROJECT_ROOT/pack/deb/${APP_PACKAGE}_${VERSION}_amd64"
     rm -rf "$debdir"
     mkdir -p "$debdir/DEBIAN"
     mkdir -p "$debdir/usr/bin"
@@ -403,7 +468,7 @@ create_rpm() {
         esac
     fi
     
-    local rpmdir="$PROJECT_ROOT/release/rpm"
+    local rpmdir="$PROJECT_ROOT/pack/rpm"
     rm -rf "$rpmdir"
     mkdir -p "$rpmdir"/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
     
@@ -472,7 +537,7 @@ EOF
         return
     fi
     
-    # Copy result
+    # Copy result to release directory
     cp "$rpmdir/RPMS/x86_64/${APP_PACKAGE}-${VERSION}-1."*.rpm "$PROJECT_ROOT/release/" 2>/dev/null || true
     log_success "RPM package created in release/"
 }
@@ -481,7 +546,7 @@ EOF
 create_arch() {
     log_info "Creating Arch Linux package..."
     
-    local archdir="$PROJECT_ROOT/release/arch"
+    local archdir="$PROJECT_ROOT/pack/arch"
     rm -rf "$archdir"
     mkdir -p "$archdir"
     
@@ -562,7 +627,7 @@ EOF
         return
     }
     
-    # Copy result
+    # Copy result to release directory
     cp *.pkg.tar.* "$PROJECT_ROOT/release/" 2>/dev/null || true
     log_success "Arch package created in release/"
 }

@@ -1,0 +1,4 @@
+#!/bin/bash
+export LD_LIBRARY_PATH="/usr/lib/folder-customizer:\$LD_LIBRARY_PATH"
+export PATH="/usr/lib/folder-customizer:\$PATH"
+exec "/usr/lib/folder-customizer/FolderCustomizer" "\$@"

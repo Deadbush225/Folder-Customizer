@@ -1,0 +1,56 @@
+# Maintainer: Deadbush225 <your-email@example.com>
+pkgname=folder-customizer
+pkgver=0.0.15
+pkgrel=1
+pkgdesc="Customize folder icons and add tags to organize your directories"
+arch=('x86_64')
+url="https://github.com/Deadbush225/folder-customizer"
+license=('MIT')
+depends=('qt6-base')
+source=()
+md5sums=()
+
+package() {
+    # Install binary and libraries
+    install -dm755 "$pkgdir/usr/lib/$pkgname"
+    
+    # Copy from the bin/ subdirectory
+    if [ -f "/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux/bin/FolderCustomizer" ]; then
+        cp "/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux/bin/FolderCustomizer" "$pkgdir/usr/lib/$pkgname/FolderCustomizer"
+    fi
+    
+    # Copy libraries if they exist
+    if [ -d "/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux/lib" ] && ls "/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux/lib"/*.so* 1> /dev/null 2>&1; then
+        cp "/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux/lib"/*.so* "$pkgdir/usr/lib/$pkgname/" 2>/dev/null || true
+    fi
+    
+    # Copy other files as needed
+    if [ -f "/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux/manifest.json" ]; then
+        cp "/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux/manifest.json" "$pkgdir/usr/lib/$pkgname/"
+    fi
+    
+    # Create wrapper script
+    install -dm755 "$pkgdir/usr/bin"
+    cat > "$pkgdir/usr/bin/$pkgname" << 'EOFSCRIPT'
+#!/bin/bash
+export LD_LIBRARY_PATH="/usr/lib/folder-customizer:$LD_LIBRARY_PATH"
+export PATH="/usr/lib/folder-customizer:$PATH"
+exec "/usr/lib/folder-customizer/FolderCustomizer" "$@"
+EOFSCRIPT
+    chmod +x "$pkgdir/usr/bin/$pkgname"
+    
+    # Desktop file
+    install -dm755 "$pkgdir/usr/share/applications"
+    cat > "$pkgdir/usr/share/applications/$pkgname.desktop" << 'EOFDESKTOP'
+[Desktop Entry]
+Name=Folder Customizer
+Comment=Customize folder icons and add tags to organize your directories
+Exec=folder-customizer
+Icon=folder-customizer
+Type=Application
+Categories=Utility;FileManager;Qt;
+EOFDESKTOP
+
+    # Application icon
+    install -dm755 "$pkgdir/usr/share/icons/hicolor/256x256/apps"
+}

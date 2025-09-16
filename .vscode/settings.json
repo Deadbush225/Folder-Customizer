@@ -1,4 +1,5 @@
 {
 	"cmake.sourceDirectory": "D:/System/Coding/Projects/folder-customizer",
-	"explorer.sortOrder": "modified"
+	"explorer.sortOrder": "modified",
+	"cmake.ignoreCMakeListsMissing": true
 }

@@ -1,0 +1,31 @@
+{
+	"name": "Folder Customizer",
+	"version": "0.0.15",
+	"description": "Customize folder icons and add tags to organize your directories",
+	"homepage": "https://github.com/Deadbush225/folder-customizer",
+	"license": "MIT",
+	"maintainer": "Deadbush225 <your-email@example.com>",
+	"desktop": {
+		"desktop_name": "Folder Customizer",
+		"generic_name": "Folder Icon Customizer",
+		"comment": "Customize folder icons and add tags to organize your directories",
+		"categories": "Utility;FileManager;Qt;",
+		"keywords": "folder;icon;customize;tag;organize;directory;",
+		"mime_types": "inode/directory;",
+		"executable": "FolderCustomizer",
+		"icon_path": "Icons/Folder Customizer.png",
+		"package_id": "folder-customizer",
+		"supports_files": true,
+		"cli_helper": true
+	},
+	"deployment": {
+		"dependencies": {
+			"deb": "libc6, libqt6core6, libqt6gui6, libqt6widgets6, libqt6network6, libboost-program-options1.83.0 | libboost-program-options1.82.0 | libboost-program-options1.81.0 | libboost-program-options1.74.0 | libboost-program-options-dev",
+			"rpm": "qt6-qtbase qt6-qtbase-gui boost-program-options"
+		},
+		"extra_files": {
+			"cli_helpers": ["fc-directory"],
+			"shared_resources": ["bin/Icons/*/PNG/*.png"]
+		}
+	}
+}
