@@ -436,7 +436,7 @@ function Pack-WithInnoSetup {
         
         # Run Inno Setup compiler
         Write-Host "Compiling installer with Inno Setup: $issFile"
-        & $innoExe "/O$installerOutput" "/F$Configuration" "$issFile"
+        & $innoExe "/O$installerOutput" "$issFile"
         
         if ($LASTEXITCODE -ne 0) {
             throw "Inno Setup compilation failed with exit code $LASTEXITCODE"
