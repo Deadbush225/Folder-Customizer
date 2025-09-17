@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
+set(Boost_NO_BOOST_CMAKE ON)
 
 if(POLICY CMP0167)
     cmake_policy(SET CMP0167 NEW)
@@ -14,27 +15,35 @@ if(POLICY CMP0177)
     cmake_policy(SET CMP0177 NEW)
 endif()
 
-set(CMAKE_BUILD_TYPE "Release")
+# Set default build type only if not specified
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
 
 # Allow disabling Qt deploy script generation (useful for older distro Qt packages or CI)
 option(ENABLE_QT_DEPLOY_SCRIPT "Generate and run Qt deploy script during install" ON)
 
 # set(CMAKE_BUILD_TYPE "Debug")
-# Use Windows-specific Boost hint only on developer machines without toolchains; don't pollute CI
-if(WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-    set(Boost_ROOT D:/Dev/boost_1_87_0/stage)
-    list(APPEND CMAKE_PREFIX_PATH ${Boost_ROOT})
-elseif(NOT WIN32)
-    # Force FindBoost module instead of a BoostConfig.cmake on Linux
-    set(Boost_NO_BOOST_CMAKE ON)
-endif()
-
 set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/install)
 
 project(FolderCustomizer VERSION 0.1.0)
 set(PROJECT_NAME FolderCustomizer)
 set(PROJECT_SOURCE ${CMAKE_SOURCE_DIR}/src)
 message("\nPROJECT SOURCE: " ${PROJECT_SOURCE})
+
+# Configure Boost after project() when compiler is detected
+if(MINGW)
+    message(STATUS "MinGW detected - using MSYS2 system Boost")
+    set(Boost_NO_BOOST_CMAKE ON)
+elseif(WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    # Use Windows-specific Boost hint only for MSVC builds
+    message(STATUS "MSVC detected - using custom Boost build")
+    set(Boost_ROOT D:/Dev/boost_1_87_0/stage)
+    list(APPEND CMAKE_PREFIX_PATH ${Boost_ROOT})
+elseif(NOT WIN32)
+    # Force FindBoost module instead of a BoostConfig.cmake on Linux
+    set(Boost_NO_BOOST_CMAKE ON)
+endif()
 
 # Global C++ standard settings for all targets
 set(CMAKE_CXX_STANDARD 20)
@@ -57,6 +66,8 @@ endif()
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 qt_standard_project_setup()
+
+find_package(Boost REQUIRED COMPONENTS program_options)
 
 include(GNUInstallDirs)
 
@@ -181,7 +192,8 @@ function(u_include_and_link_compiled_boost SUBDIR_NAME BOOST_COMPONENT)
     if(BOOST_AVAILABLE)
         message("Linking Boost program_options for ${SUBDIR_NAME}...")
 
-        if(WIN32 AND DEFINED BOOST_ROOT)
+        if(WIN32 AND DEFINED BOOST_ROOT AND NOT MINGW)
+            # Custom Boost build (MSVC)
             if(EXISTS "${BOOST_ROOT}/include/boost")
                 target_include_directories(${SUBDIR_NAME} PRIVATE "${BOOST_ROOT}/include")
             endif()
@@ -192,8 +204,14 @@ function(u_include_and_link_compiled_boost SUBDIR_NAME BOOST_COMPONENT)
 
             target_link_libraries(${SUBDIR_NAME} PUBLIC "boost_program_options")
         else()
+            # System Boost (Linux or MinGW)
             target_include_directories(${SUBDIR_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
-            target_link_libraries(${SUBDIR_NAME} PUBLIC ${BOOST_COMPONENT})
+
+            if(TARGET Boost::program_options)
+                target_link_libraries(${SUBDIR_NAME} PUBLIC Boost::program_options)
+            else()
+                target_link_libraries(${SUBDIR_NAME} PUBLIC ${BOOST_COMPONENT})
+            endif()
         endif()
     endif()
 endfunction()
@@ -231,6 +249,21 @@ set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "FolderCustomizer")
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Core Logger Utils Customizer UserInterface Qt6::Widgets Qt6::Core)
+
+# Link Boost program_options - handle both modern CMake targets and legacy variables
+if(BOOST_AVAILABLE)
+    if(TARGET Boost::program_options)
+        target_link_libraries(${PROJECT_NAME} PRIVATE Boost::program_options)
+        message(STATUS "Linking with Boost::program_options target")
+    elseif(MINGW)
+        # For MinGW with system Boost, link with the libraries found by find_package
+        target_link_libraries(${PROJECT_NAME} PRIVATE ${Boost_LIBRARIES})
+        message(STATUS "Linking with system Boost libraries: ${Boost_LIBRARIES}")
+    else()
+        # Fallback for custom builds
+        target_link_libraries(${PROJECT_NAME} PRIVATE "boost_program_options")
+    endif()
+endif()
 
 # Propagate Boost availability to the app target too
 if(BOOST_AVAILABLE)

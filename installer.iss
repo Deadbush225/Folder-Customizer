@@ -46,7 +46,7 @@ PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=windows-installer
 OutputBaseFilename={#MyPackageId}-{#MyAppVersion}
-SetupIconFile=.\install\icons\Folder Customizer.ico
+SetupIconFile=.\dist\windows\icons\Folder Customizer.ico
 SolidCompression=yes
 WizardStyle=modern
 
@@ -57,8 +57,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; Package the already-installed files from ./install (produced by the CMake target install_local)
-Source: ".\install\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Package the already-installed files from ./dist/windows (produced by the CMake install)
+Source: ".\dist\windows\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
