@@ -239,11 +239,10 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES}
     ${app_icon_resource_windows}
     Icons/resource.qrc)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    message("Removing Console...\n")
-    set_property(TARGET ${PROJECT_NAME} PROPERTY WIN32_EXECUTABLE true)
-endif()
-
+# if(CMAKE_BUILD_TYPE STREQUAL "Release")
+# message("Removing Console...\n")
+# set_property(TARGET ${PROJECT_NAME} PROPERTY WIN32_EXECUTABLE true)
+# endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "FolderCustomizer")
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

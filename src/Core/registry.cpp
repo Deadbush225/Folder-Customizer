@@ -34,7 +34,7 @@ RegistryManipulator::RegistryManipulator() {
     } else {
         directory = R"(")" + path.substr(0, pos) + R"(\)" +
                     R"(libFCContextMenuHandler.dll")";
-        qDebug() << directory;
+        // qDebug() << directory;
     }
 }
 

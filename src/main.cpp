@@ -24,16 +24,7 @@ namespace po = boost::program_options;
 #endif
 
 int main(int argc, char* argv[]) {
-#if (defined(_WIN32) && !defined(_DEBUG))
-    ::ShowWindow(::GetConsoleWindow(), SW_HIDE);  // hide console window
-#endif
-
     // FolderCustomizer <Folder> -F Dark -C Red -T
-
-    auto app = new QApplication(argc, argv);
-
-    CLI* cli = nullptr;
-    FolderCustomizerWindow* window = nullptr;
 
 #if HAVE_BOOST_PROGRAM_OPTIONS
     po::options_description desc("Allowed options");
@@ -52,6 +43,15 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
+#if (defined(_WIN32) && defined(NDEBUG))
+    ::ShowWindow(::GetConsoleWindow(),
+                 SW_HIDE);  // hide console window in release builds
+#endif
+
+    auto app = new QApplication(argc, argv);
+    CLI* cli = nullptr;
+    FolderCustomizerWindow* window = nullptr;
+
     if (vm.count("folder")) {
         cli = new CLI(vm);
     } else {
@@ -59,6 +59,7 @@ int main(int argc, char* argv[]) {
         window = new FolderCustomizerWindow();
         window->show();
     }
+
 #else
     // Fallback: use Qt's QCommandLineParser if Boost is unavailable
     QCommandLineParser parser;
