@@ -36,7 +36,7 @@ log_error() {
 PROJECT_ROOT="$(pwd)"
 RELEASE_DIR="$PROJECT_ROOT/release"
 VERSION=${1:-}
-NOTES_FILE=${2:-"$PROJECT_ROOT/release_notes.md"}
+NOTES_FILE=${2:-"$PROJECT_ROOT/scripts/release_notes.md"}
 
 # Check if GitHub CLI is installed
 if ! command -v gh &> /dev/null; then

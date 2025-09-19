@@ -1,6 +1,6 @@
 # Maintainer: Deadbush225 <your-email@example.com>
 pkgname=folder-customizer
-pkgver=0.0.15
+pkgver=0.0.16
 pkgrel=1
 pkgdesc="Customize folder icons and add tags to organize your directories"
 arch=('x86_64')

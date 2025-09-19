@@ -1,11 +1,11 @@
 format = 2
 pkgname = folder-customizer
 pkgbase = folder-customizer
-pkgver = 0.0.15-1
+pkgver = 0.0.16-1
 pkgarch = x86_64
-pkgbuild_sha256sum = 990de4da087bb2e3d9114bd4bc1bf843e0c8710f5be95f273681da1fed3971af
+pkgbuild_sha256sum = b9cedb019ebea0ba9b982947f4efedfd9d29fa8d9e879d5f237dec1d2aceb984
 packager = Unknown Packager
-builddate = 1758296183
+builddate = 1758299116
 builddir = /media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/pack/arch
 startdir = /media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/pack/arch
 buildtool = makepkg

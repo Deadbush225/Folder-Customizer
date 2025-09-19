@@ -322,31 +322,26 @@ create_tarball_fallback() {
     local filename="$1"
     log_info "Creating tar.gz fallback: $filename"
     
-    # Bundle all libraries for portable deployment
-    bundle_libraries --all
-    
+    # Only bundle libraries for portable tarball fallback (not for Arch .pkg.tar)
+    # If this is called as a fallback for Arch, do NOT bundle $INSTALL_DIR/lib
     cd "$PROJECT_ROOT/release"
     local tempdir="${filename%.tar.gz}-temp"
-    
-    # Create temporary directory and copy install contents
     mkdir -p "$tempdir"
-    cp -r "$INSTALL_DIR"/* "$tempdir/" 2>/dev/null || true
-    
+    # Copy only bin, icons, manifest, scripts (no lib)
+    [ -d "$INSTALL_DIR/bin" ] && cp -r "$INSTALL_DIR/bin" "$tempdir/"
+    [ -d "$INSTALL_DIR/icons" ] && cp -r "$INSTALL_DIR/icons" "$tempdir/"
+    [ -f "$INSTALL_DIR/manifest.json" ] && cp "$INSTALL_DIR/manifest.json" "$tempdir/"
     # Add installation scripts for tar.gz format
     if [ -f "$SCRIPTS_DIR/eInstall.sh" ]; then
         cp "$SCRIPTS_DIR/eInstall.sh" "$tempdir/"
         log_info "Added eInstall.sh to tar.gz"
     fi
-    
     if [ -f "$SCRIPTS_DIR/post-install.sh" ]; then
         cp "$SCRIPTS_DIR/post-install.sh" "$tempdir/"
         log_info "Added post-install.sh to tar.gz"
     fi
-    
-    # Create the tarball and cleanup
     tar czf "$filename" -C . "$tempdir"
     rm -rf "$tempdir"
-    
     log_success "Archive created: release/$filename"
 }
 
@@ -483,21 +478,17 @@ create_deb() {
     mkdir -p "$debdir/usr/share/applications"
     mkdir -p "$debdir/usr/share/icons/hicolor/256x256/apps"
     
-    # Copy application and libraries
+    # Copy application (do not copy libraries for DEB)
     cp "$MAIN_EXECUTABLE" "$debdir/usr/lib/$APP_PACKAGE/$APP_BINARY"
-    
     # Copy manifest.json if available
     if [ -f "$INSTALL_DIR/manifest.json" ]; then
         cp "$INSTALL_DIR/manifest.json" "$debdir/usr/lib/$APP_PACKAGE/"
     fi
-    
     # Copy eUpdater if available
     if [ -f "$INSTALL_DIR/bin/eUpdater" ] || [ -f "$INSTALL_DIR/bin/eUpdater.exe" ]; then
         cp "$INSTALL_DIR/bin"/eUpdater* "$debdir/usr/lib/$APP_PACKAGE/" 2>/dev/null || true
     fi
-    
-    # Note: DEB packages should use system dependencies, not bundle libraries
-    # Libraries are only bundled for portable formats (AppImage, tar.gz)
+    # Do NOT copy $INSTALL_DIR/lib or any .so files for DEB
     
     # Copy post-install.sh if available (for DEBIAN/postinst to use)
     if [ -f "$SCRIPTS_DIR/post-install.sh" ]; then
@@ -768,27 +759,21 @@ source=()
 md5sums=()
 
 package() {
-    # Install binary and libraries
+    # Install binary (do not copy libraries for Arch)
     install -dm755 "\$pkgdir/usr/lib/\$pkgname"
-    
-    # Copy from the bin/ subdirectory
     if [ -f "$INSTALL_DIR/bin/$APP_BINARY" ]; then
         cp "$INSTALL_DIR/bin/$APP_BINARY" "\$pkgdir/usr/lib/\$pkgname/$APP_BINARY"
     fi
-    
-    # Note: Arch packages should use system dependencies, not bundle libraries
-    # Libraries are only bundled for portable formats (AppImage, tar.gz)
-    
-    # Copy other files as needed
+    # Copy manifest.json if available
     if [ -f "$INSTALL_DIR/manifest.json" ]; then
         cp "$INSTALL_DIR/manifest.json" "\$pkgdir/usr/lib/\$pkgname/"
     fi
-    
     # Copy post-install.sh for post_install() function to use
     if [ -f "$PROJECT_ROOT/scripts/post-install.sh" ]; then
         cp "$PROJECT_ROOT/scripts/post-install.sh" "\$pkgdir/usr/lib/\$pkgname/post-install.sh"
         chmod +x "\$pkgdir/usr/lib/\$pkgname/post-install.sh"
     fi
+    # Do NOT copy $INSTALL_DIR/lib or any .so files for Arch
     
     # Create wrapper script
     install -dm755 "\$pkgdir/usr/bin"

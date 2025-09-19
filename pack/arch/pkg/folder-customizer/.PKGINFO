@@ -3,10 +3,10 @@
 pkgname = folder-customizer
 pkgbase = folder-customizer
 xdata = pkgtype=pkg
-pkgver = 0.0.15-1
+pkgver = 0.0.16-1
 pkgdesc = Customize folder icons and add tags to organize your directories
 url = https://github.com/Deadbush225/folder-customizer
-builddate = 1758296183
+builddate = 1758299116
 packager = Unknown Packager
 size = 93817775
 arch = x86_64
