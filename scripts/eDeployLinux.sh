@@ -496,10 +496,8 @@ create_deb() {
         cp "$INSTALL_DIR/bin"/eUpdater* "$debdir/usr/lib/$APP_PACKAGE/" 2>/dev/null || true
     fi
     
-    # Copy libraries from lib/
-    if [ -d "$INSTALL_DIR/lib" ] && ls "$INSTALL_DIR/lib"/*.so* 1> /dev/null 2>&1; then
-        cp "$INSTALL_DIR/lib"/*.so* "$debdir/usr/lib/$APP_PACKAGE/" 2>/dev/null || true
-    fi
+    # Note: DEB packages should use system dependencies, not bundle libraries
+    # Libraries are only bundled for portable formats (AppImage, tar.gz)
     
     # Copy post-install.sh if available (for DEBIAN/postinst to use)
     if [ -f "$SCRIPTS_DIR/post-install.sh" ]; then
@@ -518,8 +516,6 @@ create_deb() {
     # Create wrapper script
     cat > "$debdir/usr/bin/$APP_PACKAGE" << EOF
 #!/bin/bash
-export LD_LIBRARY_PATH="/usr/lib/$APP_PACKAGE:\\\$LD_LIBRARY_PATH"
-export PATH="/usr/lib/$APP_PACKAGE:\\\$PATH"
 exec "/usr/lib/$APP_PACKAGE/$APP_BINARY" "\\\$@"
 EOF
     chmod +x "$debdir/usr/bin/$APP_PACKAGE"
@@ -664,8 +660,6 @@ cp -r * %{buildroot}/usr/lib/%{name}/
 # Create wrapper script
 cat > %{buildroot}/usr/bin/%{name} << 'EOFSCRIPT'
 #!/bin/bash
-export LD_LIBRARY_PATH="/usr/lib/$APP_PACKAGE:\$LD_LIBRARY_PATH"
-export PATH="/usr/lib/$APP_PACKAGE:\$PATH"
 exec "/usr/lib/$APP_PACKAGE/$APP_BINARY" "\$@"
 EOFSCRIPT
 chmod +x %{buildroot}/usr/bin/%{name}
@@ -708,9 +702,8 @@ EOF
     if [ -d "$INSTALL_DIR/bin" ]; then
         cp -r "$INSTALL_DIR/bin" "$rpmdir/SOURCES/build-temp/"
     fi
-    if [ -d "$INSTALL_DIR/lib" ]; then
-        cp -r "$INSTALL_DIR/lib" "$rpmdir/SOURCES/build-temp/"
-    fi
+    # Note: RPM packages should use system dependencies, not bundle libraries
+    # Libraries are only bundled for portable formats (AppImage, tar.gz)
     if [ -d "$INSTALL_DIR/icons" ]; then
         cp -r "$INSTALL_DIR/icons" "$rpmdir/SOURCES/build-temp/"
     fi
@@ -783,10 +776,8 @@ package() {
         cp "$INSTALL_DIR/bin/$APP_BINARY" "\$pkgdir/usr/lib/\$pkgname/$APP_BINARY"
     fi
     
-    # Copy libraries if they exist
-    if [ -d "$INSTALL_DIR/lib" ] && ls "$INSTALL_DIR/lib"/*.so* 1> /dev/null 2>&1; then
-        cp "$INSTALL_DIR/lib"/*.so* "\$pkgdir/usr/lib/\$pkgname/" 2>/dev/null || true
-    fi
+    # Note: Arch packages should use system dependencies, not bundle libraries
+    # Libraries are only bundled for portable formats (AppImage, tar.gz)
     
     # Copy other files as needed
     if [ -f "$INSTALL_DIR/manifest.json" ]; then
@@ -803,8 +794,6 @@ package() {
     install -dm755 "\$pkgdir/usr/bin"
     cat > "\$pkgdir/usr/bin/\$pkgname" << 'EOFSCRIPT'
 #!/bin/bash
-export LD_LIBRARY_PATH="/usr/lib/$APP_PACKAGE:\$LD_LIBRARY_PATH"
-export PATH="/usr/lib/$APP_PACKAGE:\$PATH"
 exec "/usr/lib/$APP_PACKAGE/$APP_BINARY" "\$@"
 EOFSCRIPT
     chmod +x "\$pkgdir/usr/bin/\$pkgname"
