@@ -419,6 +419,22 @@ function Pack-WithInnoSetup {
             }
         }
         
+        # Read values from manifest.json for installer configuration
+        $manifestPath = Join-Path $projectRoot "manifest.json"
+        if (Test-Path $manifestPath) {
+            $manifest = Get-Content -Raw -Path $manifestPath | ConvertFrom-Json
+            $appVersion = "$($manifest.version)".Trim()
+            $appName = "$($manifest.desktop.desktop_name)".Trim()
+            $packageId = "$($manifest.desktop.package_id)".Trim()
+            Write-Host "Building installer version $appVersion for $appName (package: $packageId)"
+        }
+        else {
+            Write-Host "⚠️ manifest.json not found. Using default values." -ForegroundColor Yellow
+            $appVersion = "1.0.0"
+            $appName = "Application"
+            $packageId = "app"
+        }
+        
         # Locate the .iss file
         $issFiles = Get-ChildItem -Path $projectRoot -Filter "installer.iss" -Recurse | Select-Object -First 1
         
@@ -434,12 +450,37 @@ function Pack-WithInnoSetup {
             New-Item -ItemType Directory -Path $installerOutput -Force | Out-Null
         }
         
-        # Run Inno Setup compiler
+        # Run Inno Setup compiler with manifest values
         Write-Host "Compiling installer with Inno Setup: $issFile"
-        & $innoExe "/O$installerOutput" "$issFile"
+        $innoArgs = @(
+            "/DMyAppVersion=$appVersion",
+            "/DMyAppName=`"$appName`"", 
+            "/DMyPackageId=$packageId",
+            "/O$installerOutput",
+            "$issFile"
+        )
+        & $innoExe $innoArgs
         
         if ($LASTEXITCODE -ne 0) {
             throw "Inno Setup compilation failed with exit code $LASTEXITCODE"
+        }
+        
+        # Move installer to final location and show hash
+        $installerPattern = "${packageId}Setup-*.exe"
+        $installerFiles = Get-ChildItem -Path $projectRoot -Filter $installerPattern
+        
+        if ($installerFiles.Count -gt 0) {
+            foreach ($installer in $installerFiles) {
+                $finalPath = Join-Path $installerOutput $installer.Name
+                if ($installer.FullName -ne $finalPath) {
+                    Move-Item $installer.FullName $finalPath -Force
+                }
+                Write-Host "Installer created: $finalPath" -ForegroundColor Green
+                
+                # Show file hash for verification
+                $hash = Get-FileHash $finalPath -Algorithm SHA256
+                Write-Host "SHA256: $($hash.Hash)" -ForegroundColor Cyan
+            }
         }
         
         Write-Host "✅ Packaging completed successfully" -ForegroundColor Green

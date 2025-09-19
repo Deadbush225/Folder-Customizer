@@ -1,86 +1,123 @@
 #!/bin/bash
-# Template Generator for Generic Desktop Integration Framework
+# Generic Manifest Template Generator
+# Generates a manifest.json template for the project
 
 set -e
 
-# Colors
+# Colors for output
+RED='\033[0;31m'
 GREEN='\033[0;32m'
-BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
-NC='\033[0m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
-echo -e "${BLUE}Generic Desktop Integration Template Generator${NC}"
-echo "=============================================="
+log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
+log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+log_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# Get project information
-read -p "Project name: " PROJECT_NAME
-read -p "Project version (1.0.0): " PROJECT_VERSION
-PROJECT_VERSION=${PROJECT_VERSION:-1.0.0}
-read -p "Project description: " PROJECT_DESCRIPTION
+# Get script directory and project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+MANIFEST_FILE="$PROJECT_ROOT/manifest.json"
+
+log_info "Generic Manifest Template Generator"
+echo "===================================="
+
+# Check if manifest.json already exists
+if [ -f "$MANIFEST_FILE" ]; then
+    log_warning "manifest.json already exists at $MANIFEST_FILE"
+    read -p "Do you want to overwrite it? [y/N]: " -r
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log_info "Operation cancelled"
+        exit 0
+    fi
+fi
+
+# Interactive prompts with defaults
+read -p "Application Name: " APP_NAME
+read -p "Application Version [1.0.0]: " APP_VERSION
+APP_VERSION=${APP_VERSION:-1.0.0}
+
+read -p "Description: " APP_DESCRIPTION
+read -p "Author/Maintainer: " APP_AUTHOR
+read -p "License [MIT]: " APP_LICENSE
+APP_LICENSE=${APP_LICENSE:-MIT}
+
+read -p "Homepage URL: " APP_URL
+read -p "Desktop Name (display name) [$APP_NAME]: " DESKTOP_NAME
+DESKTOP_NAME=${DESKTOP_NAME:-$APP_NAME}
+
+read -p "Generic Name (subtitle): " GENERIC_NAME
+read -p "Categories [Utility;]: " CATEGORIES
+CATEGORIES=${CATEGORIES:-Utility;}
+
+read -p "Keywords (semicolon separated): " KEYWORDS
 read -p "Main executable name: " EXECUTABLE_NAME
-read -p "Package ID (lowercase, no spaces): " PACKAGE_ID
+read -p "Package ID (lowercase-with-dashes): " PACKAGE_ID
 
 # Generate package ID if not provided
 if [ -z "$PACKAGE_ID" ]; then
-    PACKAGE_ID=$(echo "$PROJECT_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+    PACKAGE_ID=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+    log_info "Generated package ID: $PACKAGE_ID"
 fi
 
-echo ""
-echo -e "${BLUE}Generating unified configuration file...${NC}"
+read -p "Supports file opening [false]: " SUPPORTS_FILES
+SUPPORTS_FILES=${SUPPORTS_FILES:-false}
 
-# Generate unified manifest.json with desktop section
-cat > manifest.json << EOF
+read -p "Has CLI helper [false]: " CLI_HELPER
+CLI_HELPER=${CLI_HELPER:-false}
+
+read -p "MIME types (if supports files): " MIME_TYPES
+
+# Generate manifest.json
+log_info "Generating manifest.json..."
+
+cat > "$MANIFEST_FILE" << EOF
 {
-  "name": "$PROJECT_NAME",
-  "version": "$PROJECT_VERSION",
-  "description": "$PROJECT_DESCRIPTION",
+  "name": "$APP_NAME",
+  "version": "$APP_VERSION",
+  "description": "$APP_DESCRIPTION",
+  "author": "$APP_AUTHOR",
+  "license": "$APP_LICENSE",
+  "homepage": "$APP_URL",
   "desktop": {
-    "desktop_name": "$PROJECT_NAME",
-    "generic_name": "",
-    "comment": "$PROJECT_DESCRIPTION",
-    "categories": "Utility;",
-    "keywords": "",
-    "mime_types": "",
+    "desktop_name": "$DESKTOP_NAME",
+    "generic_name": "$GENERIC_NAME",
+    "comment": "$APP_DESCRIPTION",
+    "categories": "$CATEGORIES",
+    "keywords": "$KEYWORDS",
     "executable": "$EXECUTABLE_NAME",
-    "icon_path": "Icons/$PROJECT_NAME.png",
     "package_id": "$PACKAGE_ID",
-    "supports_files": false,
-    "cli_helper": false
+    "supports_files": $SUPPORTS_FILES,
+    "cli_helper": $CLI_HELPER,
+    "mime_types": "$MIME_TYPES",
+    "icon_path": "icons/$APP_NAME.png"
+  },
+  "build": {
+    "cmake_minimum": "3.16",
+    "qt_version": "6.0",
+    "boost_required": true
+  },
+  "deployment": {
+    "linux": {
+      "categories": "$CATEGORIES",
+      "dependencies_deb": "libc6, libstdc++6, libgcc-s1",
+      "dependencies_rpm": "glibc, libstdc++, libgcc"
+    },
+    "windows": {
+      "installer_name": "${PACKAGE_ID}-setup.exe",
+      "company": "$APP_AUTHOR"
+    }
   }
 }
 EOF
 
-echo -e "${GREEN}✓${NC} Created unified manifest.json with desktop integration"
+log_success "Generated manifest.json at $MANIFEST_FILE"
+log_info "You can now edit this file to customize the configuration further"
 
-# Create directory structure
-mkdir -p install
-mkdir -p Icons
-
-echo -e "${GREEN}✓${NC} Created install/ directory"
-echo -e "${GREEN}✓${NC} Created Icons/ directory"
-
-# Copy the framework script
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [ -f "$SCRIPT_DIR/generic-desktop-install.sh" ]; then
-    cp "$SCRIPT_DIR/generic-desktop-install.sh" install.sh
-    chmod +x install.sh
-    echo -e "${GREEN}✓${NC} Created install.sh"
-else
-    echo -e "${YELLOW}⚠${NC} Could not find generic-desktop-install.sh"
-    echo "You'll need to copy it manually to install.sh"
-fi
-
-echo ""
-echo -e "${GREEN}Template generated successfully!${NC}"
-echo ""
-echo "Next steps:"
-echo "1. Build your application and place files in install/"
-echo "2. Add an icon to Icons/$PROJECT_NAME.png"
-echo "3. Customize the desktop section in manifest.json as needed"
-echo "4. Test with: ./install.sh"
-echo ""
-echo "Directory structure:"
-echo "├── manifest.json (unified config with desktop integration)"
-echo "├── install.sh"
-echo "├── install/ (place your built app here)"
-echo "└── Icons/ (place your app icon here)"
+# Show the generated content
+log_info "Generated manifest content:"
+echo "=================================="
+cat "$MANIFEST_FILE"
+echo "=================================="

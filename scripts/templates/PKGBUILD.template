@@ -1,0 +1,80 @@
+# Maintainer: {{APP_MAINTAINER}}
+pkgname={{APP_PACKAGE}}
+pkgver={{VERSION}}
+pkgrel=1
+pkgdesc="{{APP_DESCRIPTION}}"
+arch=('x86_64')
+url="{{APP_URL}}"
+license=('{{APP_LICENSE}}')
+depends=('qt6-base')
+source=()
+md5sums=()
+
+package() {
+    # Install binary and libraries
+    install -dm755 "$pkgdir/usr/lib/$pkgname"
+    
+    # Copy from the bin/ subdirectory
+    if [ -f "{{INSTALL_DIR}}/bin/{{APP_BINARY}}" ]; then
+        cp "{{INSTALL_DIR}}/bin/{{APP_BINARY}}" "$pkgdir/usr/lib/$pkgname/{{APP_BINARY}}"
+    fi
+    
+    # Copy libraries if they exist
+    if [ -d "{{INSTALL_DIR}}/lib" ] && ls "{{INSTALL_DIR}}/lib"/*.so* 1> /dev/null 2>&1; then
+        cp "{{INSTALL_DIR}}/lib"/*.so* "$pkgdir/usr/lib/$pkgname/" 2>/dev/null || true
+    fi
+    
+    # Copy other files as needed
+    if [ -f "{{INSTALL_DIR}}/manifest.json" ]; then
+        cp "{{INSTALL_DIR}}/manifest.json" "$pkgdir/usr/lib/$pkgname/"
+    fi
+    
+    # Copy post-install.sh for post_install() function to use
+    if [ -f "{{PROJECT_ROOT}}/scripts/post-install.sh" ]; then
+        cp "{{PROJECT_ROOT}}/scripts/post-install.sh" "$pkgdir/usr/lib/$pkgname/post-install.sh"
+        chmod +x "$pkgdir/usr/lib/$pkgname/post-install.sh"
+    fi
+    
+    # Create wrapper script
+    install -dm755 "$pkgdir/usr/bin"
+    cat > "$pkgdir/usr/bin/$pkgname" << 'EOFSCRIPT'
+#!/bin/bash
+export LD_LIBRARY_PATH="/usr/lib/{{APP_PACKAGE}}:$LD_LIBRARY_PATH"
+export PATH="/usr/lib/{{APP_PACKAGE}}:$PATH"
+exec "/usr/lib/{{APP_PACKAGE}}/{{APP_BINARY}}" "$@"
+EOFSCRIPT
+    chmod +x "$pkgdir/usr/bin/$pkgname"
+    
+    # Desktop file
+    install -dm755 "$pkgdir/usr/share/applications"
+    cat > "$pkgdir/usr/share/applications/$pkgname.desktop" << 'EOFDESKTOP'
+[Desktop Entry]
+Name={{APP_NAME}}
+Comment={{APP_DESCRIPTION}}
+Exec={{APP_PACKAGE}}
+Icon={{APP_PACKAGE}}
+Type=Application
+Categories={{APP_CATEGORIES}}
+EOFDESKTOP
+
+    # Application icon
+    install -dm755 "$pkgdir/usr/share/icons/hicolor/256x256/apps"
+}
+
+post_install() {
+    # Run post-install.sh if it exists
+    if [ -f "/usr/lib/{{APP_PACKAGE}}/post-install.sh" ]; then
+        echo "Running post-installation customization..."
+        bash "/usr/lib/{{APP_PACKAGE}}/post-install.sh" "/usr" "{{APP_PACKAGE}}" "{{APP_NAME}}" || true
+    fi
+    
+    # Update desktop database
+    if command -v update-desktop-database >/dev/null 2>&1; then
+        update-desktop-database /usr/share/applications 2>/dev/null || true
+    fi
+    
+    # Update icon cache
+    if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+        gtk-update-icon-cache -t /usr/share/icons/hicolor 2>/dev/null || true
+    fi
+}

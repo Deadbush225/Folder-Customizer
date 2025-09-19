@@ -29,6 +29,12 @@ package() {
         cp "/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux/manifest.json" "$pkgdir/usr/lib/$pkgname/"
     fi
     
+    # Copy post-install.sh for post_install() function to use
+    if [ -f "/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/scripts/post-install.sh" ]; then
+        cp "/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/scripts/post-install.sh" "$pkgdir/usr/lib/$pkgname/post-install.sh"
+        chmod +x "$pkgdir/usr/lib/$pkgname/post-install.sh"
+    fi
+    
     # Create wrapper script
     install -dm755 "$pkgdir/usr/bin"
     cat > "$pkgdir/usr/bin/$pkgname" << 'EOFSCRIPT'
@@ -53,4 +59,22 @@ EOFDESKTOP
 
     # Application icon
     install -dm755 "$pkgdir/usr/share/icons/hicolor/256x256/apps"
+}
+
+post_install() {
+    # Run post-install.sh if it exists
+    if [ -f "/usr/lib/folder-customizer/post-install.sh" ]; then
+        echo "Running post-installation customization..."
+        bash "/usr/lib/folder-customizer/post-install.sh" "/usr" "folder-customizer" "Folder Customizer" || true
+    fi
+    
+    # Update desktop database
+    if command -v update-desktop-database >/dev/null 2>&1; then
+        update-desktop-database /usr/share/applications 2>/dev/null || true
+    fi
+    
+    # Update icon cache
+    if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+        gtk-update-icon-cache -t /usr/share/icons/hicolor 2>/dev/null || true
+    fi
 }

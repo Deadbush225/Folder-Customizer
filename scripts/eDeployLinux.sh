@@ -256,9 +256,106 @@ copy_icon() {
     return 1
 }
 
+# Bundle libraries for portable packages
+bundle_libraries() {
+    local mode="${1:---all}"
+    log_info "Bundling libraries for portable deployment (mode: $mode)..."
+    
+    if [ -f "$SCRIPTS_DIR/bundle-libraries.sh" ]; then
+        bash "$SCRIPTS_DIR/bundle-libraries.sh" "$INSTALL_DIR" "$mode"
+    else
+        log_warning "bundle-libraries.sh not found, portable packages may not work on systems without required libraries"
+    fi
+}
+
+# Process template files by replacing placeholders
+process_template() {
+    local template_file="$1"
+    local output_file="$2"
+    
+    if [ ! -f "$template_file" ]; then
+        log_error "Template file not found: $template_file"
+        return 1
+    fi
+    
+    log_info "Processing template: $(basename "$template_file")"
+    
+    # Escape special characters for sed
+    local app_name_esc=$(printf '%s\n' "$APP_NAME" | sed 's/[[\.*^$(){}?+|/]/\\&/g')
+    local app_binary_esc=$(printf '%s\n' "$APP_BINARY" | sed 's/[[\.*^$(){}?+|/]/\\&/g')
+    local app_package_esc=$(printf '%s\n' "$APP_PACKAGE" | sed 's/[[\.*^$(){}?+|/]/\\&/g')
+    local version_esc=$(printf '%s\n' "$VERSION" | sed 's/[[\.*^$(){}?+|/]/\\&/g')
+    local app_description_esc=$(printf '%s\n' "$APP_DESCRIPTION" | sed 's/[[\.*^$(){}?+|/]/\\&/g')
+    local app_categories_esc=$(printf '%s\n' "$APP_CATEGORIES" | sed 's/[[\.*^$(){}?+|/]/\\&/g')
+    local app_maintainer_esc=$(printf '%s\n' "$APP_MAINTAINER" | sed 's/[[\.*^$(){}?+|/]/\\&/g')
+    local app_url_esc=$(printf '%s\n' "$APP_URL" | sed 's/[[\.*^$(){}?+|/]/\\&/g')
+    local app_license_esc=$(printf '%s\n' "$APP_LICENSE" | sed 's/[[\.*^$(){}?+|/]/\\&/g')
+    local app_deps_deb_esc=$(printf '%s\n' "$APP_DEPS_DEB" | sed 's/[[\.*^$(){}?+|/]/\\&/g')
+    local app_deps_rpm_esc=$(printf '%s\n' "$APP_DEPS_RPM" | sed 's/[[\.*^$(){}?+|/]/\\&/g')
+    local project_root_esc=$(printf '%s\n' "$PROJECT_ROOT" | sed 's/[[\.*^$(){}?+|/]/\\&/g')
+    local install_dir_esc=$(printf '%s\n' "$INSTALL_DIR" | sed 's/[[\.*^$(){}?+|/]/\\&/g')
+    local scripts_dir_esc=$(printf '%s\n' "$SCRIPTS_DIR" | sed 's/[[\.*^$(){}?+|/]/\\&/g')
+    
+    # Read template and replace placeholders using safe escaped values
+    sed \
+        -e "s|{{APP_NAME}}|$app_name_esc|g" \
+        -e "s|{{APP_BINARY}}|$app_binary_esc|g" \
+        -e "s|{{APP_PACKAGE}}|$app_package_esc|g" \
+        -e "s|{{VERSION}}|$version_esc|g" \
+        -e "s|{{APP_DESCRIPTION}}|$app_description_esc|g" \
+        -e "s|{{APP_CATEGORIES}}|$app_categories_esc|g" \
+        -e "s|{{APP_MAINTAINER}}|$app_maintainer_esc|g" \
+        -e "s|{{APP_URL}}|$app_url_esc|g" \
+        -e "s|{{APP_LICENSE}}|$app_license_esc|g" \
+        -e "s|{{APP_DEPS_DEB}}|$app_deps_deb_esc|g" \
+        -e "s|{{APP_DEPS_RPM}}|$app_deps_rpm_esc|g" \
+        -e "s|{{PROJECT_ROOT}}|$project_root_esc|g" \
+        -e "s|{{INSTALL_DIR}}|$install_dir_esc|g" \
+        -e "s|{{SCRIPTS_DIR}}|$scripts_dir_esc|g" \
+        "$template_file" > "$output_file"
+    
+    log_success "Template processed: $output_file"
+}
+
+# Create tar.gz fallback package with eInstall.sh and post-install.sh
+create_tarball_fallback() {
+    local filename="$1"
+    log_info "Creating tar.gz fallback: $filename"
+    
+    # Bundle all libraries for portable deployment
+    bundle_libraries --all
+    
+    cd "$PROJECT_ROOT/release"
+    local tempdir="${filename%.tar.gz}-temp"
+    
+    # Create temporary directory and copy install contents
+    mkdir -p "$tempdir"
+    cp -r "$INSTALL_DIR"/* "$tempdir/" 2>/dev/null || true
+    
+    # Add installation scripts for tar.gz format
+    if [ -f "$SCRIPTS_DIR/eInstall.sh" ]; then
+        cp "$SCRIPTS_DIR/eInstall.sh" "$tempdir/"
+        log_info "Added eInstall.sh to tar.gz"
+    fi
+    
+    if [ -f "$SCRIPTS_DIR/post-install.sh" ]; then
+        cp "$SCRIPTS_DIR/post-install.sh" "$tempdir/"
+        log_info "Added post-install.sh to tar.gz"
+    fi
+    
+    # Create the tarball and cleanup
+    tar czf "$filename" -C . "$tempdir"
+    rm -rf "$tempdir"
+    
+    log_success "Archive created: release/$filename"
+}
+
 # Create AppImage (Universal Linux)
 create_appimage() {
     log_info "Creating AppImage..."
+    
+    # Bundle all libraries for portable deployment
+    bundle_libraries --all
     
     local appdir="$PROJECT_ROOT/pack/appdir/${APP_BINARY}.AppDir"
     rm -rf "$appdir"
@@ -281,6 +378,24 @@ create_appimage() {
     # Copy libraries from lib/
     if [ -d "$INSTALL_DIR/lib" ] && ls "$INSTALL_DIR/lib"/*.so* 1> /dev/null 2>&1; then
         cp "$INSTALL_DIR/lib"/*.so* "$appdir/usr/lib/" 2>/dev/null || true
+    fi
+    
+    # Copy eInstall.sh script for uninstall functionality
+    if [ -f "$SCRIPTS_DIR/eInstall.sh" ]; then
+        cp "$SCRIPTS_DIR/eInstall.sh" "$appdir/usr/bin/eInstall.sh"
+        chmod +x "$appdir/usr/bin/eInstall.sh"
+        log_info "Added eInstall.sh to AppImage"
+    else
+        log_warning "eInstall.sh not found in $SCRIPTS_DIR"
+    fi
+    
+    # Copy post-install.sh if available
+    if [ -f "$SCRIPTS_DIR/post-install.sh" ]; then
+        cp "$SCRIPTS_DIR/post-install.sh" "$appdir/usr/bin/post-install.sh"
+        chmod +x "$appdir/usr/bin/post-install.sh"
+        log_info "Added post-install.sh to AppImage"
+    else
+        log_warning "post-install.sh not found in $SCRIPTS_DIR"
     fi
     
     # Include any app-specific customizations for AppImage
@@ -308,6 +423,13 @@ EOF
 HERE="\$(dirname "\$(readlink -f "\${0}")")"
 export LD_LIBRARY_PATH="\${HERE}/usr/lib:\${LD_LIBRARY_PATH}"
 export PATH="\${HERE}/usr/bin:\${PATH}"
+
+# Qt configuration for bundled libraries
+export QT_PLUGIN_PATH="\${HERE}/usr/lib/qt6/plugins:\${QT_PLUGIN_PATH}"
+export QML_IMPORT_PATH="\${HERE}/usr/lib/qt6/qml:\${QML_IMPORT_PATH}"
+export QT_QPA_PLATFORM_PLUGIN_PATH="\${HERE}/usr/lib/qt6/plugins/platforms"
+
+# Execute the application
 exec "\${HERE}/usr/bin/$APP_BINARY" "\$@"
 EOF
     chmod +x "$appdir/AppRun"
@@ -379,6 +501,15 @@ create_deb() {
         cp "$INSTALL_DIR/lib"/*.so* "$debdir/usr/lib/$APP_PACKAGE/" 2>/dev/null || true
     fi
     
+    # Copy post-install.sh if available (for DEBIAN/postinst to use)
+    if [ -f "$SCRIPTS_DIR/post-install.sh" ]; then
+        cp "$SCRIPTS_DIR/post-install.sh" "$debdir/usr/lib/$APP_PACKAGE/post-install.sh"
+        chmod +x "$debdir/usr/lib/$APP_PACKAGE/post-install.sh"
+        log_info "Added post-install.sh to DEB package"
+    else
+        log_warning "post-install.sh not found in $SCRIPTS_DIR"
+    fi
+    
     # Include any app-specific customizations for DEB
     if command -v "${APP_PACKAGE//-/_}_deb_extras" >/dev/null 2>&1; then
         "${APP_PACKAGE//-/_}_deb_extras" "$debdir"
@@ -419,6 +550,35 @@ Description: $APP_NAME - $APP_DESCRIPTION
  $APP_DESCRIPTION
 Depends: $APP_DEPS_DEB
 EOF
+
+    # Create DEBIAN/postinst script
+    if [ -f "$SCRIPTS_DIR/post-install.sh" ]; then
+        cat > "$debdir/DEBIAN/postinst" << EOF
+#!/bin/bash
+set -e
+
+# Run post-install.sh if it exists
+POST_INSTALL_SCRIPT="/usr/lib/$APP_PACKAGE/post-install.sh"
+if [ -f "\$POST_INSTALL_SCRIPT" ]; then
+    echo "Running post-installation customization..."
+    bash "\$POST_INSTALL_SCRIPT" "/usr" "$APP_PACKAGE" "$APP_NAME" || true
+fi
+
+# Update desktop database
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database /usr/share/applications 2>/dev/null || true
+fi
+
+# Update icon cache  
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -t /usr/share/icons/hicolor 2>/dev/null || true
+fi
+
+exit 0
+EOF
+        chmod +x "$debdir/DEBIAN/postinst"
+        log_info "Created DEBIAN/postinst script"
+    fi
     
     # Build package
     if command -v dpkg-deb &> /dev/null; then
@@ -439,18 +599,14 @@ create_rpm() {
     # Force tarball on non-RPM distros or when requested
     if [ "${FORCE_RPM_TARBALL:-}" = "1" ]; then
         log_warning "FORCE_RPM_TARBALL=1 set; creating tar.gz instead of RPM"
-        cd "$PROJECT_ROOT/release"
-        tar czf "${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz" -C "$INSTALL_DIR" bin lib icons *.sh *.json 2>/dev/null || tar czf "${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz" -C "$INSTALL_DIR" .
-        log_success "Archive created: release/${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz"
+        create_tarball_fallback "${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz"
         return
     fi
 
     # Check for rpmbuild and appropriate distro
     if ! command -v rpmbuild &> /dev/null; then
         log_warning "rpmbuild not found, creating tar.gz instead"
-        cd "$PROJECT_ROOT/release"
-        tar czf "${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz" -C "$INSTALL_DIR" bin lib icons *.sh *.json 2>/dev/null || tar czf "${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz" -C "$INSTALL_DIR" .
-        log_success "Archive created: release/${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz"
+        create_tarball_fallback "${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz"
         return
     fi
 
@@ -460,9 +616,7 @@ create_rpm() {
             *fedora*|*rhel*|*centos*|*suse*) : ;;
             *)
                 log_warning "Non-RPM-based distro detected (${ID:-unknown}); creating tar.gz instead"
-                cd "$PROJECT_ROOT/release"
-                tar czf "${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz" -C "$INSTALL_DIR" bin lib icons *.sh *.json 2>/dev/null || tar czf "${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz" -C "$INSTALL_DIR" .
-                log_success "Archive created: release/${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz"
+                create_tarball_fallback "${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz"
                 return
                 ;;
         esac
@@ -472,8 +626,12 @@ create_rpm() {
     rm -rf "$rpmdir"
     mkdir -p "$rpmdir"/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
     
-    # Create spec file
-    cat > "$rpmdir/SPECS/$APP_PACKAGE.spec" << EOF
+    # Create spec file from template
+    if [ -f "$SCRIPTS_DIR/templates/rpm.spec.template" ]; then
+        process_template "$SCRIPTS_DIR/templates/rpm.spec.template" "$rpmdir/SPECS/$APP_PACKAGE.spec"
+    else
+        # Fallback to inline spec file
+        cat > "$rpmdir/SPECS/$APP_PACKAGE.spec" << EOF
 Name:           $APP_PACKAGE
 Version:        $VERSION
 Release:        1%{?dist}
@@ -519,21 +677,63 @@ chmod +x %{buildroot}/usr/bin/%{name}
 /usr/share/applications/%{name}.desktop
 %endif
 
+%post
+# Run post-install.sh if it exists
+if [ -f "/usr/lib/%{name}/post-install.sh" ]; then
+    echo "Running post-installation customization..."
+    bash "/usr/lib/%{name}/post-install.sh" "/usr" "%{name}" "$APP_NAME" || true
+fi
+
+# Update desktop database
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database /usr/share/applications 2>/dev/null || true
+fi
+
+# Update icon cache
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -t /usr/share/icons/hicolor 2>/dev/null || true
+fi
+
 %changelog
 * $(date +'%a %b %d %Y') $APP_MAINTAINER - $VERSION-1
 - Initial RPM package
 EOF
+    fi
     
     # Create source tarball
-    cd "$INSTALL_DIR"
-    tar czf "$rpmdir/SOURCES/${APP_PACKAGE}-${VERSION}.tar.gz" bin lib icons *.sh *.json 2>/dev/null || tar czf "$rpmdir/SOURCES/${APP_PACKAGE}-${VERSION}.tar.gz" *
+    cd "$PROJECT_ROOT"
+    mkdir -p "$rpmdir/SOURCES/build-temp"
+    
+    # Copy files from install directory
+    if [ -d "$INSTALL_DIR/bin" ]; then
+        cp -r "$INSTALL_DIR/bin" "$rpmdir/SOURCES/build-temp/"
+    fi
+    if [ -d "$INSTALL_DIR/lib" ]; then
+        cp -r "$INSTALL_DIR/lib" "$rpmdir/SOURCES/build-temp/"
+    fi
+    if [ -d "$INSTALL_DIR/icons" ]; then
+        cp -r "$INSTALL_DIR/icons" "$rpmdir/SOURCES/build-temp/"
+    fi
+    if [ -f "$INSTALL_DIR/manifest.json" ]; then
+        cp "$INSTALL_DIR/manifest.json" "$rpmdir/SOURCES/build-temp/"
+    fi
+    
+    # Copy post-install.sh for %post to use
+    if [ -f "$SCRIPTS_DIR/post-install.sh" ]; then
+        cp "$SCRIPTS_DIR/post-install.sh" "$rpmdir/SOURCES/build-temp/"
+        log_info "Added post-install.sh to RPM package"
+    else
+        log_warning "post-install.sh not found in $SCRIPTS_DIR"
+    fi
+    
+    cd "$rpmdir/SOURCES"
+    tar czf "${APP_PACKAGE}-${VERSION}.tar.gz" -C build-temp .
+    rm -rf build-temp
     
     # Build RPM
     if ! rpmbuild --define "_topdir $rpmdir" -bb "$rpmdir/SPECS/$APP_PACKAGE.spec"; then
         log_warning "RPM build failed, creating tar.gz"
-        cd "$PROJECT_ROOT/release"
-        tar czf "${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz" -C "$INSTALL_DIR" bin lib icons *.sh *.json 2>/dev/null || tar czf "${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz" -C "$INSTALL_DIR" .
-        log_success "Archive created: release/${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz"
+        create_tarball_fallback "${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz"
         return
     fi
     
@@ -552,14 +752,16 @@ create_arch() {
     
     if ! command -v makepkg &> /dev/null; then
         log_warning "makepkg not found, creating tar.gz instead"
-        cd "$PROJECT_ROOT/release"
-        tar czf "${APP_PACKAGE}-${VERSION}-x86_64.tar.gz" -C "$INSTALL_DIR" bin lib icons *.sh *.json 2>/dev/null || tar czf "${APP_PACKAGE}-${VERSION}-x86_64.tar.gz" -C "$INSTALL_DIR" .
-        log_success "Archive created: release/${APP_PACKAGE}-${VERSION}-x86_64.tar.gz"
+        create_tarball_fallback "${APP_PACKAGE}-${VERSION}-x86_64.tar.gz"
         return
     fi
     
-    # Create PKGBUILD
-    cat > "$archdir/PKGBUILD" << EOF
+    # Create PKGBUILD from template
+    if [ -f "$SCRIPTS_DIR/templates/PKGBUILD.template" ]; then
+        process_template "$SCRIPTS_DIR/templates/PKGBUILD.template" "$archdir/PKGBUILD"
+    else
+        # Fallback to inline PKGBUILD
+        cat > "$archdir/PKGBUILD" << EOF
 # Maintainer: $APP_MAINTAINER
 pkgname=$APP_PACKAGE
 pkgver=$VERSION
@@ -591,6 +793,12 @@ package() {
         cp "$INSTALL_DIR/manifest.json" "\$pkgdir/usr/lib/\$pkgname/"
     fi
     
+    # Copy post-install.sh for post_install() function to use
+    if [ -f "$PROJECT_ROOT/scripts/post-install.sh" ]; then
+        cp "$PROJECT_ROOT/scripts/post-install.sh" "\$pkgdir/usr/lib/\$pkgname/post-install.sh"
+        chmod +x "\$pkgdir/usr/lib/\$pkgname/post-install.sh"
+    fi
+    
     # Create wrapper script
     install -dm755 "\$pkgdir/usr/bin"
     cat > "\$pkgdir/usr/bin/\$pkgname" << 'EOFSCRIPT'
@@ -616,14 +824,31 @@ EOFDESKTOP
     # Application icon
     install -dm755 "\$pkgdir/usr/share/icons/hicolor/256x256/apps"
 }
+
+post_install() {
+    # Run post-install.sh if it exists
+    if [ -f "/usr/lib/$APP_PACKAGE/post-install.sh" ]; then
+        echo "Running post-installation customization..."
+        bash "/usr/lib/$APP_PACKAGE/post-install.sh" "/usr" "$APP_PACKAGE" "$APP_NAME" || true
+    fi
+    
+    # Update desktop database
+    if command -v update-desktop-database >/dev/null 2>&1; then
+        update-desktop-database /usr/share/applications 2>/dev/null || true
+    fi
+    
+    # Update icon cache
+    if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+        gtk-update-icon-cache -t /usr/share/icons/hicolor 2>/dev/null || true
+    fi
+}
 EOF
+    fi
     
     cd "$archdir"
     makepkg -f || {
         log_warning "makepkg failed, creating tar.gz instead"
-        cd "$PROJECT_ROOT/release"
-        tar czf "${APP_PACKAGE}-${VERSION}-x86_64.tar.gz" -C "$INSTALL_DIR" bin lib icons *.sh *.json 2>/dev/null || tar czf "${APP_PACKAGE}-${VERSION}-x86_64.tar.gz" -C "$INSTALL_DIR" .
-        log_success "Archive created: release/${APP_PACKAGE}-${VERSION}-x86_64.tar.gz"
+        create_tarball_fallback "${APP_PACKAGE}-${VERSION}-x86_64.tar.gz"
         return
     }
     

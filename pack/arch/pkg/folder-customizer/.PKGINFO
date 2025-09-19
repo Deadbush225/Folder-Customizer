@@ -6,9 +6,9 @@ xdata = pkgtype=pkg
 pkgver = 0.0.15-1
 pkgdesc = Customize folder icons and add tags to organize your directories
 url = https://github.com/Deadbush225/folder-customizer
-builddate = 1758035765
+builddate = 1758296183
 packager = Unknown Packager
-size = 554589
+size = 93817775
 arch = x86_64
 license = MIT
 depend = qt6-base

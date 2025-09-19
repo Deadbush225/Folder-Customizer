@@ -2,4 +2,11 @@
 HERE="$(dirname "$(readlink -f "${0}")")"
 export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
 export PATH="${HERE}/usr/bin:${PATH}"
+
+# Qt configuration for bundled libraries
+export QT_PLUGIN_PATH="${HERE}/usr/lib/qt6/plugins:${QT_PLUGIN_PATH}"
+export QML_IMPORT_PATH="${HERE}/usr/lib/qt6/qml:${QML_IMPORT_PATH}"
+export QT_QPA_PLATFORM_PLUGIN_PATH="${HERE}/usr/lib/qt6/plugins/platforms"
+
+# Execute the application
 exec "${HERE}/usr/bin/FolderCustomizer" "$@"

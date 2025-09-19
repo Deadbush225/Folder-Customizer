@@ -1,0 +1,65 @@
+Name:           {{APP_PACKAGE}}
+Version:        {{VERSION}}
+Release:        1%{?dist}
+Summary:        {{APP_DESCRIPTION}}
+License:        {{APP_LICENSE}}
+URL:            {{APP_URL}}
+Source0:        %{name}-%{version}.tar.gz
+
+BuildRequires:  qt6-qtbase-devel
+Requires:       {{APP_DEPS_RPM}}
+
+%description
+{{APP_DESCRIPTION}}
+
+%prep
+%setup -q
+
+%build
+# Files are pre-built
+
+%install
+rm -rf %{buildroot}
+mkdir -p %{buildroot}/usr/bin
+mkdir -p %{buildroot}/usr/lib/%{name}
+mkdir -p %{buildroot}/usr/share/applications
+
+# Install files
+cp -r * %{buildroot}/usr/lib/%{name}/
+
+# Create wrapper script
+cat > %{buildroot}/usr/bin/%{name} << 'EOFSCRIPT'
+#!/bin/bash
+export LD_LIBRARY_PATH="/usr/lib/{{APP_PACKAGE}}:$LD_LIBRARY_PATH"
+export PATH="/usr/lib/{{APP_PACKAGE}}:$PATH"
+exec "/usr/lib/{{APP_PACKAGE}}/{{APP_BINARY}}" "$@"
+EOFSCRIPT
+chmod +x %{buildroot}/usr/bin/%{name}
+
+%files
+/usr/bin/%{name}
+/usr/lib/%{name}/
+%if 0%{?fedora} || 0%{?rhel} >= 8
+/usr/share/applications/%{name}.desktop
+%endif
+
+%post
+# Run post-install.sh if it exists
+if [ -f "/usr/lib/%{name}/post-install.sh" ]; then
+    echo "Running post-installation customization..."
+    bash "/usr/lib/%{name}/post-install.sh" "/usr" "%{name}" "{{APP_NAME}}" || true
+fi
+
+# Update desktop database
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database /usr/share/applications 2>/dev/null || true
+fi
+
+# Update icon cache
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -t /usr/share/icons/hicolor 2>/dev/null || true
+fi
+
+%changelog
+* $(date +'%a %b %d %Y') {{APP_MAINTAINER}} - {{VERSION}}-1
+- Initial RPM package
