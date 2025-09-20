@@ -429,10 +429,7 @@ function Pack-WithInnoSetup {
             Write-Host "Building installer version $appVersion for $appName (package: $packageId)"
         }
         else {
-            Write-Host "⚠️ manifest.json not found. Using default values." -ForegroundColor Yellow
-            $appVersion = "1.0.0"
-            $appName = "Application"
-            $packageId = "app"
+            throw "manifest.json not found. Cannot proceed with packaging."
         }
         
         # Locate the .iss file
@@ -454,33 +451,27 @@ function Pack-WithInnoSetup {
         Write-Host "Compiling installer with Inno Setup: $issFile"
         $innoArgs = @(
             "/DMyAppVersion=$appVersion",
-            "/DMyAppName=`"$appName`"", 
+            "/DMyAppName=$appName",
             "/DMyPackageId=$packageId",
             "/O$installerOutput",
-            "$issFile"
+            $issFile
         )
-        & $innoExe $innoArgs
+        & $innoExe @innoArgs
         
         if ($LASTEXITCODE -ne 0) {
             throw "Inno Setup compilation failed with exit code $LASTEXITCODE"
         }
         
-        # Move installer to final location and show hash
-        $installerPattern = "${packageId}Setup-*.exe"
-        $installerFiles = Get-ChildItem -Path $projectRoot -Filter $installerPattern
-        
-        if ($installerFiles.Count -gt 0) {
-            foreach ($installer in $installerFiles) {
-                $finalPath = Join-Path $installerOutput $installer.Name
-                if ($installer.FullName -ne $finalPath) {
-                    Move-Item $installer.FullName $finalPath -Force
-                }
-                Write-Host "Installer created: $finalPath" -ForegroundColor Green
-                
-                # Show file hash for verification
-                $hash = Get-FileHash $finalPath -Algorithm SHA256
-                Write-Host "SHA256: $($hash.Hash)" -ForegroundColor Cyan
-            }
+        # Ensure installer exists in the release folder and show hash
+        # Check if installer file exists in the release folder
+        $searchPattern = "*$packageId*$appVersion*.exe"
+        $installerFile = Get-ChildItem -Path $installerOutput -Filter $searchPattern | Select-Object -First 1
+        if ($installerFile) {
+            Write-Host "Installer created: $($installerFile.FullName)" -ForegroundColor Green
+            $hash = Get-FileHash $installerFile.FullName -Algorithm SHA256
+            Write-Host "SHA256: $($hash.Hash)" -ForegroundColor Cyan
+        } else {
+            Write-Host "⚠️ Installer not found in $installerOutput (pattern: $searchPattern)" -ForegroundColor Yellow
         }
         
         Write-Host "✅ Packaging completed successfully" -ForegroundColor Green
