@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <QtCore/QCommandLineParser>
+#include <QtCore/QDebug>
 #include <QtCore/Qt>
 #include <QtGui/QColor>
 #include <QtGui/QIcon>
@@ -55,7 +56,11 @@ int main(int argc, char* argv[]) {
     if (vm.count("folder")) {
         cli = new CLI(vm);
     } else {
-        QApplication::setWindowIcon(QIcon(":/icons/Folder Customizer.png"));
+        QApplication::setWindowIcon(QIcon(":/icons/Folder Customizer.ico"));
+
+        QPixmap pm(":/icons/Folder Customizer.ico");
+        qDebug() << "Icon valid?" << !pm.isNull();
+
         window = new FolderCustomizerWindow();
         window->show();
     }
@@ -87,6 +92,10 @@ int main(int argc, char* argv[]) {
         FolderCustomizer::colorizeTag(folderPath, tone, color, tag);
         return 0;
     } else {
+        QIcon testIcon(":/icons/Folder Customizer.png");
+        qDebug() << "Icon null?" << testIcon.isNull();
+        QApplication::setWindowIcon(testIcon);
+
         QApplication::setWindowIcon(QIcon(":/icons/Folder Customizer.png"));
         window = new FolderCustomizerWindow();
         window->show();

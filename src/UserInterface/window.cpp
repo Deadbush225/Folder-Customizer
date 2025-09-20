@@ -13,6 +13,8 @@ QStringList* stdToQStringList(std::vector<std::string> stdStringList) {
 }
 
 FolderCustomizerWindow::FolderCustomizerWindow() {
+    this->setWindowIcon(QIcon(":/icons/Folder Customizer.ico"));
+
     setDarkTheme();
     // Logger* log = new Logger();
     // log->write(QString("Test message"), LOGGER::CHRONOLOGY::AFT,

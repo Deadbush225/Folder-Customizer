@@ -26,9 +26,9 @@ option(ENABLE_QT_DEPLOY_SCRIPT "Generate and run Qt deploy script during install
 # set(CMAKE_BUILD_TYPE "Debug")
 # Install directories based on platform
 if(WIN32)
-    set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/dist/windows)
+    set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../install/windows)
 else()
-    set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/dist/linux)
+    set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../install/linux)
 endif()
 
 project(FolderCustomizer VERSION 0.1.0)
@@ -370,11 +370,11 @@ endif()
 
 # --- Convenience install targets -------------------------------------------
 # install_local: Build app + eUpdater (+ context menu on Windows), then remove
-# ./dist/linux or ./dist/windows and perform an installation using cmake --install.
+# ../install/linux or ../install/windows and perform an installation using cmake --install.
 if(WIN32)
-    set(INSTALL_LOCAL_DIR "${CMAKE_SOURCE_DIR}/dist/windows")
+    set(INSTALL_LOCAL_DIR "${CMAKE_SOURCE_DIR}/../dist/windows")
 else()
-    set(INSTALL_LOCAL_DIR "${CMAKE_SOURCE_DIR}/dist/linux")
+    set(INSTALL_LOCAL_DIR "${CMAKE_SOURCE_DIR}/../dist/linux")
 endif()
 
 add_custom_target(install_local
