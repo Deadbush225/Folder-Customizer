@@ -1,9 +1,0 @@
-Package: folder-customizer
-Version: 0.0.16
-Section: utils
-Priority: optional
-Architecture: amd64
-Maintainer: Deadbush225 <your-email@example.com>
-Description: Folder Customizer - Customize folder icons and add tags to organize your directories
- Customize folder icons and add tags to organize your directories
-Depends: libc6, libqt6core6, libqt6gui6, libqt6widgets6, libqt6network6, libboost-program-options1.83.0 | libboost-program-options1.82.0 | libboost-program-options1.81.0 | libboost-program-options1.74.0 | libboost-program-options-dev

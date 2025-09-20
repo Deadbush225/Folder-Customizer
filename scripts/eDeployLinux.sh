@@ -1,6 +1,6 @@
 #!/bin/bash
 # Generic cross-platform deployment script
-# Usage: ./eDeployLinux.sh [all|windows|linux|appimage|deb|rpm|arch]
+# Usage: ./eDeployLinux.sh [all|windows|linux|appimage|deb|rpm|arch|tarball]
 #
 # Environment variables:
 # - CLEAN_BUILD=1: Force clean build (removes build directory)
@@ -322,15 +322,15 @@ create_tarball_fallback() {
     local filename="$1"
     log_info "Creating tar.gz fallback: $filename"
     
-    # Only bundle libraries for portable tarball fallback (not for Arch .pkg.tar)
-    # If this is called as a fallback for Arch, do NOT bundle $INSTALL_DIR/lib
+    # Always exclude lib directory for fallback tarballs (Arch .pkg.tar.gz)
     cd "$PROJECT_ROOT/release"
     local tempdir="${filename%.tar.gz}-temp"
     mkdir -p "$tempdir"
-    # Copy only bin, icons, manifest, scripts (no lib)
     [ -d "$INSTALL_DIR/bin" ] && cp -r "$INSTALL_DIR/bin" "$tempdir/"
     [ -d "$INSTALL_DIR/icons" ] && cp -r "$INSTALL_DIR/icons" "$tempdir/"
     [ -f "$INSTALL_DIR/manifest.json" ] && cp "$INSTALL_DIR/manifest.json" "$tempdir/"
+    # Remove any lib directory if present (paranoia)
+    rm -rf "$tempdir/lib"
     # Add installation scripts for tar.gz format
     if [ -f "$SCRIPTS_DIR/eInstall.sh" ]; then
         cp "$SCRIPTS_DIR/eInstall.sh" "$tempdir/"
@@ -343,6 +343,36 @@ create_tarball_fallback() {
     tar czf "$filename" -C . "$tempdir"
     rm -rf "$tempdir"
     log_success "Archive created: release/$filename"
+}
+
+# Create portable tarball that bundles libraries (for portable distribution)
+create_portable_tarball() {
+    local filename="$1"
+    log_info "Creating portable tar.gz: $filename"
+
+    # Bundle libraries for portable tarball
+    bundle_libraries --all
+
+    cd "$PROJECT_ROOT/release"
+    local tempdir="${filename%.tar.gz}-portable"
+
+    mkdir -p "$tempdir"
+    # Copy full install directory including lib
+    cp -r "$INSTALL_DIR"/* "$tempdir/" 2>/dev/null || true
+
+    # Add installation scripts
+    if [ -f "$SCRIPTS_DIR/eInstall.sh" ]; then
+        cp "$SCRIPTS_DIR/eInstall.sh" "$tempdir/"
+        log_info "Added eInstall.sh to portable tar.gz"
+    fi
+    if [ -f "$SCRIPTS_DIR/post-install.sh" ]; then
+        cp "$SCRIPTS_DIR/post-install.sh" "$tempdir/"
+        log_info "Added post-install.sh to portable tar.gz"
+    fi
+
+    tar czf "$filename" -C . "$tempdir"
+    rm -rf "$tempdir"
+    log_success "Portable archive created: release/$filename"
 }
 
 # Create AppImage (Universal Linux)
@@ -736,41 +766,58 @@ create_arch() {
     
     if ! command -v makepkg &> /dev/null; then
         log_warning "makepkg not found, creating tar.gz instead"
-        create_tarball_fallback "${APP_PACKAGE}-${VERSION}-x86_64.tar.gz"
+        create_tarball_fallback "${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz"
         return
     fi
     
-    # Create PKGBUILD from template
-    if [ -f "$SCRIPTS_DIR/templates/PKGBUILD.template" ]; then
-        process_template "$SCRIPTS_DIR/templates/PKGBUILD.template" "$archdir/PKGBUILD"
-    else
-        # Fallback to inline PKGBUILD
-        cat > "$archdir/PKGBUILD" << EOF
-# Maintainer: $APP_MAINTAINER
-pkgname=$APP_PACKAGE
-pkgver=$VERSION
+    # Prepare a minimal source tarball for makepkg (exclude lib/) so PKGBUILD packages do not bundle libraries
+    mkdir -p "$archdir"
+    cd "$PROJECT_ROOT"
+    mkdir -p "$archdir/build-temp"
+    [ -d "$INSTALL_DIR/bin" ] && cp -r "$INSTALL_DIR/bin" "$archdir/build-temp/"
+    [ -d "$INSTALL_DIR/icons" ] && cp -r "$INSTALL_DIR/icons" "$archdir/build-temp/"
+    [ -f "$INSTALL_DIR/manifest.json" ] && cp "$INSTALL_DIR/manifest.json" "$archdir/build-temp/"
+    # Copy post-install script if present
+    if [ -f "$SCRIPTS_DIR/post-install.sh" ]; then
+        cp "$SCRIPTS_DIR/post-install.sh" "$archdir/build-temp/"
+        log_info "Added post-install.sh to Arch source tarball"
+    fi
+    # Ensure lib is not included
+    rm -rf "$archdir/build-temp/lib"
+    # Create tarball in archdir (makepkg will extract it into $srcdir during build)
+    (cd "$archdir" && tar czf "${APP_PACKAGE}-${VERSION}.tar.gz" -C build-temp .)
+    rm -rf "$archdir/build-temp"
+
+    # Create PKGBUILD template if it doesn't exist (use placeholders for substitution)
+    mkdir -p "$SCRIPTS_DIR/templates"
+    if [ ! -f "$SCRIPTS_DIR/templates/PKGBUILD.template" ]; then
+cat > "$SCRIPTS_DIR/templates/PKGBUILD.template" << 'EOF'
+# Maintainer: {{APP_MAINTAINER}}
+pkgname={{APP_PACKAGE}}
+pkgver={{VERSION}}
 pkgrel=1
-pkgdesc="$APP_DESCRIPTION"
+pkgdesc="{{APP_DESCRIPTION}}"
 arch=('x86_64')
-url="$APP_URL"
-license=('$APP_LICENSE')
+url="{{APP_URL}}"
+license=('{{APP_LICENSE}}')
 depends=('qt6-base')
-source=()
+source=("{{APP_PACKAGE}}-{{VERSION}}.tar.gz")
 md5sums=()
 
 package() {
     # Install binary (do not copy libraries for Arch)
     install -dm755 "\$pkgdir/usr/lib/\$pkgname"
-    if [ -f "$INSTALL_DIR/bin/$APP_BINARY" ]; then
-        cp "$INSTALL_DIR/bin/$APP_BINARY" "\$pkgdir/usr/lib/\$pkgname/$APP_BINARY"
+    # Files are provided in the extracted source located in $srcdir
+    if [ -f "\$srcdir/bin/{{APP_BINARY}}" ]; then
+        cp "\$srcdir/bin/{{APP_BINARY}}" "\$pkgdir/usr/lib/\$pkgname/{{APP_BINARY}}"
     fi
-    # Copy manifest.json if available
-    if [ -f "$INSTALL_DIR/manifest.json" ]; then
-        cp "$INSTALL_DIR/manifest.json" "\$pkgdir/usr/lib/\$pkgname/"
+    # Copy manifest.json if available in source
+    if [ -f "\$srcdir/manifest.json" ]; then
+        cp "\$srcdir/manifest.json" "\$pkgdir/usr/lib/\$pkgname/"
     fi
     # Copy post-install.sh for post_install() function to use
-    if [ -f "$PROJECT_ROOT/scripts/post-install.sh" ]; then
-        cp "$PROJECT_ROOT/scripts/post-install.sh" "\$pkgdir/usr/lib/\$pkgname/post-install.sh"
+    if [ -f "\$srcdir/post-install.sh" ]; then
+        cp "\$srcdir/post-install.sh" "\$pkgdir/usr/lib/\$pkgname/post-install.sh"
         chmod +x "\$pkgdir/usr/lib/\$pkgname/post-install.sh"
     fi
     # Do NOT copy $INSTALL_DIR/lib or any .so files for Arch
@@ -779,7 +826,7 @@ package() {
     install -dm755 "\$pkgdir/usr/bin"
     cat > "\$pkgdir/usr/bin/\$pkgname" << 'EOFSCRIPT'
 #!/bin/bash
-exec "/usr/lib/$APP_PACKAGE/$APP_BINARY" "\$@"
+exec "/usr/lib/{{APP_PACKAGE}}/{{APP_BINARY}}" "\$@"
 EOFSCRIPT
     chmod +x "\$pkgdir/usr/bin/\$pkgname"
     
@@ -787,12 +834,12 @@ EOFSCRIPT
     install -dm755 "\$pkgdir/usr/share/applications"
     cat > "\$pkgdir/usr/share/applications/\$pkgname.desktop" << 'EOFDESKTOP'
 [Desktop Entry]
-Name=$APP_NAME
-Comment=$APP_DESCRIPTION
-Exec=$APP_PACKAGE
-Icon=$APP_PACKAGE
+Name={{APP_NAME}}
+Comment={{APP_DESCRIPTION}}
+Exec={{APP_PACKAGE}}
+Icon={{APP_PACKAGE}}
 Type=Application
-Categories=$APP_CATEGORIES
+Categories={{APP_CATEGORIES}}
 EOFDESKTOP
 
     # Application icon
@@ -801,9 +848,9 @@ EOFDESKTOP
 
 post_install() {
     # Run post-install.sh if it exists
-    if [ -f "/usr/lib/$APP_PACKAGE/post-install.sh" ]; then
+    if [ -f "/usr/lib/{{APP_PACKAGE}}/post-install.sh" ]; then
         echo "Running post-installation customization..."
-        bash "/usr/lib/$APP_PACKAGE/post-install.sh" "/usr" "$APP_PACKAGE" "$APP_NAME" || true
+        bash "/usr/lib/{{APP_PACKAGE}}/post-install.sh" "/usr" "{{APP_PACKAGE}}" "{{APP_NAME}}" || true
     fi
     
     # Update desktop database
@@ -818,6 +865,10 @@ post_install() {
 }
 EOF
     fi
+
+    # Process template into actual PKGBUILD in archdir
+    process_template "$SCRIPTS_DIR/templates/PKGBUILD.template" "$archdir/PKGBUILD"
+        # Fallback to inline PKGBUILD
     
     cd "$archdir"
     makepkg -f || {
@@ -838,6 +889,7 @@ create_linux() {
     create_deb
     create_rpm
     create_arch
+    # create_portable_tarball
 }
 
 # Create Windows installer (placeholder)
@@ -885,6 +937,11 @@ main() {
         "appimage")
             check_build
             create_appimage
+            ;;
+        "tarball")
+            # Create a portable tar.gz (includes bundled libraries)
+            check_build
+            create_portable_tarball "${APP_PACKAGE}-${VERSION}-x86_64.tar.gz"
             ;;
         "deb")
             check_build

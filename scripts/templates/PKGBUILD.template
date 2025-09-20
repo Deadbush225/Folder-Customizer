@@ -7,41 +7,32 @@ arch=('x86_64')
 url="{{APP_URL}}"
 license=('{{APP_LICENSE}}')
 depends=('qt6-base')
-source=()
-md5sums=()
+source=("{{APP_PACKAGE}}-{{VERSION}}.tar.gz")
+sha256sums=('SKIP')
 
 package() {
-    # Install binary and libraries
+    # Install binary (do not copy libraries for Arch)
     install -dm755 "$pkgdir/usr/lib/$pkgname"
-    
-    # Copy from the bin/ subdirectory
-    if [ -f "{{INSTALL_DIR}}/bin/{{APP_BINARY}}" ]; then
-        cp "{{INSTALL_DIR}}/bin/{{APP_BINARY}}" "$pkgdir/usr/lib/$pkgname/{{APP_BINARY}}"
+    # Files are provided in the extracted source located in $srcdir
+    if [ -f "$srcdir/bin/{{APP_BINARY}}" ]; then
+        cp "$srcdir/bin/{{APP_BINARY}}" "$pkgdir/usr/lib/$pkgname/{{APP_BINARY}}"
     fi
-    
-    # Copy libraries if they exist
-    if [ -d "{{INSTALL_DIR}}/lib" ] && ls "{{INSTALL_DIR}}/lib"/*.so* 1> /dev/null 2>&1; then
-        cp "{{INSTALL_DIR}}/lib"/*.so* "$pkgdir/usr/lib/$pkgname/" 2>/dev/null || true
+    # Copy manifest.json if available in source
+    if [ -f "$srcdir/manifest.json" ]; then
+        cp "$srcdir/manifest.json" "$pkgdir/usr/lib/$pkgname/"
     fi
-    
-    # Copy other files as needed
-    if [ -f "{{INSTALL_DIR}}/manifest.json" ]; then
-        cp "{{INSTALL_DIR}}/manifest.json" "$pkgdir/usr/lib/$pkgname/"
-    fi
-    
     # Copy post-install.sh for post_install() function to use
-    if [ -f "{{PROJECT_ROOT}}/scripts/post-install.sh" ]; then
-        cp "{{PROJECT_ROOT}}/scripts/post-install.sh" "$pkgdir/usr/lib/$pkgname/post-install.sh"
+    if [ -f "$srcdir/post-install.sh" ]; then
+        cp "$srcdir/post-install.sh" "$pkgdir/usr/lib/$pkgname/post-install.sh"
         chmod +x "$pkgdir/usr/lib/$pkgname/post-install.sh"
     fi
+    # Do NOT copy $INSTALL_DIR/lib or any .so files for Arch
     
     # Create wrapper script
     install -dm755 "$pkgdir/usr/bin"
     cat > "$pkgdir/usr/bin/$pkgname" << 'EOFSCRIPT'
 #!/bin/bash
-export LD_LIBRARY_PATH="/usr/lib/{{APP_PACKAGE}}:$LD_LIBRARY_PATH"
-export PATH="/usr/lib/{{APP_PACKAGE}}:$PATH"
-exec "/usr/lib/{{APP_PACKAGE}}/{{APP_BINARY}}" "$@"
+exec "/usr/lib/{{APP_PACKAGE}}/{{APP_BINARY}}" "\$@"
 EOFSCRIPT
     chmod +x "$pkgdir/usr/bin/$pkgname"
     
