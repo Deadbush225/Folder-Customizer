@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 set(Boost_NO_BOOST_CMAKE ON)
 
+set(CMAKE_C_COMPILER gcc)
+set(CMAKE_CXX_COMPILER g++)
+
 if(POLICY CMP0167)
     cmake_policy(SET CMP0167 NEW)
 endif()
@@ -25,12 +28,6 @@ option(ENABLE_QT_DEPLOY_SCRIPT "Generate and run Qt deploy script during install
 
 # set(CMAKE_BUILD_TYPE "Debug")
 # Install directories based on platform
-if(WIN32)
-    set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../install/windows)
-else()
-    set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/../install/linux)
-endif()
-
 project(FolderCustomizer VERSION 0.1.0)
 set(PROJECT_NAME FolderCustomizer)
 set(PROJECT_SOURCE ${CMAKE_SOURCE_DIR}/src)
@@ -277,21 +274,27 @@ else()
 endif()
 
 # Install PNG icons for Linux .directory support in /bin/Icons (used by the program)
-file(GLOB ICONS_PNG_DARK "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Dark/PNG/*.png")
-file(GLOB ICONS_PNG_LIGHT "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Light/PNG/*.png")
-file(GLOB ICONS_PNG_NORMAL "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Normal/PNG/*.png")
-install(FILES ${ICONS_PNG_DARK}
-    DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Dark/PNG)
-install(FILES ${ICONS_PNG_LIGHT}
-    DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Light/PNG)
-install(FILES ${ICONS_PNG_NORMAL}
-    DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Normal/PNG)
+file(GLOB ICONS_ICO_DARK "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Dark/ICO/*.ico")
+list(FILTER ICONS_ICO_DARK EXCLUDE REGEX "-16\\.ico$")
+file(GLOB ICONS_ICO_LIGHT "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Light/ICO/*.ico")
+list(FILTER ICONS_ICO_LIGHT EXCLUDE REGEX "-16\\.ico$")
+file(GLOB ICONS_ICO_NORMAL "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Normal/ICO/*.ico")
+list(FILTER ICONS_ICO_NORMAL EXCLUDE REGEX "-16\\.ico$")
 
-# Install system eUpdater if available
+install(FILES ${ICONS_ICO_DARK}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Dark/)
+install(FILES ${ICONS_ICO_LIGHT}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Light/)
+install(FILES ${ICONS_ICO_NORMAL}
+    DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Normal/)
+
+# Install system eUpdater if available (avoid duplicate DLLs)
 find_program(EUPDATER_EXECUTABLE NAMES eUpdater eUpdater.exe)
 
 if(EUPDATER_EXECUTABLE)
     get_filename_component(EUPDATER_DIR ${EUPDATER_EXECUTABLE} DIRECTORY)
+
+    # Only install to bin, not to root
     install(PROGRAMS ${EUPDATER_EXECUTABLE} DESTINATION ${CMAKE_INSTALL_BINDIR})
     message(STATUS "Found eUpdater: ${EUPDATER_EXECUTABLE}")
 else()
@@ -302,53 +305,50 @@ endif()
 set(ROOT_ICON_PNG "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Folder Customizer.png")
 set(ROOT_ICON_ICO "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Folder Customizer.ico")
 
-if(EXISTS ${ROOT_ICON_PNG})
-    install(FILES ${ROOT_ICON_PNG} DESTINATION ${CMAKE_INSTALL_ICONDIR})
-endif()
+# if(EXISTS ${ROOT_ICON_PNG})
+# install(FILES ${ROOT_ICON_PNG} DESTINATION ${CMAKE_INSTALL_ICONDIR})
+# endif()
 
 # Install ICO files for Windows installer and program use
 if(EXISTS ${ROOT_ICON_ICO})
     # Install to /icons for Windows installer
-    install(FILES ${ROOT_ICON_ICO} DESTINATION ${CMAKE_INSTALL_ICONDIR})
+    # install(FILES ${ROOT_ICON_ICO} DESTINATION ${CMAKE_INSTALL_ICONDIR})
 
     # Install to /bin/Icons for program use
     install(FILES ${ROOT_ICON_ICO} DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons)
 endif()
 
 # Install manifest.json to root
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/manifest.json" DESTINATION .)
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/manifest.json" DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Install install.sh (the generic desktop install script) to root
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generic-desktop-install.sh")
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/scripts/generic-desktop-install.sh"
-        DESTINATION .
-        RENAME "install.sh")
+if(UNIX AND NOT APPLE)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/scripts/eInstall.sh")
+        install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/scripts/eInstall.sh"
+            DESTINATION .
+            RENAME "install.sh")
 
-    # Make install.sh executable during install
-    install(CODE "execute_process(COMMAND chmod +x \"${CMAKE_INSTALL_PREFIX}/install.sh\")")
+        # Make install.sh executable during install
+        install(CODE "execute_process(COMMAND chmod +x \"${CMAKE_INSTALL_PREFIX}/install.sh\")")
+    endif()
 endif()
 
-# Install the main application executable so install_local populates ./install
+# Install the main application executable and DLLs only to bin
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # Enhanced Qt deployment with diagnostics and fallback
 if(ENABLE_QT_DEPLOY_SCRIPT)
-    if(APPLE)
-        if(COMMAND qt_generate_deploy_app_script)
-            qt_generate_deploy_app_script(
-                TARGET ${PROJECT_NAME} OUTPUT_SCRIPT deploy_script
-            )
-            install(SCRIPT ${deploy_script})
-        else()
-            message(STATUS "qt_generate_deploy_app_script not available on this Qt build; skipping deploy script generation on macOS")
-        endif()
-    elseif(WIN32)
+    if(WIN32)
         # Use enhanced Qt deployment with multiple detection methods and fallback
         if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/EnhancedQtDeploy.cmake")
             include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/EnhancedQtDeploy.cmake")
             deploy_qt_enhanced(${PROJECT_NAME})
         else()
             message(FATAL_ERROR "EnhancedQtDeploy.cmake not found - Qt deployment will fail")
+        endif()
+
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/PruneInstall.cmake")
+            install(SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/cmake/PruneInstall.cmake")
         endif()
     else()
         message(STATUS "Skipping qt_generate_deploy_app_script on this platform (not macOS)")
@@ -364,17 +364,14 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/BoostDeploy.cmake")
 endif()
 
 # Prune optional/banned bits that may remain or from previous installs using a script file
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/PruneInstall.cmake")
-    install(SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/cmake/PruneInstall.cmake")
-endif()
 
 # --- Convenience install targets -------------------------------------------
 # install_local: Build app + eUpdater (+ context menu on Windows), then remove
 # ../install/linux or ../install/windows and perform an installation using cmake --install.
 if(WIN32)
-    set(INSTALL_LOCAL_DIR "${CMAKE_SOURCE_DIR}/../dist/windows")
+    set(INSTALL_LOCAL_DIR "${CMAKE_SOURCE_DIR}/dist/windows")
 else()
-    set(INSTALL_LOCAL_DIR "${CMAKE_SOURCE_DIR}/../dist/linux")
+    set(INSTALL_LOCAL_DIR "${CMAKE_SOURCE_DIR}/dist/linux")
 endif()
 
 add_custom_target(install_local

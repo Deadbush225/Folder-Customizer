@@ -113,7 +113,7 @@ function(deploy_qt_enhanced PROJECT_NAME)
                 --no-opengl-sw 
                 --no-compiler-runtime
                 --verbose 2
-                --dir \"\${CMAKE_INSTALL_PREFIX}\" 
+                --dir \"\${CMAKE_INSTALL_PREFIX}/bin\" 
                 \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/${PROJECT_NAME}.exe\"
             WORKING_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}\"
             RESULT_VARIABLE DEPLOY_RESULT
