@@ -349,19 +349,21 @@ if(ENABLE_QT_DEPLOY_SCRIPT)
 
         if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/PruneInstall.cmake")
             install(SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/cmake/PruneInstall.cmake")
+        else()
+            message(FATAL_ERROR "PruneInstall.cmake not found - Qt deployment will fail")
         endif()
     else()
-        message(STATUS "Skipping qt_generate_deploy_app_script on this platform (not macOS)")
+        message(STATUS "Skipping qt_generate_deploy_app_script on this platform")
     endif()
 else()
     message(STATUS "ENABLE_QT_DEPLOY_SCRIPT=OFF; skipping Qt deploy script generation")
 endif()
 
 # Deploy only needed Boost DLLs (if using dynamic linking) - AFTER Qt deployment
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/BoostDeploy.cmake")
-    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/BoostDeploy.cmake")
-    deploy_boost_program_options()
-endif()
+# if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/BoostDeploy.cmake")
+# include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/BoostDeploy.cmake")
+# deploy_boost_program_options()
+# endif()
 
 # Prune optional/banned bits that may remain or from previous installs using a script file
 
