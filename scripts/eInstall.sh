@@ -294,16 +294,16 @@ case "$ACTION" in
         mkdir -p "$INSTALL_PREFIX/icons"
         mkdir -p "$INSTALL_PREFIX/share/applications"
         mkdir -p "$INSTALL_PREFIX/share/icons/hicolor/256x256/apps"
-
+        
         # Install application: place the real binary under lib/<package>/bin/
         log_info "Installing $APP_NAME..."
         cp "$INSTALL_BIN/$BIN_SRC" "$INSTALL_PREFIX/lib/$PACKAGE_ID/bin/"
-
+        
         # Copy manifest.json into package lib dir
         if [ -f "$SCRIPT_DIR/manifest.json" ]; then
             cp "$SCRIPT_DIR/manifest.json" "$INSTALL_PREFIX/lib/$PACKAGE_ID/"
         fi
-
+        
         # Copy shared libraries into package lib dir
         if ls "$INSTALL_LIB"/*.so* 1> /dev/null 2>&1; then
             log_info "Installing shared libraries..."
@@ -319,15 +319,15 @@ case "$ACTION" in
             log_warning "No icon found, application will use default icon"
         fi
         
-    # Create wrapper script in bin/ that launches the real binary under lib/<package>/bin/
-    log_info "Creating launcher script..."
+        # Create wrapper script in bin/ that launches the real binary under lib/<package>/bin/
+        log_info "Creating launcher script..."
     cat > "$INSTALL_PREFIX/bin/$PACKAGE_ID" << EOF
 #!/bin/bash
 HERE="
 $(dirname "$(readlink -f "$0")")"
 exec "${INSTALL_PREFIX}/lib/${PACKAGE_ID}/bin/${BIN_SRC}" "\$@"
 EOF
-    chmod +x "$INSTALL_PREFIX/bin/$PACKAGE_ID"
+        chmod +x "$INSTALL_PREFIX/bin/$PACKAGE_ID"
         
         # Run optional post-install customization script
         if [ -f "$SCRIPT_DIR/post-install.sh" ]; then
@@ -366,14 +366,14 @@ EOF
             fi
         fi
         
-    log_info "Uninstalling $APP_NAME..."
-    # Remove wrapper only from bin
-    rm -f "$INSTALL_PREFIX/bin/$PACKAGE_ID" || true
-    # Remove package-specific lib dir (contains real binary, manifest and libs)
-    rm -rf "$INSTALL_PREFIX/lib/$PACKAGE_ID" || true
-    # Remove desktop and icon entries
-    rm -f "$INSTALL_PREFIX/share/applications/$PACKAGE_ID.desktop" || true
-    rm -f "$INSTALL_PREFIX/share/icons/hicolor/256x256/apps/$PACKAGE_ID.png" || true
+        log_info "Uninstalling $APP_NAME..."
+        # Remove wrapper only from bin
+        rm -f "$INSTALL_PREFIX/bin/$PACKAGE_ID" || true
+        # Remove package-specific lib dir (contains real binary, manifest and libs)
+        rm -rf "$INSTALL_PREFIX/lib/$PACKAGE_ID" || true
+        # Remove desktop and icon entries
+        rm -f "$INSTALL_PREFIX/share/applications/$PACKAGE_ID.desktop" || true
+        rm -f "$INSTALL_PREFIX/share/icons/hicolor/256x256/apps/$PACKAGE_ID.png" || true
         
         # Update system databases
         if command -v update-desktop-database &> /dev/null; then
