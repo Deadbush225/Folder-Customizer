@@ -306,10 +306,13 @@ set(ROOT_ICON_PNG "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Folder Customizer.png")
 set(ROOT_ICON_ICO "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Folder Customizer.ico")
 
 # if(EXISTS ${ROOT_ICON_PNG})
-# install(FILES ${ROOT_ICON_PNG} DESTINATION ${CMAKE_INSTALL_ICONDIR})
+if(UNIX AND NOT APPLE)
+    install(FILES ${ROOT_ICON_PNG} DESTINATION ${CMAKE_INSTALL_ICONDIR} RENAME "folder-customizer.png")
+endif()
+
 # endif()
 
-# Install ICO files for Windows installer and program use
+# Install ico for program use
 if(EXISTS ${ROOT_ICON_ICO})
     # Install to /icons for Windows installer
     # install(FILES ${ROOT_ICON_ICO} DESTINATION ${CMAKE_INSTALL_ICONDIR})
@@ -319,7 +322,7 @@ if(EXISTS ${ROOT_ICON_ICO})
 endif()
 
 # Install manifest.json to root
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/manifest.json" DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/manifest.json" DESTINATION .)
 
 # Install install.sh (the generic desktop install script) to root
 if(UNIX AND NOT APPLE)

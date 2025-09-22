@@ -236,6 +236,7 @@ copy_icon() {
     local icon_sources=(
         "$INSTALL_DIR/icons/${APP_NAME}.png"
         "$INSTALL_DIR/icons/${APP_BINARY}.png"
+        "$INSTALL_DIR/icons/${PACKAGE_ID}.png"
         "$APP_ICON_SOURCE"
         "$PROJECT_ROOT/Icons/${APP_NAME}.png"
         "$PROJECT_ROOT/src/icons/${APP_NAME}.png"
@@ -378,56 +379,56 @@ create_portable_tarball() {
 # Create AppImage (Universal Linux)
 create_appimage() {
     log_info "Creating AppImage..."
-    
+
     # Bundle all libraries for portable deployment
     bundle_libraries --all
-    
+
     local appdir="$PROJECT_ROOT/pack/appdir/${APP_BINARY}.AppDir"
     rm -rf "$appdir"
     mkdir -p "$appdir/usr/bin"
-    mkdir -p "$appdir/usr/lib"
-    
-    # Copy application
-    cp "$MAIN_EXECUTABLE" "$appdir/usr/bin/$APP_BINARY"
-    
-    # Copy manifest.json if available
+    mkdir -p "$appdir/usr/lib/$APP_PACKAGE"
+
+    # Copy application into package-specific directory
+    cp "$MAIN_EXECUTABLE" "$appdir/usr/lib/$APP_PACKAGE/$APP_BINARY"
+
+    # Copy manifest.json if available into package directory
     if [ -f "$INSTALL_DIR/manifest.json" ]; then
-        cp "$INSTALL_DIR/manifest.json" "$appdir/usr/bin/manifest.json"
+        cp "$INSTALL_DIR/manifest.json" "$appdir/usr/lib/$APP_PACKAGE/manifest.json"
     fi
-    
+
     # Copy eUpdater if available
     if [ -f "$INSTALL_DIR/bin/eUpdater" ] || [ -f "$INSTALL_DIR/bin/eUpdater.exe" ]; then
-        cp "$INSTALL_DIR/bin"/eUpdater* "$appdir/usr/bin/" 2>/dev/null || true
+        cp "$INSTALL_DIR/bin"/eUpdater* "$appdir/usr/lib/$APP_PACKAGE/" 2>/dev/null || true
     fi
-    
-    # Copy libraries from lib/
+
+    # Copy libraries from lib/ into package-specific lib dir
     if [ -d "$INSTALL_DIR/lib" ] && ls "$INSTALL_DIR/lib"/*.so* 1> /dev/null 2>&1; then
-        cp "$INSTALL_DIR/lib"/*.so* "$appdir/usr/lib/" 2>/dev/null || true
+        cp "$INSTALL_DIR/lib"/*.so* "$appdir/usr/lib/$APP_PACKAGE/" 2>/dev/null || true
     fi
-    
-    # Copy eInstall.sh script for uninstall functionality
+
+    # Copy eInstall.sh script for uninstall functionality into package lib dir
     if [ -f "$SCRIPTS_DIR/eInstall.sh" ]; then
-        cp "$SCRIPTS_DIR/eInstall.sh" "$appdir/usr/bin/eInstall.sh"
-        chmod +x "$appdir/usr/bin/eInstall.sh"
+        cp "$SCRIPTS_DIR/eInstall.sh" "$appdir/usr/lib/$APP_PACKAGE/eInstall.sh"
+        chmod +x "$appdir/usr/lib/$APP_PACKAGE/eInstall.sh"
         log_info "Added eInstall.sh to AppImage"
     else
         log_warning "eInstall.sh not found in $SCRIPTS_DIR"
     fi
-    
-    # Copy post-install.sh if available
+
+    # Copy post-install.sh if available into package lib dir
     if [ -f "$SCRIPTS_DIR/post-install.sh" ]; then
-        cp "$SCRIPTS_DIR/post-install.sh" "$appdir/usr/bin/post-install.sh"
-        chmod +x "$appdir/usr/bin/post-install.sh"
+        cp "$SCRIPTS_DIR/post-install.sh" "$appdir/usr/lib/$APP_PACKAGE/post-install.sh"
+        chmod +x "$appdir/usr/lib/$APP_PACKAGE/post-install.sh"
         log_info "Added post-install.sh to AppImage"
     else
         log_warning "post-install.sh not found in $SCRIPTS_DIR"
     fi
-    
+
     # Include any app-specific customizations for AppImage
     if command -v "${APP_PACKAGE//-/_}_appimage_extras" >/dev/null 2>&1; then
         "${APP_PACKAGE//-/_}_appimage_extras" "$appdir"
     fi
-    
+
     # Create desktop file
     cat > "$appdir/${APP_BINARY}.desktop" << EOF
 [Desktop Entry]
@@ -438,15 +439,24 @@ Exec=$APP_BINARY
 Icon=${APP_PACKAGE}
 Categories=$APP_CATEGORIES
 EOF
-    
+
     # Copy icon
     copy_icon "$appdir" "${APP_PACKAGE}.png"
-    
+
+    # Create a small wrapper in usr/bin that launches the real binary in usr/lib/<pkg>/
+    cat > "$appdir/usr/bin/$APP_PACKAGE" << EOF
+#!/bin/bash
+HERE="\$(dirname "\$(readlink -f "\${0}")")"
+export LD_LIBRARY_PATH="\${HERE}/usr/lib/$APP_PACKAGE:\${LD_LIBRARY_PATH}"
+exec "\${HERE}/usr/lib/$APP_PACKAGE/$APP_BINARY" "\$@"
+EOF
+    chmod +x "$appdir/usr/bin/$APP_PACKAGE"
+
     # Create AppRun script
     cat > "$appdir/AppRun" << EOF
 #!/bin/bash
 HERE="\$(dirname "\$(readlink -f "\${0}")")"
-export LD_LIBRARY_PATH="\${HERE}/usr/lib:\${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="\${HERE}/usr/lib/$APP_PACKAGE:\${LD_LIBRARY_PATH}"
 export PATH="\${HERE}/usr/bin:\${PATH}"
 
 # Qt configuration for bundled libraries
@@ -454,11 +464,11 @@ export QT_PLUGIN_PATH="\${HERE}/usr/lib/qt6/plugins:\${QT_PLUGIN_PATH}"
 export QML_IMPORT_PATH="\${HERE}/usr/lib/qt6/qml:\${QML_IMPORT_PATH}"
 export QT_QPA_PLATFORM_PLUGIN_PATH="\${HERE}/usr/lib/qt6/plugins/platforms"
 
-# Execute the application
-exec "\${HERE}/usr/bin/$APP_BINARY" "\$@"
+# Execute the wrapper (which will launch the real binary)
+exec "\${HERE}/usr/bin/$APP_PACKAGE" "\$@"
 EOF
     chmod +x "$appdir/AppRun"
-    
+
     # Download appimagetool if needed
     if [ ! -f "$SCRIPTS_DIR/appimagetool" ]; then
         log_info "Downloading appimagetool..."
@@ -675,8 +685,12 @@ mkdir -p %{buildroot}/usr/bin
 mkdir -p %{buildroot}/usr/lib/%{name}
 mkdir -p %{buildroot}/usr/share/applications
 
-# Install files
-cp -r * %{buildroot}/usr/lib/%{name}/
+# Install files (prefer files from bin/ if present so binaries end up directly in /usr/lib/%{name}/)
+if [ -d bin ]; then
+    cp -r bin/* %{buildroot}/usr/lib/%{name}/
+else
+    cp -r * %{buildroot}/usr/lib/%{name}/
+fi
 
 # Create wrapper script
 cat > %{buildroot}/usr/bin/%{name} << 'EOFSCRIPT'
@@ -719,9 +733,10 @@ EOF
     cd "$PROJECT_ROOT"
     mkdir -p "$rpmdir/SOURCES/build-temp"
     
-    # Copy files from install directory
+    # Copy files from install directory: place bin/* and icons at top-level of the source tarball
     if [ -d "$INSTALL_DIR/bin" ]; then
-        cp -r "$INSTALL_DIR/bin" "$rpmdir/SOURCES/build-temp/"
+        mkdir -p "$rpmdir/SOURCES/build-temp/bin"
+        cp -r "$INSTALL_DIR/bin/"* "$rpmdir/SOURCES/build-temp/bin/" 2>/dev/null || true
     fi
     # Note: RPM packages should use system dependencies, not bundle libraries
     # Libraries are only bundled for portable formats (AppImage, tar.gz)
@@ -921,6 +936,8 @@ deploy_all() {
 # Main script logic
 main() {
     load_config
+
+    mkdir -p "$PROJECT_ROOT/release"
     
     case "${1:-all}" in
         "all")
@@ -938,10 +955,15 @@ main() {
             check_build
             create_appimage
             ;;
-        "tarball")
+        "portable")
             # Create a portable tar.gz (includes bundled libraries)
             check_build
             create_portable_tarball "${APP_PACKAGE}-${VERSION}-x86_64.tar.gz"
+            ;;
+        "tarball")
+            # Create a portable tar.gz (includes bundled libraries)
+            check_build
+            create_tarball_fallback "${APP_PACKAGE}-${VERSION}-x86_64.tar.gz"
             ;;
         "deb")
             check_build

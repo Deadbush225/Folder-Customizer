@@ -1,7 +1,7 @@
 #!/bin/bash
 # Generic Linux Desktop Integration Framework
 # Version: 1.1
-# 
+#
 # This script provides desktop integration for any Linux application
 # that follows the expected project structure.
 #
@@ -71,7 +71,7 @@ load_config() {
             PACKAGE_ID=$(grep -A 20 '"desktop"[[:space:]]*:' "$SCRIPT_DIR/manifest.json" | grep -o '"package_id"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*: *"\([^"]*\)".*/\1/' || echo "")
             SUPPORTS_FILES=$(grep -A 20 '"desktop"[[:space:]]*:' "$SCRIPT_DIR/manifest.json" | grep -o '"supports_files"[[:space:]]*:[[:space:]]*[^,}]*' | sed 's/.*: *\(.*\)/\1/' || echo "false")
             HAS_CLI_HELPER=$(grep -A 20 '"desktop"[[:space:]]*:' "$SCRIPT_DIR/manifest.json" | grep -o '"cli_helper"[[:space:]]*:[[:space:]]*[^,}]*' | sed 's/.*: *\(.*\)/\1/' || echo "false")
-        elif [ -f "$SCRIPT_DIR/app-config.json" ]; then
+            elif [ -f "$SCRIPT_DIR/app-config.json" ]; then
             # Fallback to separate app-config.json file (for backwards compatibility)
             DESKTOP_NAME=$(grep -o '"desktop_name"[[:space:]]*:[[:space:]]*"[^"]*"' "$SCRIPT_DIR/app-config.json" | sed 's/.*: *"\([^"]*\)".*/\1/' || echo "$APP_NAME")
             DESKTOP_GENERIC_NAME=$(grep -o '"generic_name"[[:space:]]*:[[:space:]]*"[^"]*"' "$SCRIPT_DIR/app-config.json" | sed 's/.*: *"\([^"]*\)".*/\1/' || echo "")
@@ -131,7 +131,7 @@ load_config() {
     else
         candidates="main app"
         if [ -n "$APP_NAME" ]; then
-            candidates="$APP_NAME $(echo "$APP_NAME" | tr ' ' '') $(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]') $candidates"
+            candidates="$APP_NAME $(echo "$APP_NAME" | tr -d ' ') $(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]') $candidates"
         fi
         for candidate in $candidates; do
             if [ -f "$INSTALL_BIN/$candidate" ]; then
@@ -146,21 +146,17 @@ load_config() {
         ls -la "$INSTALL_BIN" 2>/dev/null || echo "  (directory not found)"
         exit 1
     fi
-    # Locate icon
+    # Locate icon: prefer ./icons/${PACKAGE_ID}.{png,svg,ico} for deterministic packaging
+    ICON_FILE=""
     if [ -n "$ICON_PATH" ] && [ -f "$SCRIPT_DIR/$ICON_PATH" ]; then
         ICON_FILE="$SCRIPT_DIR/$ICON_PATH"
     else
-        for ext in png ico svg; do
-            icon_names="icon logo"
-            if [ -n "$APP_NAME" ]; then
-                icon_names="$APP_NAME $(echo "$APP_NAME" | tr ' ' '') $icon_names"
+        for ext in png svg ico; do
+            cand="$INSTALL_ICONS/${PACKAGE_ID}.$ext"
+            if [ -f "$cand" ]; then
+                ICON_FILE="$cand"
+                break
             fi
-            for name in $icon_names; do
-                if [ -f "$INSTALL_ICONS/$name.$ext" ]; then
-                    ICON_FILE="$INSTALL_ICONS/$name.$ext"
-                    break 2
-                fi
-            done
         done
     fi
 }
@@ -254,7 +250,7 @@ for arg in "$@"; do
             echo "Configuration (manifest.json):"
             echo "  Basic: name, version, description"
             echo "  Desktop: desktop.desktop_name, desktop.categories, etc."
-            exit 0 ;;
+        exit 0 ;;
     esac
 done
 
@@ -293,26 +289,27 @@ case "$ACTION" in
         # Create directories
         log_info "Creating installation directories..."
         mkdir -p "$INSTALL_PREFIX/bin"
-        mkdir -p "$INSTALL_PREFIX/lib"
+        mkdir -p "$INSTALL_PREFIX/lib/$PACKAGE_ID/bin"
+        mkdir -p "$INSTALL_PREFIX/lib/$PACKAGE_ID"
         mkdir -p "$INSTALL_PREFIX/icons"
         mkdir -p "$INSTALL_PREFIX/share/applications"
         mkdir -p "$INSTALL_PREFIX/share/icons/hicolor/256x256/apps"
 
-        # Install application
+        # Install application: place the real binary under lib/<package>/bin/
         log_info "Installing $APP_NAME..."
-        cp "$INSTALL_BIN/$BIN_SRC" "$INSTALL_PREFIX/bin/"
+        cp "$INSTALL_BIN/$BIN_SRC" "$INSTALL_PREFIX/lib/$PACKAGE_ID/bin/"
 
-        # Copy manifest.json
+        # Copy manifest.json into package lib dir
         if [ -f "$SCRIPT_DIR/manifest.json" ]; then
-            cp "$SCRIPT_DIR/manifest.json" "$INSTALL_PREFIX/"
+            cp "$SCRIPT_DIR/manifest.json" "$INSTALL_PREFIX/lib/$PACKAGE_ID/"
         fi
 
-        # Copy shared libraries
+        # Copy shared libraries into package lib dir
         if ls "$INSTALL_LIB"/*.so* 1> /dev/null 2>&1; then
             log_info "Installing shared libraries..."
-            cp "$INSTALL_LIB"/*.so* "$INSTALL_PREFIX/lib/" 2>/dev/null || true
+            cp "$INSTALL_LIB"/*.so* "$INSTALL_PREFIX/lib/$PACKAGE_ID/" 2>/dev/null || true
         fi
-
+        
         # Install icons
         if [ -n "$ICON_FILE" ] && [ -f "$ICON_FILE" ]; then
             log_info "Installing application icon..."
@@ -321,46 +318,46 @@ case "$ACTION" in
         else
             log_warning "No icon found, application will use default icon"
         fi
-
-        # Create wrapper script
-        log_info "Creating launcher script..."
-        cat > "$INSTALL_PREFIX/bin/$PACKAGE_ID" << EOF
+        
+    # Create wrapper script in bin/ that launches the real binary under lib/<package>/bin/
+    log_info "Creating launcher script..."
+    cat > "$INSTALL_PREFIX/bin/$PACKAGE_ID" << EOF
 #!/bin/bash
-export LD_LIBRARY_PATH="$INSTALL_PREFIX/lib:\$LD_LIBRARY_PATH"
-export PATH="$INSTALL_PREFIX/bin:\$PATH"
-exec "$INSTALL_PREFIX/bin/$BIN_SRC" "\$@"
+HERE="
+$(dirname "$(readlink -f "$0")")"
+exec "${INSTALL_PREFIX}/lib/${PACKAGE_ID}/bin/${BIN_SRC}" "\$@"
 EOF
-        chmod +x "$INSTALL_PREFIX/bin/$PACKAGE_ID"
-
+    chmod +x "$INSTALL_PREFIX/bin/$PACKAGE_ID"
+        
         # Run optional post-install customization script
         if [ -f "$SCRIPT_DIR/post-install.sh" ]; then
             log_info "Running post-install customization script..."
             bash "$SCRIPT_DIR/post-install.sh" "$INSTALL_PREFIX" "$PACKAGE_ID" "$APP_NAME"
         fi
-
+        
         # Install desktop file
         log_info "Installing desktop entry..."
         generate_desktop_file > "$INSTALL_PREFIX/share/applications/$PACKAGE_ID.desktop"
         chmod 644 "$INSTALL_PREFIX/share/applications/$PACKAGE_ID.desktop"
-
+        
         # Update system databases
         if command -v update-desktop-database &> /dev/null; then
             log_info "Updating desktop database..."
             update-desktop-database "$INSTALL_PREFIX/share/applications" 2>/dev/null || true
         fi
-
+        
         if command -v gtk-update-icon-cache &> /dev/null; then
             log_info "Updating icon cache..."
             gtk-update-icon-cache -t "$INSTALL_PREFIX/share/icons/hicolor" 2>/dev/null || true
         fi
-
+        
         log_success "$APP_NAME installed successfully!"
         log_info "Run '$PACKAGE_ID' to launch the application"
         log_info "Or find it in your application menu"
         echo ""
         log_info "To validate the installation, run: $0 --validate"
-        ;;
-        
+    ;;
+    
     "uninstall")
         if [ "$AUTO_YES" -ne 1 ]; then
             if ! confirm "Remove $APP_NAME from $INSTALL_PREFIX?"; then
@@ -369,11 +366,14 @@ EOF
             fi
         fi
         
-        log_info "Uninstalling $APP_NAME..."
-        rm -f "$INSTALL_PREFIX/bin/$PACKAGE_ID" || true
-        rm -rf "$INSTALL_PREFIX/lib/$PACKAGE_ID" || true
-        rm -f "$INSTALL_PREFIX/share/applications/$PACKAGE_ID.desktop" || true
-        rm -f "$INSTALL_PREFIX/share/icons/hicolor/256x256/apps/$PACKAGE_ID.png" || true
+    log_info "Uninstalling $APP_NAME..."
+    # Remove wrapper only from bin
+    rm -f "$INSTALL_PREFIX/bin/$PACKAGE_ID" || true
+    # Remove package-specific lib dir (contains real binary, manifest and libs)
+    rm -rf "$INSTALL_PREFIX/lib/$PACKAGE_ID" || true
+    # Remove desktop and icon entries
+    rm -f "$INSTALL_PREFIX/share/applications/$PACKAGE_ID.desktop" || true
+    rm -f "$INSTALL_PREFIX/share/icons/hicolor/256x256/apps/$PACKAGE_ID.png" || true
         
         # Update system databases
         if command -v update-desktop-database &> /dev/null; then
@@ -385,8 +385,8 @@ EOF
         fi
         
         log_success "$APP_NAME uninstalled successfully!"
-        ;;
-        
+    ;;
+    
     "validate")
         log_info "Validating $APP_NAME desktop integration..."
         echo ""
@@ -424,5 +424,5 @@ EOF
         fi
         
         log_success "Validation complete!"
-        ;;
+    ;;
 esac

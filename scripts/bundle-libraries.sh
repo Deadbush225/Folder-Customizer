@@ -209,7 +209,7 @@ if [ "$BUNDLE_MODE" != "--qt-only" ] || ls "$LIB_DIR"/libQt*.so* >/dev/null 2>&1
 fi
 
 # Create a library dependency report
-REPORT_FILE="$INSTALL_DIR/bundled-libs-report.txt"
+REPORT_FILE="./bundled-libs-report.txt"
 {
     echo "=== Library Bundling Report ==="
     echo "Date: $(date)"
