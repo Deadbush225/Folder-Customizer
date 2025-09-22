@@ -2,11 +2,7 @@ param(
     [switch]$SkipDependencies,
     [switch]$SkipBuild,
     [switch]$SkipPack,
-    [switch]$SkipInstallQt,
-    [switch]$SkipInstallBoost,
     [string]$Configuration = "Release",
-    [string]$QtPath,
-    [string]$BoostPath,
     [string]$CMakeGenerator = "Ninja"
 )
 
@@ -24,11 +20,7 @@ function Show-Banner {
     Write-Host "  Skip Dependencies: $SkipDependencies"
     Write-Host "  Skip Build: $SkipBuild"
     Write-Host "  Skip Pack: $SkipPack"
-    Write-Host "  Skip Install Qt: $SkipInstallQt"
-    Write-Host "  Skip Install Boost: $SkipInstallBoost"
     Write-Host "  Build Configuration: $Configuration"
-    Write-Host "  Qt Path: $QtPath"
-    Write-Host "  Boost Path: $BoostPath"
     Write-Host "  CMake Generator: $CMakeGenerator"
     Write-Host ""
 }
@@ -157,16 +149,16 @@ function Build-Project {
         
         # Build the project first
         Write-Host "Building with CMake..."
-        cmake --build . --config $Configuration
+        cmake --build . --target install_local --config $Configuration
 
         if ($LASTEXITCODE -ne 0) {
             throw "Build failed with exit code $LASTEXITCODE"
         }
         
         # Install to dist/windows directory
-        Write-Host "Installing to dist/windows..."
-        $installPath = Join-Path $projectRoot "dist\windows"
-        cmake --install . --config $Configuration --prefix $installPath
+        # Write-Host "Installing to dist/windows..."
+        # $installPath = Join-Path $projectRoot "dist\windows"
+        # cmake --install . --config $Configuration --prefix $installPath
 
         if ($LASTEXITCODE -ne 0) {
             throw "Installation failed with exit code $LASTEXITCODE"
@@ -215,163 +207,6 @@ function Install-Project {
     }
 }
 
-function Deploy-QtDependencies {
-    if ($SkipBuild) {
-        Write-Host "⏩ Skipping Qt deployment as build was skipped." -ForegroundColor Yellow
-        return
-    }
-    
-    Write-Host "Deploying Qt dependencies..."
-    try {
-        $installDir = Join-Path $projectRoot "dist" | Join-Path -ChildPath "windows"
-        $binDir = Join-Path $installDir "bin"
-        
-        if (-not (Test-Path $binDir)) {
-            throw "Binary directory not found: $binDir. Make sure the installation step completed successfully."
-        }
-        
-        # Find windeployqt.exe
-        $windeployqt = $null
-        if (-not [string]::IsNullOrEmpty($QtPath)) {
-            $qtBinDir = Join-Path $QtPath "bin"
-            $windeployqt = Join-Path $qtBinDir "windeployqt.exe"
-        }
-        else {
-            # Try to find windeployqt in PATH
-            $windeployqt = Get-Command windeployqt.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
-        }
-        
-        if (-not $windeployqt -or -not (Test-Path $windeployqt)) {
-            Write-Host "⚠️ windeployqt.exe not found. Qt dependencies may not be properly deployed." -ForegroundColor Yellow
-            return
-        }
-        
-        # Find the main executable
-        $exeFiles = Get-ChildItem -Path $binDir -Filter "*.exe"
-        if ($exeFiles.Count -eq 0) {
-            Write-Host "⚠️ No executable files found in $binDir. Skipping Qt deployment." -ForegroundColor Yellow
-            return
-        }
-        
-        # Deploy Qt dependencies for each executable
-        foreach ($exeFile in $exeFiles) {
-            $exePath = $exeFile.FullName
-            Write-Host "Running windeployqt for: $exePath"
-            & $windeployqt --no-compiler-runtime --no-translations $exePath
-            
-            if ($LASTEXITCODE -ne 0) {
-                throw "windeployqt failed with exit code $LASTEXITCODE for $exePath"
-            }
-        }
-        
-        Write-Host "✅ Qt dependencies deployed successfully" -ForegroundColor Green
-    }
-    catch {
-        Write-Host "❌ Qt deployment failed: $_" -ForegroundColor Red
-        exit 1
-    }
-}
-
-function Deploy-BoostDependencies {
-    if ($SkipBuild) {
-        Write-Host "⏩ Skipping Boost deployment as build was skipped." -ForegroundColor Yellow
-        return
-    }
-    
-    Write-Host "Deploying Boost dependencies..."
-    try {
-        $installDir = Join-Path $projectRoot "dist" | Join-Path -ChildPath "windows"
-        $binDir = Join-Path $installDir "bin"
-        
-        if (-not (Test-Path $binDir)) {
-            throw "Binary directory not found: $binDir. Make sure the installation step completed successfully."
-        }
-        
-        # Determine Boost DLLs to copy
-        $boostDllDir = $null
-        if (-not [string]::IsNullOrEmpty($BoostPath)) {
-            $boostDllDir = Join-Path $BoostPath "lib"
-            if (-not (Test-Path $boostDllDir)) {
-                $boostDllDir = Join-Path $BoostPath "stage\lib"
-                if (-not (Test-Path $boostDllDir)) {
-                    Write-Host "⚠️ Boost library directory not found in $BoostPath. Skipping Boost deployment." -ForegroundColor Yellow
-                    return
-                }
-            }
-        }
-        else {
-            # Try to find Boost in Program Files
-            $potentialBoostDirs = @(
-                "${env:ProgramFiles}\boost",
-                "${env:ProgramFiles(x86)}\boost",
-                "${env:ProgramFiles}\boost_*",
-                "${env:ProgramFiles(x86)}\boost_*"
-            )
-            
-            foreach ($dir in $potentialBoostDirs) {
-                $matchedDirs = Get-Item $dir -ErrorAction SilentlyContinue
-                if ($matchedDirs) {
-                    foreach ($matchedDir in $matchedDirs) {
-                        $potentialLibDir = Join-Path $matchedDir.FullName "lib"
-                        if (Test-Path $potentialLibDir) {
-                            $boostDllDir = $potentialLibDir
-                            break
-                        }
-                        $potentialLibDir = Join-Path $matchedDir.FullName "stage\lib"
-                        if (Test-Path $potentialLibDir) {
-                            $boostDllDir = $potentialLibDir
-                            break
-                        }
-                    }
-                }
-                if ($boostDllDir) {
-                    break
-                }
-            }
-            
-            if (-not $boostDllDir) {
-                Write-Host "⚠️ Boost library directory not found. Skipping Boost deployment." -ForegroundColor Yellow
-                return
-            }
-        }
-        
-        # Copy required Boost DLLs
-        # This is a list of commonly used Boost DLLs - adjust based on your project's needs
-        $boostLibs = @(
-            "boost_program_options",
-            "boost_filesystem",
-            "boost_system",
-            "boost_thread",
-            "boost_regex",
-            "boost_date_time",
-            "boost_chrono",
-            "boost_atomic"
-        )
-        
-        $dllsCopied = 0
-        foreach ($lib in $boostLibs) {
-            $dllPattern = "$lib*.dll"
-            $boostDlls = Get-ChildItem -Path $boostDllDir -Filter $dllPattern -ErrorAction SilentlyContinue
-            
-            foreach ($dll in $boostDlls) {
-                Write-Host "Copying: $($dll.Name)"
-                Copy-Item -Path $dll.FullName -Destination $binDir -Force
-                $dllsCopied++
-            }
-        }
-        
-        if ($dllsCopied -eq 0) {
-            Write-Host "⚠️ No Boost DLLs were found to copy. Your application may not work correctly." -ForegroundColor Yellow
-        }
-        else {
-            Write-Host "✅ Copied $dllsCopied Boost DLLs successfully" -ForegroundColor Green
-        }
-    }
-    catch {
-        Write-Host "❌ Boost deployment failed: $_" -ForegroundColor Red
-        exit 1
-    }
-}
 
 function Pack-WithInnoSetup {
     if ($SkipPack) {
@@ -470,7 +305,8 @@ function Pack-WithInnoSetup {
             Write-Host "Installer created: $($installerFile.FullName)" -ForegroundColor Green
             $hash = Get-FileHash $installerFile.FullName -Algorithm SHA256
             Write-Host "SHA256: $($hash.Hash)" -ForegroundColor Cyan
-        } else {
+        }
+        else {
             Write-Host "⚠️ Installer not found in $installerOutput (pattern: $searchPattern)" -ForegroundColor Yellow
         }
         
@@ -530,10 +366,7 @@ function Show-Summary {
     Write-Host ""
     Write-Host "=================== SUMMARY ==================="
     Write-Host "Build:              $(if ($SkipBuild) { '⏩ Skipped' } else { '✅ Completed' })"
-    Write-Host "Qt & Boost Install: $(if ($SkipInstallQt -and $SkipInstallBoost) { '⏩ Skipped' } else { '✅ Completed' })"
-    Write-Host "Project Install:    $(if ($SkipBuild) { '⏩ Skipped' } else { '✅ Completed' })"
-    Write-Host "Qt Deploy:          $(if ($SkipBuild) { '⏩ Skipped' } else { '✅ Completed' })"
-    Write-Host "Boost Deploy:       $(if ($SkipBuild) { '⏩ Skipped' } else { '✅ Completed' })"
+    # Write-Host "Project Install:    $(if ($SkipBuild) { '⏩ Skipped' } else { '✅ Completed' })"
     Write-Host "Packaging:          $(if ($SkipPack) { '⏩ Skipped' } else { '✅ Completed' })"
     Write-Host "Total time:         $($duration.Minutes)m $($duration.Seconds)s"
     Write-Host "================================================"
@@ -562,13 +395,7 @@ try {
     # Step 4: Install-Project - Skipped (handled by install_local target)
     # Install-Project
     
-    # Step 5: Deploy Qt dependencies using windeployqt
-    Deploy-QtDependencies
-    
-    # Step 6: Deploy Boost DLLs
-    Deploy-BoostDependencies
-    
-    # Step 7: Package the application with Inno Setup
+    # Step 5: Package the application with Inno Setup
     Pack-WithInnoSetup
     
     # Show summary

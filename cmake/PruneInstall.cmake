@@ -28,13 +28,13 @@ _rm_glob_bin_only("${CMAKE_INSTALL_PREFIX}/msvcp140*.dll")
 _rm_glob_bin_only("${CMAKE_INSTALL_PREFIX}/vcruntime140*.dll")
 _rm_glob_bin_only("${CMAKE_INSTALL_PREFIX}/concrt140.dll")
 
-# Remove all plugin folders outside /bin/
-file(GLOB _plugin_dirs "${CMAKE_INSTALL_PREFIX}/*")
+# Remove unwanted plugin subfolders inside /bin/
+file(GLOB _bin_plugin_dirs "${CMAKE_INSTALL_PREFIX}/bin/*")
 
-foreach(_dir IN LISTS _plugin_dirs)
-    if(IS_DIRECTORY "${_dir}" AND NOT _dir MATCHES "/bin/")
+foreach(_dir IN LISTS _bin_plugin_dirs)
+    if(IS_DIRECTORY "${_dir}")
         if(_dir MATCHES "imageformats|bearer|networkinformation|sqldrivers|multimedia|qmltooling|quick|scenegraph|translations|generic|tls")
-            message(STATUS "Removing plugin dir: ${_dir}")
+            message(STATUS "Removing plugin dir in bin: ${_dir}")
             file(REMOVE_RECURSE "${_dir}")
         endif()
     endif()
