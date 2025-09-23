@@ -1,5 +1,5 @@
 === Library Bundling Report ===
-Date: Mon Sep 22 02:27:20 PM PST 2025
+Date: Tue Sep 23 10:47:53 PM PST 2025
 Mode: --all
 Target: /media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux
 
@@ -57,7 +57,6 @@ Target: /media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/di
 /media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux/lib/libQt6Widgets.so.6
 /media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux/lib/libssh2.so.1
 /media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux/lib/libssl.so.3
-/media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux/lib/libstdc++.so.6
 /media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux/lib/libsystemd.so.0
 /media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux/lib/libunistring.so.5
 /media/deadbush225/LocalDisk/System/Coding/Projects/folder-customizer/dist/linux/lib/libX11.so.6

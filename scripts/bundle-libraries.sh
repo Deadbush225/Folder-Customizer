@@ -72,7 +72,10 @@ LIB_SEARCH_PATHS=(
 )
 
 # System libraries that should NOT be bundled (always available on Linux systems)
-SYSTEM_LIBS_REGEX="^(linux-vdso\.so|ld-linux.*\.so|libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|libnsl\.so|libutil\.so|libcrypt\.so|libgcc_s\.so)"
+SYSTEM_LIBS_REGEX="^(linux-vdso\.so|ld-linux.*\.so|libc\.so|libm\.so|libdl\.so|libpthread\.so|librt\.so|libresolv\.so|libnsl\.so|libutil\.so|libcrypt\.so|libstdc\+\+\.so|libgcc_s\.so|libGL(\.so.*)?|libEGL(\.so.*)?|libGLX(\.so.*)?|libGLdispatch(\.so.*)?|libOpenGL(\.so.*)?|libdrm(\.so.*)?|libxcb(-.*)?\.so)"
+# This regex is anchored and covers common core libraries and loader variants.
+# Keep this conservative: do NOT bundle libc, ld-linux, libtinfo, libncurses, libstdc++, libgcc_s, and graphics driver libs.
+SYSTEM_LIBS_REGEX="^(linux-vdso\\.so|ld-linux.*\\.so|ld-.*\\.so.*|libc\\.so(\\..*)?$|libm\\.so(\\..*)?$|libdl\\.so(\\..*)?$|libpthread\\.so(\\..*)?$|librt\\.so(\\..*)?$|libresolv\\.so(\\..*)?$|libnsl\\.so(\\..*)?$|libutil\\.so(\\..*)?$|libcrypt\\.so(\\..*)?$|libtinfo\\.so(\\..*)?$|libncursesw\\.so(\\..*)?$|libstdc\\+\\+\\.so(\\..*)?$|libgcc_s\\.so(\\..*)?$|libGL(\\.so.*)?|libEGL(\\.so.*)?|libGLX(\\.so.*)?|libGLdispatch(\\.so.*)?|libOpenGL(\\.so.*)?|libdrm(\\.so.*)?|libxcb(-.*)?\\.so(\\..*)?$)"
 
 # Libraries that are safe to bundle based on mode
 declare -A LIB_BUNDLE_RULES
@@ -103,6 +106,7 @@ copy_library_recursive() {
     
     # Skip system libraries
     if [[ "$lib_name" =~ $SYSTEM_LIBS_REGEX ]]; then
+        log_info "Skipping system core library: $lib_name"
         return
     fi
     
@@ -207,6 +211,19 @@ if [ "$BUNDLE_MODE" != "--qt-only" ] || ls "$LIB_DIR"/libQt*.so* >/dev/null 2>&1
         fi
     done
 fi
+
+# Safety cleanup: ensure no forbidden core libraries were accidentally copied (# defensive)
+FORBIDDEN_LIB_PATTERNS=("libc.so" "ld-linux" "ld-" "libtinfo" "libncurses" "libstdc++" "libgcc_s")
+for p in "${FORBIDDEN_LIB_PATTERNS[@]}"; do
+    matches=$(find "$LIB_DIR" -maxdepth 1 -type f -name "${p}*" 2>/dev/null || true)
+    if [ -n "$matches" ]; then
+        log_warning "Found forbidden/core libs in $LIB_DIR matching '$p' - removing to avoid runtime conflicts"
+        find "$LIB_DIR" -maxdepth 1 -type f -name "${p}*" -exec rm -f {} + 2>/dev/null || true
+    fi
+done
+
+# Recompute report after cleanup
+log_info "Post-cleanup library directory size: $(du -sh "$LIB_DIR" | cut -f1)"
 
 # Create a library dependency report
 REPORT_FILE="./bundled-libs-report.txt"
