@@ -68,55 +68,7 @@ endif()
 
 # # Locate Qt6; if it's missing or older than 6.9, attempt to install a qtbase 6.9 package
 find_package(Qt6 QUIET COMPONENTS Widgets Core)
-
-if(NOT Qt6_FOUND OR(DEFINED Qt6_VERSION AND Qt6_VERSION VERSION_LESS "6.9"))
-    if(NOT Qt6_FOUND)
-        message(STATUS "Qt6 not found on the system. Will attempt to install qtbase (Qt 6.9) using system package manager.")
-    else()
-        message(STATUS "Found Qt6 ${Qt6_VERSION}, which is older than required 6.9. Will attempt to install/upgrade qtbase (Qt 6.9).")
-    endif()
-
-    # Detect common package managers
-    find_program(APT_EXECUTABLE apt-get)
-    find_program(PACMAN_EXECUTABLE pacman)
-    find_program(DNF_EXECUTABLE dnf)
-    find_program(ZYPPER_EXECUTABLE zypper)
-
-    if(APT_EXECUTABLE)
-        message(STATUS "Detected apt-get; attempting to install Qt6 packages (may require sudo)")
-        execute_process(COMMAND sh -c "sudo apt-get update && sudo apt-get install -y qt6-base-dev qtbase6-dev || sudo apt-get install -y qt6-default qtbase-dev"
-            RESULT_VARIABLE _qt_install_res
-            OUTPUT_VARIABLE _qt_install_out
-            ERROR_VARIABLE _qt_install_err)
-    elseif(PACMAN_EXECUTABLE)
-        message(STATUS "Detected pacman; attempting to install qt6-base (Arch/Manjaro)")
-        execute_process(COMMAND sh -c "sudo pacman -Syu --noconfirm qt6-base" RESULT_VARIABLE _qt_install_res OUTPUT_VARIABLE _qt_install_out ERROR_VARIABLE _qt_install_err)
-    elseif(DNF_EXECUTABLE)
-        message(STATUS "Detected dnf; attempting to install qt6-qtbase-devel (Fedora)")
-        execute_process(COMMAND sh -c "sudo dnf install -y qt6-qtbase-devel" RESULT_VARIABLE _qt_install_res OUTPUT_VARIABLE _qt_install_out ERROR_VARIABLE _qt_install_err)
-    elseif(ZYPPER_EXECUTABLE)
-        message(STATUS "Detected zypper; attempting to install libqt6-qtbase-devel (openSUSE)")
-        execute_process(COMMAND sh -c "sudo zypper install -y libqt6-qtbase-devel" RESULT_VARIABLE _qt_install_res OUTPUT_VARIABLE _qt_install_out ERROR_VARIABLE _qt_install_err)
-    else()
-        message(WARNING "No supported package manager detected; please install Qt 6.9 (qtbase) manually and re-run CMake.")
-    endif()
-
-    if(DEFINED _qt_install_res AND NOT _qt_install_res EQUAL 0)
-        message(WARNING "Automatic Qt install attempt finished with non-zero result (${_qt_install_res}). If Qt 6.9 is not present, please install it manually.")
-
-        # Optionally print small hint output for debugging
-        if(DEFINED _qt_install_out)
-            message(VERBOSE "Qt install stdout: ${_qt_install_out}")
-        endif()
-
-        if(DEFINED _qt_install_err)
-            message(VERBOSE "Qt install stderr: ${_qt_install_err}")
-        endif()
-    endif()
-
-    # Try locating Qt6 again (this will error out if still not present)
-    find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
-endif()
+message(STATUS "Using Qt version: ${Qt6Core_VERSION}")
 
 qt_standard_project_setup()
 

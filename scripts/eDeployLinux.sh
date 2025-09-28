@@ -76,7 +76,7 @@ load_config() {
         APP_MAINTAINER="Unknown <unknown@example.com>"
         APP_URL="https://github.com/user/repo"
         APP_LICENSE="MIT"
-    APP_DEPS_DEB="libc6, libqt6core6 (>= 6.9.0), libqt6gui6 (>= 6.9.0), libqt6widgets6 (>= 6.9.0)"
+    APP_DEPS_DEB="libc6, libqt6core6 (>= 6.8.1), libqt6gui6 (>= 6.8.1), libqt6widgets6 (>= 6.8.1)"
         APP_DEPS_RPM="qt6-qtbase qt6-qtbase-gui"
     else
         log_info "Loading configuration from: $PROJECT_ROOT/manifest.json"
@@ -90,7 +90,7 @@ load_config() {
         APP_MAINTAINER=$(jq -r '.maintainer // "Unknown <unknown@example.com>"' "$PROJECT_ROOT/manifest.json")
         APP_URL=$(jq -r '.homepage // "https://github.com/user/repo"' "$PROJECT_ROOT/manifest.json")
         APP_LICENSE=$(jq -r '.license // "MIT"' "$PROJECT_ROOT/manifest.json")
-    APP_DEPS_DEB=$(jq -r '.deployment.dependencies.deb // "libc6, libqt6core6 (>= 6.9.0), libqt6gui6 (>= 6.9.0), libqt6widgets6 (>= 6.9.0), libqt6network6 (>= 6.9.0)"' "$PROJECT_ROOT/manifest.json")
+    APP_DEPS_DEB=$(jq -r '.deployment.dependencies.deb // "libc6, libqt6core6 (>= 6.8.1), libqt6gui6 (>= 6.8.1), libqt6widgets6 (>= 6.8.1), libqt6network6 (>= 6.8.1)"' "$PROJECT_ROOT/manifest.json")
         APP_DEPS_RPM=$(jq -r '.deployment.dependencies.rpm // "qt6-qtbase qt6-qtbase-gui"' "$PROJECT_ROOT/manifest.json")
     fi
     
@@ -259,14 +259,11 @@ copy_icon() {
 
 # Bundle libraries for portable packages
 bundle_libraries() {
+    # Bundling disabled: project reverted to Qt 6.8 so bundling shipped Qt libs is unnecessary.
+    # This function intentionally does nothing to avoid invoking bundle-libraries.sh.
     local mode="${1:---all}"
-    log_info "Bundling libraries for portable deployment (mode: $mode)..."
-    
-    if [ -f "$SCRIPTS_DIR/bundle-libraries.sh" ]; then
-        bash "$SCRIPTS_DIR/bundle-libraries.sh" "$INSTALL_DIR" "$mode"
-    else
-        log_warning "bundle-libraries.sh not found, portable packages may not work on systems without required libraries"
-    fi
+    log_info "Skipping bundling of libraries (mode: $mode) — bundling disabled for Qt 6.8 revert"
+    return 0
 }
 
 # Process template files by replacing placeholders
@@ -351,15 +348,17 @@ create_portable_tarball() {
     local filename="$1"
     log_info "Creating portable tar.gz: $filename"
 
-    # Bundle libraries for portable tarball
-    bundle_libraries --all
+    # Bundling of libraries intentionally skipped (Qt 6.8 revert)
+    log_info "Skipping library bundling for portable tarball (bundling disabled)"
 
     cd "$PROJECT_ROOT/release"
     local tempdir="${filename%.tar.gz}-portable"
 
     mkdir -p "$tempdir"
-    # Copy full install directory including lib
-    cp -r "$INSTALL_DIR"/* "$tempdir/" 2>/dev/null || true
+    # Copy selected install contents (do NOT include lib/ to avoid bundling libraries)
+    [ -d "$INSTALL_DIR/bin" ] && cp -r "$INSTALL_DIR/bin" "$tempdir/" 2>/dev/null || true
+    [ -d "$INSTALL_DIR/icons" ] && cp -r "$INSTALL_DIR/icons" "$tempdir/" 2>/dev/null || true
+    [ -f "$INSTALL_DIR/manifest.json" ] && cp "$INSTALL_DIR/manifest.json" "$tempdir/" 2>/dev/null || true
 
     # Add installation scripts
     if [ -f "$SCRIPTS_DIR/eInstall.sh" ]; then
@@ -380,8 +379,8 @@ create_portable_tarball() {
 create_appimage() {
     log_info "Creating AppImage..."
 
-    # Bundle all libraries for portable deployment
-    bundle_libraries --all
+    # Bundling of libraries intentionally skipped (Qt 6.8 revert)
+    log_info "Skipping library bundling for AppImage creation (bundling disabled)"
 
     local appdir="$PROJECT_ROOT/pack/appdir/${APP_BINARY}.AppDir"
     rm -rf "$appdir"
@@ -401,124 +400,15 @@ create_appimage() {
         cp "$INSTALL_DIR/bin"/eUpdater* "$appdir/usr/lib/$APP_PACKAGE/" 2>/dev/null || true
     fi
 
-    # Copy libraries from lib/ into package-specific lib dir, but avoid bundling core system libraries
-    if [ -d "$INSTALL_DIR/lib" ] && ls "$INSTALL_DIR/lib"/*.so* 1> /dev/null 2>&1; then
-        log_info "Copying application libraries into AppDir (excluding core/system libs)..."
-        mkdir -p "$appdir/usr/lib/$APP_PACKAGE"
-        # Conservative regex for core system libraries we must NOT bundle
-        FORBIDDEN_LIBS_REGEX="^(linux-vdso\\.so|ld-linux.*\\.so|ld-.*\\.so.*|libc\\.so(\\..*)?$|libm\\.so(\\..*)?$|libdl\\.so(\\..*)?$|libpthread\\.so(\\..*)?$|librt\\.so(\\..*)?$|libresolv\\.so(\\..*)?$|libnsl\\.so(\\..*)?$|libutil\\.so(\\..*)?$|libcrypt\\.so(\\..*)?$|libtinfo\\.so(\\..*)?$|libncursesw\\.so(\\..*)?$|libstdc\\+\\+\\.so(\\..*)?$|libgcc_s\\.so(\\..*)?$|libGL(\\.so.*)?|libEGL(\\.so.*)?|libGLX(\\.so.*)?|libGLdispatch(\\.so.*)?|libOpenGL(\\.so.*)?|libdrm(\\.so.*)?|libxcb(-.*)?\\.so(\\..*)?$)"
-        for f in "$INSTALL_DIR/lib"/*.so*; do
-            [ -f "$f" ] || continue
-            base="$(basename "$f")"
-            if [[ "$base" =~ $FORBIDDEN_LIBS_REGEX ]]; then
-                log_info "Skipping forbidden/core library: $base"
-                continue
-            fi
-            cp "$f" "$appdir/usr/lib/$APP_PACKAGE/" 2>/dev/null || true
-        done
-        # Defensive cleanup: ensure no forbidden libs exist in the app package lib dir
-        find "$appdir/usr/lib/$APP_PACKAGE" -maxdepth 1 -type f \( -name "libc.so*" -o -name "ld-linux*" -o -name "libtinfo*" -o -name "libncurses*" -o -name "libstdc++*" -o -name "libgcc_s*" -o -name "libGL*" -o -name "libEGL*" -o -name "libGLX*" \) -exec rm -f {} + 2>/dev/null || true
-    fi
+    # Do NOT copy arbitrary shared libraries into AppDir. Rely on system Qt or explicit plugin copying.
+    log_info "Not copying $INSTALL_DIR/lib into AppDir (bundling disabled)"
 
-    # Copy Qt plugins (platforms, imageformats, etc.) if present in the install lib tree
-    if [ -d "$INSTALL_DIR/lib/qt6/plugins" ]; then
-        mkdir -p "$appdir/usr/lib/qt6/plugins"
-        cp -r "$INSTALL_DIR/lib/qt6/plugins"/* "$appdir/usr/lib/qt6/plugins/" 2>/dev/null || true
-        log_info "Copied Qt plugins into AppDir: usr/lib/qt6/plugins"
-    fi
+    # Do NOT copy Qt plugins from the install tree or system locations.
+    # The project targets system Qt (Qt 6.8) and bundling plugins risks shipping mismatched Qt versions.
+    log_info "Not copying Qt plugins into AppDir (bundling disabled)"
 
-    # If the AppDir is missing platform plugins (e.g. wayland or xcb), try copying from common system plugin dirs
-    REQUIRED_PLATFORM_FILES=("libqwayland" "libqxcb")
-    have_platforms=0
-    if [ -d "$appdir/usr/lib/qt6/plugins/platforms" ]; then
-        if ls "$appdir/usr/lib/qt6/plugins/platforms"/*.so* 1> /dev/null 2>&1; then
-            have_platforms=1
-        fi
-    fi
-
-    if [ $have_platforms -eq 0 ]; then
-        log_warning "No Qt platform plugins found in AppDir; searching system plugin locations for fallbacks..."
-        SYSTEM_QTPLUGIN_DIRS=("/usr/lib/qt6/plugins" "/usr/lib/x86_64-linux-gnu/qt6/plugins" "/usr/local/lib/qt6/plugins" "/usr/lib/qt/plugins")
-        for sysdir in "${SYSTEM_QTPLUGIN_DIRS[@]}"; do
-            if [ -d "$sysdir/platforms" ]; then
-                log_info "Found system Qt plugins in: $sysdir"
-                mkdir -p "$appdir/usr/lib/qt6/plugins/platforms"
-                cp -r "$sysdir/platforms"/* "$appdir/usr/lib/qt6/plugins/platforms/" 2>/dev/null || true
-                # Also copy other plugin subdirs if present
-                for sub in imageformats iconengines platformthemes; do
-                    if [ -d "$sysdir/$sub" ]; then
-                        mkdir -p "$appdir/usr/lib/qt6/plugins/$sub"
-                        cp -r "$sysdir/$sub"/* "$appdir/usr/lib/qt6/plugins/$sub/" 2>/dev/null || true
-                    fi
-                done
-                have_platforms=1
-                break
-            fi
-        done
-
-        if [ $have_platforms -eq 0 ]; then
-            log_warning "Could not find system Qt plugins in standard locations. The AppImage may still fail to start on systems missing Qt platform plugins."
-        else
-            log_info "Copied system Qt platform plugins into AppDir/platforms"
-        fi
-    fi
-
-    # Ensure plugin shared-library dependencies are bundled (e.g., libxcb-cursor.so.0)
-    if [ -d "$appdir/usr/lib/qt6/plugins" ]; then
-        log_info "Checking Qt plugin dependencies and bundling missing shared libs..."
-        PLUGIN_SO_FILES=$(find "$appdir/usr/lib/qt6/plugins" -type f -name "*.so*" 2>/dev/null || true)
-        for plugin in $PLUGIN_SO_FILES; do
-            # Resolve direct dependencies from ldd
-            deps=$(ldd "$plugin" 2>/dev/null | awk '/=> \// {print $3}' | sort -u)
-            for dep in $deps; do
-                if [ -n "$dep" ] && [ -f "$dep" ]; then
-                    target="$appdir/usr/lib/$APP_PACKAGE/$(basename "$dep")"
-                        if [ ! -f "$target" ]; then
-                            # Skip bundling of graphics/driver and core runtime libs that cause conflicts
-                            case "$(basename "$dep")" in
-                                # Core libc and loader - never bundle
-                                libc.so*|ld-linux*|ld-*.so*|\*/ld-linux*|libpthread.so*|librt.so*|libm.so*|libdl.so*|libresolv.so*|libnsl.so*|libutil.so*|libcrypt.so*)
-                                    log_info "Skipping core system library: $(basename "$dep")"
-                                    continue
-                                    ;;
-                                # Exclude compiler/runtime and graphics/driver libraries
-                                libstdc++*|libgcc_s*|libGL*|libEGL*|libGLX*|libGLdispatch*|libOpenGL*|libdrm*|libxcb*|libxcb\-*)
-                                    log_info "Skipping driver/runtime library: $(basename "$dep")"
-                                    continue
-                                    ;;
-                            esac
-                        log_info "Bundling plugin dependency: $(basename "$dep")"
-                        mkdir -p "$(dirname "$target")"
-                        cp "$dep" "$target" 2>/dev/null || true
-                        chmod 755 "$target" 2>/dev/null || true
-                        if command -v strip >/dev/null 2>&1; then
-                            strip --strip-unneeded "$target" 2>/dev/null || true
-                        fi
-                        # Also try to copy one level of nested deps for this dep
-                        nested=$(ldd "$dep" 2>/dev/null | awk '/=> \\// {print $3}' | sort -u)
-                        for nd in $nested; do
-                            if [ -n "$nd" ] && [ -f "$nd" ]; then
-                                nb="$(basename "$nd")"
-                                # Skip forbidden/core nested libs
-                                case "$nb" in
-                                    libc.so*|ld-linux*|ld-*.so*|libpthread.so*|librt.so*|libm.so*|libdl.so*|libresolv.so*|libnsl.so*|libutil.so*|libcrypt.so*|libtinfo.so*|libncurses*|libstdc++*|libgcc_s*|libGL*|libEGL*|libGLX*|libGLdispatch*|libOpenGL*|libdrm*|libxcb*)
-                                        log_info "Skipping nested forbidden library: $nb"
-                                        continue
-                                        ;;
-                                esac
-                                ntarget="$appdir/usr/lib/$APP_PACKAGE/$nb"
-                                if [ ! -f "$ntarget" ]; then
-                                    log_info "Bundling nested dependency: $nb"
-                                    cp "$nd" "$ntarget" 2>/dev/null || true
-                                    chmod 755 "$ntarget" 2>/dev/null || true
-                                fi
-                            fi
-                        done
-                    fi
-                fi
-            done
-        done
-    fi
+    # Plugin dependency bundling is disabled to avoid shipping mismatched Qt versions.
+    log_info "Skipping plugin dependency bundling (bundling disabled)"
 
     # Copy eInstall.sh script for uninstall functionality into package lib dir
     if [ -f "$SCRIPTS_DIR/eInstall.sh" ]; then
@@ -636,16 +526,9 @@ create_deb() {
     
     # Copy application
     cp "$MAIN_EXECUTABLE" "$debdir/usr/lib/$APP_PACKAGE/$APP_BINARY"
-    # Copy libraries into package so the DEB can be self-contained on systems
-    # which do not have the required Qt runtime versions available.
-    if [ -d "$INSTALL_DIR/lib" ] && ls "$INSTALL_DIR/lib"/*.so* 1> /dev/null 2>&1; then
-        mkdir -p "$debdir/usr/lib/$APP_PACKAGE/lib"
-        cp -r "$INSTALL_DIR/lib"/*.so* "$debdir/usr/lib/$APP_PACKAGE/lib/" 2>/dev/null || true
-        log_info "Bundled libraries into DEB: usr/lib/$APP_PACKAGE/lib/"
-        BUNDLED_QT_LIBS=1
-    else
-        BUNDLED_QT_LIBS=0
-    fi
+    # Do NOT bundle libraries for DEB packages. Use system Qt packages instead.
+    log_info "Not bundling libraries into DEB; package will depend on system Qt runtimes"
+    BUNDLED_QT_LIBS=0
     # Copy manifest.json if available
     if [ -f "$INSTALL_DIR/manifest.json" ]; then
         cp "$INSTALL_DIR/manifest.json" "$debdir/usr/lib/$APP_PACKAGE/"

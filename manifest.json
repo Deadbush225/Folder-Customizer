@@ -20,7 +20,7 @@
 	},
 	"deployment": {
 		"dependencies": {
-		"deb": "libc6, libqt6core6 (>= 6.9.0), libqt6gui6 (>= 6.9.0), libqt6widgets6 (>= 6.9.0), libqt6network6 (>= 6.9.0), libboost-program-options1.83.0 | libboost-program-options1.82.0 | libboost-program-options1.81.0 | libboost-program-options1.74.0 | libboost-program-options-dev",
+			"deb": "libc6, libqt6core6 (>= 6.8.1), libqt6gui6 (>= 6.8.1), libqt6widgets6 (>= 6.8.1), libqt6network6 (>= 6.8.1), libboost-program-options1.83.0 | libboost-program-options1.82.0 | libboost-program-options1.81.0 | libboost-program-options1.74.0 | libboost-program-options-dev",
 			"rpm": "qt6-qtbase qt6-qtbase-gui boost-program-options"
 		},
 		"extra_files": {
