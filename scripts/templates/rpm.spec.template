@@ -1,0 +1,81 @@
+Name:           folder-customizer
+Version:        0.0.16
+Release:        1%{?dist}
+Summary:        Customize folder icons and add tags to organize your directories
+License:        MIT
+URL:            https://github.com/Deadbush225/folder-customizer
+Source0:        %{name}-%{version}.tar.gz
+
+# BuildRequires:  qt6-qtbase-devel
+Requires:       qt6-qtbase qt6-qtbase-gui boost-program-options
+
+%description
+Customize folder icons and add tags to organize your directories
+
+%prep
+%setup -q
+
+%build
+# Files are pre-built
+
+%install
+rm -rf %{buildroot}
+mkdir -p %{buildroot}/usr/bin
+# Create library directory using distro-aware _libdir (may be /usr/lib or /usr/lib64)
+mkdir -p %{buildroot}%{_libdir}/%{name}
+# Create desktop and icon directories before attempting to install files into them
+mkdir -p %{buildroot}%{_datadir}/applications
+mkdir -p %{buildroot}%{_datadir}/icons/hicolor/256x256/apps
+mkdir -p %{buildroot}%{_datadir}/icons/hicolor/48x48/apps
+mkdir -p %{buildroot}%{_datadir}/icons/hicolor/scalable/apps
+
+# Install files. Place executables under a bin/ subdirectory to match the wrapper
+if [ -d bin ]; then
+    mkdir -p %{buildroot}%{_libdir}/%{name}/bin
+    cp -r bin/* %{buildroot}%{_libdir}/%{name}/bin/ || true
+fi
+
+    # Create wrapper script (point to the distro-aware libdir)
+    cat > %{buildroot}/usr/bin/%{name} << 'EOFSCRIPT'
+#!/bin/bash
+exec "%{_libdir}/%{name}/bin/FolderCustomizer" "$@"
+EOFSCRIPT
+chmod +x %{buildroot}/usr/bin/%{name}
+    
+    # Install desktop file and icons from the extracted source tree (after %setup)
+    # The tarball content is extracted into the build directory, so reference files relative to the current directory
+    if [ -f "%{name}.desktop" ]; then
+        install -m 0644 "%{name}.desktop" "%{buildroot}%{_datadir}/applications/%{name}.desktop" || true
+    fi
+
+    # Install icons into the package libdir for use by the application
+    if [ -d icons ]; then
+        mkdir -p %{buildroot}%{_libdir}/%{name}/icons
+        cp -r icons/* %{buildroot}%{_libdir}/%{name}/icons/ || true
+    fi
+
+%files
+%{_bindir}/%{name}
+%{_libdir}/%{name}/
+%{_datadir}/applications/%{name}.desktop
+
+%post
+# Run post-install.sh if it exists in the package libdir
+if [ -f "%{_libdir}/%{name}/post-install.sh" ]; then
+    echo "Running post-installation customization..."
+    bash "%{_libdir}/%{name}/post-install.sh" "/usr" "%{name}" "Folder Customizer" || true
+fi
+
+# Update desktop database
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database /usr/share/applications 2>/dev/null || true
+fi
+
+# Update icon cache
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -t /usr/share/icons/hicolor 2>/dev/null || true
+fi
+
+%changelog
+* Mon Sep 29 2025 Deadbush225 <your-email@example.com> - 0.0.16-1
+- Initial RPM package
