@@ -676,11 +676,9 @@ create_rpm() {
     # Prepare changelog date and create spec file from template
     local changelog_date
     changelog_date=$(date +"%a %b %d %Y")
-    if [ -f "$SCRIPTS_DIR/templates/rpm.spec.template" ]; then
-        process_template "$SCRIPTS_DIR/templates/rpm.spec.template" "$rpmdir/SPECS/$APP_PACKAGE.spec"
-    else
+    if [ ! -f "$SCRIPTS_DIR/templates/rpm.spec.template" ]; then
         # Fallback to inline spec file
-        cat > "$rpmdir/SPECS/$APP_PACKAGE.spec" << EOF
+        cat > "$SCRIPTS_DIR/templates/rpm.spec.template" << EOF
 Name:           $APP_PACKAGE
 Version:        $VERSION
 Release:        1%{?dist}
@@ -764,6 +762,8 @@ fi
 - Initial RPM package
 EOF
     fi
+
+    process_template "$SCRIPTS_DIR/templates/rpm.spec.template" "$rpmdir/SPECS/$APP_PACKAGE.spec"
     
     # Create source tarball
     cd "$PROJECT_ROOT"
