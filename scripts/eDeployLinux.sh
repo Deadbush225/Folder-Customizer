@@ -234,8 +234,13 @@ copy_icon() {
     
     # Try various icon locations in order of preference
     local icon_sources=(
+        # Prefer icons from the install tree (dist/linux/icons)
+        "$INSTALL_DIR/icons/${APP_PACKAGE}.png"
+        "$INSTALL_DIR/icons/${APP_PACKAGE}.svg"
         "$INSTALL_DIR/icons/${APP_NAME}.png"
         "$INSTALL_DIR/icons/${APP_BINARY}.png"
+        "$INSTALL_DIR/icons/${APP_PACKAGE}.png"
+        # legacy variable name fallback
         "$INSTALL_DIR/icons/${PACKAGE_ID}.png"
         "$APP_ICON_SOURCE"
         "$PROJECT_ROOT/Icons/${APP_NAME}.png"
@@ -661,23 +666,16 @@ create_rpm() {
         return
     fi
 
-    if [ -r /etc/os-release ]; then
-        . /etc/os-release
-        case "${ID_LIKE}${ID}" in
-            *fedora*|*rhel*|*centos*|*suse*) : ;;
-            *)
-                log_warning "Non-RPM-based distro detected (${ID:-unknown}); creating tar.gz instead"
-                create_tarball_fallback "${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz"
-                return
-                ;;
-        esac
-    fi
+    # rpmbuild is present; proceed with RPM creation regardless of host OS family
+    log_info "rpmbuild found — proceeding with RPM build on this host"
     
     local rpmdir="$PROJECT_ROOT/pack/rpm"
     rm -rf "$rpmdir"
     mkdir -p "$rpmdir"/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
     
-    # Create spec file from template
+    # Prepare changelog date and create spec file from template
+    local changelog_date
+    changelog_date=$(date +"%a %b %d %Y")
     if [ -f "$SCRIPTS_DIR/templates/rpm.spec.template" ]; then
         process_template "$SCRIPTS_DIR/templates/rpm.spec.template" "$rpmdir/SPECS/$APP_PACKAGE.spec"
     else
@@ -691,7 +689,7 @@ License:        $APP_LICENSE
 URL:            $APP_URL
 Source0:        %{name}-%{version}.tar.gz
 
-BuildRequires:  qt6-qtbase-devel
+# BuildRequires:  qt6-qtbase-devel
 Requires:       $APP_DEPS_RPM
 
 %description
@@ -706,35 +704,49 @@ $APP_DESCRIPTION
 %install
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/usr/bin
-mkdir -p %{buildroot}/usr/lib/%{name}
-mkdir -p %{buildroot}/usr/share/applications
+# Create library directory using distro-aware _libdir (may be /usr/lib or /usr/lib64)
+mkdir -p %{buildroot}%{_libdir}/%{name}
+# Create desktop and icon directories before attempting to install files into them
+mkdir -p %{buildroot}%{_datadir}/applications
+mkdir -p %{buildroot}%{_datadir}/icons/hicolor/256x256/apps
+mkdir -p %{buildroot}%{_datadir}/icons/hicolor/48x48/apps
+mkdir -p %{buildroot}%{_datadir}/icons/hicolor/scalable/apps
 
-# Install files (prefer files from bin/ if present so binaries end up directly in /usr/lib/%{name}/)
+# Install files. Place executables under a bin/ subdirectory to match the wrapper
 if [ -d bin ]; then
-    cp -r bin/* %{buildroot}/usr/lib/%{name}/
-else
-    cp -r * %{buildroot}/usr/lib/%{name}/
+    mkdir -p %{buildroot}%{_libdir}/%{name}/bin
+    cp -r bin/* %{buildroot}%{_libdir}/%{name}/bin/ || true
 fi
 
-# Create wrapper script
-cat > %{buildroot}/usr/bin/%{name} << 'EOFSCRIPT'
+    # Create wrapper script (point to the distro-aware libdir)
+    cat > %{buildroot}/usr/bin/%{name} << 'EOFSCRIPT'
 #!/bin/bash
-exec "/usr/lib/$APP_PACKAGE/$APP_BINARY" "\$@"
+exec "%{_libdir}/%{name}/bin/$APP_BINARY" "\$@"
 EOFSCRIPT
 chmod +x %{buildroot}/usr/bin/%{name}
+    
+    # Install desktop file and icons from the extracted source tree (after %setup)
+    # The tarball content is extracted into the build directory, so reference files relative to the current directory
+    if [ -f "%{name}.desktop" ]; then
+        install -m 0644 "%{name}.desktop" "%{buildroot}%{_datadir}/applications/%{name}.desktop" || true
+    fi
+
+    # Install icons into the package libdir for use by the application
+    if [ -d icons ]; then
+        mkdir -p %{buildroot}%{_libdir}/%{name}/icons
+        cp -r icons/* %{buildroot}%{_libdir}/%{name}/icons/ || true
+    fi
 
 %files
-/usr/bin/%{name}
-/usr/lib/%{name}/
-%if 0%{?fedora} || 0%{?rhel} >= 8
-/usr/share/applications/%{name}.desktop
-%endif
+%{_bindir}/%{name}
+%{_libdir}/%{name}/
+%{_datadir}/applications/%{name}.desktop
 
 %post
-# Run post-install.sh if it exists
-if [ -f "/usr/lib/%{name}/post-install.sh" ]; then
+# Run post-install.sh if it exists in the package libdir
+if [ -f "%{_libdir}/%{name}/post-install.sh" ]; then
     echo "Running post-installation customization..."
-    bash "/usr/lib/%{name}/post-install.sh" "/usr" "%{name}" "$APP_NAME" || true
+    bash "%{_libdir}/%{name}/post-install.sh" "/usr" "%{name}" "$APP_NAME" || true
 fi
 
 # Update desktop database
@@ -748,44 +760,60 @@ if command -v gtk-update-icon-cache >/dev/null 2>&1; then
 fi
 
 %changelog
-* $(date +'%a %b %d %Y') $APP_MAINTAINER - $VERSION-1
+* ${changelog_date} $APP_MAINTAINER - $VERSION-1
 - Initial RPM package
 EOF
     fi
     
     # Create source tarball
     cd "$PROJECT_ROOT"
-    mkdir -p "$rpmdir/SOURCES/build-temp"
-    
-    # Copy files from install directory: place bin/* and icons at top-level of the source tarball
+    # Create a top-level directory inside SOURCES that matches the expected tarball layout
+    src_top="$rpmdir/SOURCES/${APP_PACKAGE}-${VERSION}"
+    rm -rf "$src_top"
+    mkdir -p "$src_top"
+
+    # Copy files from install directory into that top-level directory
     if [ -d "$INSTALL_DIR/bin" ]; then
-        mkdir -p "$rpmdir/SOURCES/build-temp/bin"
-        cp -r "$INSTALL_DIR/bin/"* "$rpmdir/SOURCES/build-temp/bin/" 2>/dev/null || true
+        mkdir -p "$src_top/bin"
+        cp -r "$INSTALL_DIR/bin/"* "$src_top/bin/" 2>/dev/null || true
     fi
-    # Note: RPM packages should use system dependencies, not bundle libraries
-    # Libraries are only bundled for portable formats (AppImage, tar.gz)
     if [ -d "$INSTALL_DIR/icons" ]; then
-        cp -r "$INSTALL_DIR/icons" "$rpmdir/SOURCES/build-temp/"
+        mkdir -p "$src_top/icons"
+        cp -r "$INSTALL_DIR/icons/"* "$src_top/icons/" 2>/dev/null || true
     fi
     if [ -f "$INSTALL_DIR/manifest.json" ]; then
-        cp "$INSTALL_DIR/manifest.json" "$rpmdir/SOURCES/build-temp/"
+        cp "$INSTALL_DIR/manifest.json" "$src_top/manifest.json"
     fi
     
+    # Create a desktop file in the source top so the RPM spec can install it
+    # The spec refers to %{_sourcedir}/%{name}.desktop when installing the desktop file.
+    cat > "$src_top/${APP_PACKAGE}.desktop" << EOF
+[Desktop Entry]
+Name=$APP_NAME
+Comment=$APP_DESCRIPTION
+Exec=$APP_PACKAGE
+Icon=%{_libdir}/${APP_PACKAGE}/bin/icons/${APP_PACKAGE}.png
+Type=Application
+Categories=$APP_CATEGORIES
+EOF
+    log_info "Added desktop file to RPM source: $src_top/${APP_PACKAGE}.desktop"
+
     # Copy post-install.sh for %post to use
     if [ -f "$SCRIPTS_DIR/post-install.sh" ]; then
-        cp "$SCRIPTS_DIR/post-install.sh" "$rpmdir/SOURCES/build-temp/"
+        cp "$SCRIPTS_DIR/post-install.sh" "$src_top/post-install.sh"
         log_info "Added post-install.sh to RPM package"
     else
         log_warning "post-install.sh not found in $SCRIPTS_DIR"
     fi
     
     cd "$rpmdir/SOURCES"
-    tar czf "${APP_PACKAGE}-${VERSION}.tar.gz" -C build-temp .
-    rm -rf build-temp
+    tar czf "${APP_PACKAGE}-${VERSION}.tar.gz" "${APP_PACKAGE}-${VERSION}"
+    rm -rf "${APP_PACKAGE}-${VERSION}"
     
     # Build RPM
-    if ! rpmbuild --define "_topdir $rpmdir" -bb "$rpmdir/SPECS/$APP_PACKAGE.spec"; then
-        log_warning "RPM build failed, creating tar.gz"
+    if ! rpmbuild --define "_topdir $rpmdir" -bb "$rpmdir/SPECS/$APP_PACKAGE.spec" >"$rpmdir/rpmbuild.log" 2>&1; then
+        log_warning "RPM build failed, printing error log:"
+        cat "$rpmdir/rpmbuild.log"
         create_tarball_fallback "${APP_PACKAGE}-${VERSION}-1.x86_64.tar.gz"
         return
     fi
