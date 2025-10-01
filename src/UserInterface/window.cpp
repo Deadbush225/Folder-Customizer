@@ -66,23 +66,9 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
         updaterPath += ".exe";
 #endif
         if (QFileInfo::exists(updaterPath)) {
-            // Pass update source URLs via CLI to avoid hardcoding in updater
-            const QString manifestUrl = QStringLiteral(
-                "https://raw.githubusercontent.com/Deadbush225/"
-                "folder-customizer/main/"
-                "manifest.json");
-            const QString installerTpl = QStringLiteral(
-                "https://github.com/Deadbush225/folder-customizer/releases/"
-                "download/"
-                "%1/folder-customizer-%1.exe");
-
-            QStringList args;
-            args << QStringLiteral("--manifest-url") << manifestUrl
-                 << QStringLiteral("--installer-template") << installerTpl
-                 << QStringLiteral("--package-name")
-                 << QStringLiteral("folder-customizer");
-
-            if (!QProcess::startDetached(updaterPath, args)) {
+            // eUpdater is expected to be built with the manifest URL and
+            // installer template baked in, so invoke it without CLI args.
+            if (!QProcess::startDetached(updaterPath)) {
                 QMessageBox::warning(this, "Update Check",
                                      "Failed to start the Updater.");
             }

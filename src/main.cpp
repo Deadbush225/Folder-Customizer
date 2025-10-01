@@ -92,9 +92,9 @@ int main(int argc, char* argv[]) {
         FolderCustomizer::colorizeTag(folderPath, tone, color, tag);
         return 0;
     } else {
-        QIcon testIcon(":/icons/Folder Customizer.png");
-        qDebug() << "Icon null?" << testIcon.isNull();
-        QApplication::setWindowIcon(testIcon);
+        // QIcon testIcon(":/icons/Folder Customizer.png");
+        // qDebug() << "Icon null?" << testIcon.isNull();
+        // QApplication::setWindowIcon(testIcon);
 
         QApplication::setWindowIcon(QIcon(":/icons/Folder Customizer.png"));
         window = new FolderCustomizerWindow();

@@ -291,17 +291,36 @@ install(FILES ${ICONS_ICO_LIGHT}
 install(FILES ${ICONS_ICO_NORMAL}
     DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Normal/)
 
-# Install system eUpdater if available (avoid duplicate DLLs)
-find_program(EUPDATER_EXECUTABLE NAMES eUpdater eUpdater.exe)
+# Prefer building and embedding a local eUpdater subproject when present.
+set(EUPDATER_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../eUpdater")
 
-if(EUPDATER_EXECUTABLE)
-    get_filename_component(EUPDATER_DIR ${EUPDATER_EXECUTABLE} DIRECTORY)
+set(FC_HOME_PAGE "https://github.com/Deadbush225/folder-customizer")
+set(FC_PACKAGE_ID "folder-customizer")
 
-    # Only install to bin, not to root
-    install(PROGRAMS ${EUPDATER_EXECUTABLE} DESTINATION ${CMAKE_INSTALL_BINDIR})
-    message(STATUS "Found eUpdater: ${EUPDATER_EXECUTABLE}")
-else()
-    message(WARNING "eUpdater not found in system PATH. Update functionality may not work.")
+if(EXISTS "${EUPDATER_SOURCE_DIR}/CMakeLists.txt")
+    message(STATUS "Found local eUpdater source; adding as subdirectory so it rebuilds on changes")
+
+    # Set required variables for eUpdater before add_subdirectory
+    # Use raw.githubusercontent for manifest so the updater can fetch the JSON directly
+    set(EUPDATER_DEFAULT_MANIFEST_URL "https://raw.githubusercontent.com/Deadbush225/Folder-Customizer/main/manifest.json" CACHE STRING "Default manifest URL for eUpdater" FORCE)
+    set(EUPDATER_DEFAULT_RELEASE_API_URL "https://api.github.com/repos/Deadbush225/folder-customizer/releases/latest" CACHE STRING "Default release API URL for eUpdater" FORCE)
+
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/eUpdater-install" CACHE PATH "Install prefix for eUpdater" FORCE)
+
+    add_subdirectory("${EUPDATER_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/eUpdater-build")
+
+    # Ensure the main app depends on eUpdater
+    add_dependencies(${PROJECT_NAME} eUpdater)
+
+    # Install the eUpdater target alongside the main executable
+    install(TARGETS eUpdater DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+    # Add a custom target to only rebuild eUpdater
+    add_custom_target(build_updater
+        COMMAND ${CMAKE_COMMAND} --build "${CMAKE_BINARY_DIR}/eUpdater-build" --target eUpdater
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/eUpdater-build"
+        COMMENT "Rebuild only the eUpdater binary"
+    )
 endif()
 
 # Install main app icon to /icons (for install package and installer)
@@ -325,7 +344,11 @@ if(EXISTS ${ROOT_ICON_ICO})
 endif()
 
 # Install manifest.json to root
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/manifest.json" DESTINATION .)
+if(WIN32)
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/manifest.json" DESTINATION ${CMAKE_INSTALL_BINDIR})
+else()
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/manifest.json" DESTINATION .)
+endif()
 
 # Install install.sh (the generic desktop install script) to root
 if(UNIX AND NOT APPLE)
@@ -341,6 +364,25 @@ endif()
 
 # Install the main application executable and DLLs only to bin
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+# # Optionally build and embed eUpdater as a subproject if the folder exists.
+# if(EXISTS "${CMAKE_SOURCE_DIR}/../eUpdater/CMakeLists.txt")
+# message(STATUS "Found local eUpdater subproject; adding to build and embedding defaults")
+
+# # For reproducible embedding we set sensible defaults here using known
+# # project metadata. We set these as CACHE variables so the eUpdater
+# # subproject's configure_file will substitute them when it's configured.
+# set(FC_HOME_PAGE "https://github.com/Deadbush225/folder-customizer")
+# set(FC_PACKAGE_ID "folder-customizer")
+
+# set(EUPDATER_DEFAULT_MANIFEST_URL "${FC_HOME_PAGE}/manifest.json" CACHE STRING "Default manifest URL for eUpdater" FORCE)
+# set(EUPDATER_DEFAULT_RELEASE_API_URL "https://api.github.com/repos/Deadbush225/folder-customizer/releases/latest" CACHE STRING "Default release API URL for eUpdater" FORCE)
+# set(EUPDATER_DEFAULT_INSTALLER_TPL "${FC_HOME_PAGE}/releases/download/%1/folder-customizer-%1.AppImage" CACHE STRING "Default installer URL template for eUpdater" FORCE)
+# set(EUPDATER_DEFAULT_PACKAGE_NAME "${FC_PACKAGE_ID}" CACHE STRING "Default package name for eUpdater" FORCE)
+
+# # Add as subdirectory using the repo-relative path (parent repo layout)
+# add_subdirectory("${CMAKE_SOURCE_DIR}/../eUpdater" "${CMAKE_BINARY_DIR}/eUpdater-build")
+# endif()
 
 # Enhanced Qt deployment with diagnostics and fallback
 if(ENABLE_QT_DEPLOY_SCRIPT)

@@ -1,7 +1,0 @@
-[Desktop Entry]
-Name=Folder Customizer
-Comment=Customize folder icons and add tags to organize your directories
-Exec=folder-customizer
-Icon=/usr/lib64/folder-customizer/icons/folder-customizer.png
-Type=Application
-Categories=Utility;FileManager;Qt;
