@@ -25,24 +25,42 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     this->programPath = new QString("C:\\Program Files\\Folder Customizer");
 
     // + DND Layout
-    this->listview = new ListBoxwidget();
-    // this->listview->addItem("C:\\Users\\Eliaz\\Desktop\\Test");
+    this->tableview = new eTableWidget();
+    this->tableview->setColumnCount(2);
+    this->tableview->horizontalHeader()->setVisible(false);
+
+    // Make the left column thin and unstretchable, stretch the right column
+    this->tableview->horizontalHeader()->setSectionResizeMode(
+        1, QHeaderView::Fixed);
+    this->tableview->horizontalHeader()->setSectionResizeMode(
+        0, QHeaderView::Stretch);
+    this->tableview->setColumnWidth(1, 32);  // Thin for checkboxes
+    // this->tableview->addItem("C:\\Users\\Eliaz\\Desktop\\Test");
 
     QHBoxLayout* buttonLayout = new QHBoxLayout();
 
     auto btn_Del = new QPushButton(QString("Delete"));
     QObject::connect(btn_Del, &QPushButton::clicked, this,
                      &FolderCustomizerWindow::deleteSelectedItem);
-    buttonLayout->addWidget(btn_Del);
+    // buttonLayout->addWidget(btn_Del);
 
     auto btn_ClearAll = new QPushButton("Clear All");
     QObject::connect(btn_ClearAll, &QPushButton::clicked, this,
                      &FolderCustomizerWindow::clearAll);
     buttonLayout->addWidget(btn_ClearAll);
 
+    auto btn_Browse = new QPushButton("Browse");
+    QObject::connect(btn_Browse, &QPushButton::clicked, this, [this]() {
+        QString dir = QFileDialog::getExistingDirectory(this, "Select Folder");
+        if (!dir.isEmpty()) {
+            // this->tableview->addItem(dir);
+            this->tableview->addItem(dir);
+        }
+    });
+    buttonLayout->addWidget(btn_Browse);
     auto dnd_layout = new QVBoxLayout();
     dnd_layout->addLayout(buttonLayout);
-    dnd_layout->addWidget(this->listview);
+    dnd_layout->addWidget(this->tableview);
 
     // + Customization Layout
     auto settings_menu = this->menuBar()->addMenu("&Settings");
@@ -50,12 +68,15 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     auto install_key_act = new QAction("Add to context menu", this);
     QObject::connect(install_key_act, &QAction::triggered, this,
                      [this]() { registryManipulator->installRegistry(); });
-    settings_menu->addAction(install_key_act);
 
     auto uninstall_key_act = new QAction("Remove from context menu", this);
     QObject::connect(uninstall_key_act, &QAction::triggered, this,
                      [this]() { registryManipulator->uninstallRegistry(); });
+
+#ifdef Q_OS_WIN
     settings_menu->addAction(uninstall_key_act);
+    settings_menu->addAction(install_key_act);
+#endif
 
     auto help_menu = this->menuBar()->addMenu("&Help");
     auto check_updates_act = new QAction("Check Updates", this);
@@ -66,8 +87,9 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
         updaterPath += ".exe";
 #endif
         if (QFileInfo::exists(updaterPath)) {
-            // eUpdater is expected to be built with the manifest URL and
-            // installer template baked in, so invoke it without CLI args.
+            // eUpdater is expected to be built with the manifest URL
+            // and installer template baked in, so invoke it without CLI
+            // args.
             if (!QProcess::startDetached(updaterPath)) {
                 QMessageBox::warning(this, "Update Check",
                                      "Failed to start the Updater.");
@@ -163,7 +185,8 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     customization_layout->addWidget(this->yes_icon_chkbx);
     // customization_layout->addLayout(combo_layout);  // referred 2 times
     customization_layout->addWidget(this->yes_tag_chkbx);
-    // customization_layout->addLayout(line_edit_layout);  // referred 2 times
+    // customization_layout->addLayout(line_edit_layout);  // referred 2
+    // times
     customization_layout->addWidget(apply_button);
 
     customization_layout->addStretch();
@@ -194,7 +217,8 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
 void FolderCustomizerWindow::setupToolBar() {}
 
 void FolderCustomizerWindow::deleteSelectedItem() {
-    QModelIndexList selected = this->listview->selectedIndexes();
+    QModelIndexList selected =
+        this->tableview->selectionModel()->selectedIndexes();
 
     QList<int> indexes = {};
 
@@ -207,18 +231,18 @@ void FolderCustomizerWindow::deleteSelectedItem() {
               [](const int a, const int b) -> bool { return a > b; });
 
     for (int index : indexes) {
-        this->listview->takeItem(index);
+        this->tableview->removeItem(index);
     }
 }
 
 void FolderCustomizerWindow::clearAll() {
-    this->listview->clear();
+    this->tableview->clear();
 }
 
 void FolderCustomizerWindow::apply() {
     QString tone = this->tone_comboBox->currentText();
     QString color = this->color_comboBox->currentText();
-    QList<QString> folders = this->listview->getAllItems();
+    QList<QString> folders = this->tableview->getAllItems();
 
     // QString icon_path = *(this->programPath) + tone + color + ".ico";
 
@@ -248,7 +272,7 @@ void FolderCustomizerWindow::apply() {
 void FolderCustomizerWindow::reset() {
     bool resetIcon = resetIcon_chkbx->isChecked();
     bool resetTag = resetTag_chkbx->isChecked();
-    QList<QString> folders = this->listview->getAllItems();
+    QList<QString> folders = this->tableview->getAllItems();
 
     for (QString folder : folders) {
         FolderCustomizer::reset(folder, resetIcon, resetTag);

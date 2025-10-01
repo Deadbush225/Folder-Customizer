@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/">
+    <file alias="eIcon">../Icons/Folder Customizer.ico</file>
+  </qresource>
+</RCC>

@@ -9,14 +9,16 @@
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QDockWidget>
+#include <QtWidgets/QFileDialog>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
-#include <QtWidgets/QListView>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
+#include <QtWidgets/QTableWidget>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
@@ -48,7 +50,7 @@ class FolderCustomizerWindow : public QMainWindow {
    private:
     void setDarkTheme();
 
-    ListBoxwidget* listview;
+    eTableWidget* tableview;
 
     // QPushButton* install_key_act;
     // QPushButton* uninstall_key_btn;

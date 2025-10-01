@@ -16,3 +16,4 @@ QFrame[frameShape="4"] { /* QFrame::HLine */
     background: #2f2f2f;
     margin: 0.5em 0;
 }
+

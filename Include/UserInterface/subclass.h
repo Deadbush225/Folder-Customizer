@@ -10,9 +10,9 @@
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
-#include <QtWidgets/QListWidget>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QSizePolicy>
+#include <QtWidgets/QTableWidget>
 #include <QtWidgets/QVBoxLayout>
 
 #include <QtGui/QDragEnterEvent>
@@ -57,11 +57,13 @@ class MessageBoxwLabel : public QDialog {
     bool addTag;
 };
 
-class ListBoxwidget : public QListWidget {
+class eTableWidget : public QTableWidget {
    public:
-    ListBoxwidget();
+    eTableWidget();
     QList<QString> getAllItems();
-    using QListWidget::selectedIndexes;
+    void addItem(QString item);
+    void removeItem(int index);
+    // using QListWidget::selectedIndexes;
 
    protected:
     void dragEnterEvent(QDragEnterEvent* event) override;

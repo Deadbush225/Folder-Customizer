@@ -54,19 +54,24 @@ void MessageBoxwLabel::click() {
 }
 
 // + ListBoxwidget
-ListBoxwidget::ListBoxwidget() {
+eTableWidget::eTableWidget() {
     this->viewport()->setAcceptDrops(true);
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->setSelectionMode(QAbstractItemView::ExtendedSelection);
     this->setDragDropMode(QAbstractItemView::DragDrop);
     this->setDropIndicatorShown(true);
+
+    // Remove column grid lines, keep row grid lines
+    this->setShowGrid(true);
+    this->setStyleSheet(
+        "QTableWidget::item { border-left: 0px; border-right: 0px; }");
 }
 
-void ListBoxwidget::dragEnterEvent(QDragEnterEvent* event) {
+void eTableWidget::dragEnterEvent(QDragEnterEvent* event) {
     event->accept();
 }
 
-void ListBoxwidget::dragMoveEvent(QDragMoveEvent* event) {
+void eTableWidget::dragMoveEvent(QDragMoveEvent* event) {
     if (!(event->mimeData()->hasUrls())) {
         event->ignore();
         return;
@@ -75,7 +80,7 @@ void ListBoxwidget::dragMoveEvent(QDragMoveEvent* event) {
     event->accept();
 }
 
-void ListBoxwidget::dropEvent(QDropEvent* event) {
+void eTableWidget::dropEvent(QDropEvent* event) {
     if (event->mimeData()->hasUrls()) {
         event->accept();
 
@@ -93,17 +98,17 @@ void ListBoxwidget::dropEvent(QDropEvent* event) {
     }
 }
 
-QList<QString> ListBoxwidget::getAllItems() {
+QList<QString> eTableWidget::getAllItems() {
     this->dir_list.clear();
 
-    for (int i = 0; i != this->count(); i++) {
-        QString url = this->item(i)->text();
+    for (int i = 0; i != this->rowCount(); i++) {
+        QString url = this->item(i, 0)->text();
         this->dir_list.append(url);
     }
     return this->dir_list;
 }
 
-QStringList ListBoxwidget::removeDuplicates(const QStringList labels) {
+QStringList eTableWidget::removeDuplicates(const QStringList labels) {
     QStringList nodup;
 
     QStringList contents = this->getAllItems();
@@ -117,7 +122,7 @@ QStringList ListBoxwidget::removeDuplicates(const QStringList labels) {
     return nodup;
 }
 
-void ListBoxwidget::ov_addItems(const QStringList labels) {
+void eTableWidget::ov_addItems(const QStringList labels) {
     // remove item on the list that are duplicates
 
     // (const_cast<QStringList*>(labels))->removeDuplicates();
@@ -127,7 +132,51 @@ void ListBoxwidget::ov_addItems(const QStringList labels) {
     QStringList nodup = this->removeDuplicates(labels);
 
     qDebug() << (nodup);
-    this->addItems(nodup);
+    for (QString item : nodup) {
+        this->addItem(item);
+    }
+}
+
+void eTableWidget::addItem(QString item) {
+    int row = this->rowCount();
+    this->insertRow(row);
+    QTableWidgetItem* newItem = new QTableWidgetItem(item);
+    this->setItem(row, 0, newItem);
+
+    QPushButton* button = new QPushButton();
+    button->setIcon(QIcon(":/icons/delete"));
+    button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    QWidget* cellWidget = new QWidget();
+    QHBoxLayout* layout = new QHBoxLayout(cellWidget);
+    layout->addWidget(button);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
+    cellWidget->setLayout(layout);
+    this->setCellWidget(row, 1, cellWidget);
+
+    connect(button, &QPushButton::clicked, this,
+            [this, row]() { this->removeItem(row); });
+}
+
+void eTableWidget::removeItem(int index) {
+    QList<QTableWidgetSelectionRange> ranges = this->selectedRanges();
+    if (ranges.size() > 0) {
+        QList<int> rowsToRemove;
+        for (const QTableWidgetSelectionRange& range : ranges) {
+            for (int r = range.topRow(); r <= range.bottomRow(); ++r) {
+                rowsToRemove.append(r);
+            }
+        }
+        std::sort(rowsToRemove.begin(), rowsToRemove.end(),
+                  std::greater<int>());
+        ;
+        for (int r : rowsToRemove) {
+            this->removeRow(r);
+        }
+        return;
+    }
+
+    this->removeRow(index);
 }
 
 // + QGroupBox

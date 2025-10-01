@@ -291,37 +291,12 @@ install(FILES ${ICONS_ICO_LIGHT}
 install(FILES ${ICONS_ICO_NORMAL}
     DESTINATION ${CMAKE_INSTALL_BINDIR}/Icons/Normal/)
 
-# Prefer building and embedding a local eUpdater subproject when present.
-set(EUPDATER_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../eUpdater")
-
+# eUpdater Integration - Use hybrid approach with local override + FetchContent fallback
 set(FC_HOME_PAGE "https://github.com/Deadbush225/folder-customizer")
 set(FC_PACKAGE_ID "folder-customizer")
 
-if(EXISTS "${EUPDATER_SOURCE_DIR}/CMakeLists.txt")
-    message(STATUS "Found local eUpdater source; adding as subdirectory so it rebuilds on changes")
-
-    # Set required variables for eUpdater before add_subdirectory
-    # Use raw.githubusercontent for manifest so the updater can fetch the JSON directly
-    set(EUPDATER_DEFAULT_MANIFEST_URL "https://raw.githubusercontent.com/Deadbush225/Folder-Customizer/main/manifest.json" CACHE STRING "Default manifest URL for eUpdater" FORCE)
-    set(EUPDATER_DEFAULT_RELEASE_API_URL "https://api.github.com/repos/Deadbush225/folder-customizer/releases/latest" CACHE STRING "Default release API URL for eUpdater" FORCE)
-
-    set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/eUpdater-install" CACHE PATH "Install prefix for eUpdater" FORCE)
-
-    add_subdirectory("${EUPDATER_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/eUpdater-build")
-
-    # Ensure the main app depends on eUpdater
-    add_dependencies(${PROJECT_NAME} eUpdater)
-
-    # Install the eUpdater target alongside the main executable
-    install(TARGETS eUpdater DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-    # Add a custom target to only rebuild eUpdater
-    add_custom_target(build_updater
-        COMMAND ${CMAKE_COMMAND} --build "${CMAKE_BINARY_DIR}/eUpdater-build" --target eUpdater
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/eUpdater-build"
-        COMMENT "Rebuild only the eUpdater binary"
-    )
-endif()
+# Include eUpdater integration logic
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/eUpdaterIntegration.cmake")
 
 # Install main app icon to /icons (for install package and installer)
 set(ROOT_ICON_PNG "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Folder Customizer.png")
