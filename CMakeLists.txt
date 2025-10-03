@@ -415,8 +415,6 @@ if(TARGET FCContextMenuHandler)
     add_dependencies(install_local FCContextMenuHandler)
 endif()
 
-# Note: Previous 'reinstall' target removed; use 'install_local' and package from ./install
-
 # Post-install size optimization (attach after install_local target exists)
 # Mirror download-sorter: strip symbols and optionally compress with upx when available
 if(UNIX)

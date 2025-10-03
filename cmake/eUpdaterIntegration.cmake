@@ -10,7 +10,8 @@ set(EUPDATER_LOCAL_DIR "${CMAKE_SOURCE_DIR}/../eUpdater" CACHE PATH "Path to loc
 set(EUPDATER_DEFAULT_MANIFEST_URL "https://raw.githubusercontent.com/Deadbush225/Folder-Customizer/main/manifest.json" CACHE STRING "Default manifest URL for eUpdater")
 set(EUPDATER_DEFAULT_RELEASE_API_URL "https://api.github.com/repos/Deadbush225/folder-customizer/releases/latest" CACHE STRING "Default release API URL for eUpdater")
 
-set(ENABLE_EUPDATER OFF CACHE BOOL "Enable eUpdater integration")
+# set(ENABLE_EUPDATER OFF CACHE BOOL "Enable eUpdater integration")
+set(ENABLE_EUPDATER ON CACHE BOOL "Enable eUpdater integration")
 
 if(NOT ENABLE_EUPDATER)
     message(STATUS "eUpdater integration is disabled.")
@@ -33,6 +34,7 @@ else()
         GIT_REPOSITORY https://github.com/eliazar-sll/eUpdater.git # Replace with actual repo
         GIT_TAG main # or specific version tag
         SOURCE_DIR "${CMAKE_BINARY_DIR}/eUpdater-src"
+        BINARY_DIR "${CMAKE_BINARY_DIR}/eUpdater-build"
     )
 
     FetchContent_MakeAvailable(eUpdater)
