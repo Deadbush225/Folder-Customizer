@@ -33,7 +33,7 @@ file(GLOB _bin_plugin_dirs "${CMAKE_INSTALL_PREFIX}/bin/*")
 
 foreach(_dir IN LISTS _bin_plugin_dirs)
     if(IS_DIRECTORY "${_dir}")
-        if(_dir MATCHES "imageformats|bearer|networkinformation|sqldrivers|multimedia|qmltooling|quick|scenegraph|translations|generic|tls")
+        if(_dir MATCHES "bearer|networkinformation|sqldrivers|multimedia|qmltooling|quick|scenegraph|translations|generic")
             message(STATUS "Removing plugin dir in bin: ${_dir}")
             file(REMOVE_RECURSE "${_dir}")
         endif()

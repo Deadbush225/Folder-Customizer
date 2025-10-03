@@ -109,16 +109,16 @@ function Build-Project {
         $cmakeArgs += "-DCMAKE_MAKE_PROGRAM=C:/msys64/mingw64/bin/ninja.exe"
         
         # Explicitly set eUpdater from Program Files (x86)
-        $systemEupdater = "C:\Program Files (x86)\eUpdater\bin\eUpdater.exe"
-        if (Test-Path $systemEupdater) {
-            $cmakeArgs += "-DEUPDATER_EXECUTABLE=`"$systemEupdater`""
-            Write-Host "Using system eUpdater: $systemEupdater"
-        }
+        # $systemEupdater = "C:\Program Files (x86)\eUpdater\bin\eUpdater.exe"
+        # if (Test-Path $systemEupdater) {
+        #     $cmakeArgs += "-DEUPDATER_EXECUTABLE=`"$systemEupdater`""
+        #     Write-Host "Using system eUpdater: $systemEupdater"
+        # }
         
-        # Set MinGW environment variables and add eUpdater to PATH
-        $env:PATH = "C:\Program Files (x86)\eUpdater\bin;C:\msys64\mingw64\bin;$env:PATH"
-        $env:MINGW_PREFIX = "C:/msys64/mingw64"
-        $env:CMAKE_PREFIX_PATH = "C:\Program Files (x86)\eUpdater"
+        # # Set MinGW environment variables and add eUpdater to PATH
+        # $env:PATH = "C:\Program Files (x86)\eUpdater\bin;C:\msys64\mingw64\bin;$env:PATH"
+        # $env:MINGW_PREFIX = "C:/msys64/mingw64"
+        # $env:CMAKE_PREFIX_PATH = "C:\Program Files (x86)\eUpdater"
         
         # Add Qt path if specified, otherwise use hardcoded default
         if (-not [string]::IsNullOrEmpty($QtPath)) {
