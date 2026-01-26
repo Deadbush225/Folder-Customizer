@@ -1,7 +1,0 @@
-CMakeLists.txt
-Include
-src
-docs
-build
-Installer
-Registry
