@@ -13,3 +13,5 @@ legacy/
 
 release/
 pack/
+.vscode/
+.order

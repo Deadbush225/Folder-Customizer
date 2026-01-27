@@ -34,7 +34,7 @@ endif()
 
 if(BOOST_AVAILABLE)
     target_compile_definitions(${SUBDIR_NAME} PRIVATE HAVE_BOOST_PROGRAM_OPTIONS=1)
-    u_include_and_link_compiled_boost(${SUBDIR_NAME} Boost::program_options)
+    u_include_and_link_compiled_boost(${SUBDIR_NAME} program_options)
 else()
     target_compile_definitions(${SUBDIR_NAME} PRIVATE HAVE_BOOST_PROGRAM_OPTIONS=0)
 endif()
