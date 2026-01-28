@@ -35,6 +35,13 @@ if (-not $SkipBuild) {
 }
 
 # 2. Build Installer
+$releaseAssetsPath = Join-Path $projectRoot "release-assets"
+if (Test-Path $releaseAssetsPath) {
+  Write-Host "Cleaning up release-assets..." -ForegroundColor Yellow
+  Remove-Item $releaseAssetsPath -Recurse -Force
+}
+New-Item -ItemType Directory -Path $releaseAssetsPath -Force | Out-Null
+
 Write-Host "Building Installer..." -ForegroundColor Cyan
 $installerScript = "installer.iss"
 $outputDir = "release-assets"
