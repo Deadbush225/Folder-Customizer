@@ -46,8 +46,41 @@ These modules provide reusable functionality:
   - Defines standard install directories (bin, lib, icons)
   - Handles icon installation for all platforms
   - Manages manifest.json and install script deployment
+  - **Incremental Install Support**: 
+      - Uses `COMPONENT Prerequisites` for static assets (icons, etc.) to allow skipping them during development builds.
+      - Uses `install(DIRECTORY ...)` for cleaner log output.
 
 - **PostBuildOptimization.cmake**: Binary optimization and installation
+  - **`install_local` Target**:
+      - Defines the "Smart Install" logic.
+      - **Application Component**: Always installed (exe, manifest).
+      - **Prerequisites Component**: Only installed if `Q6Core.dll` is missing from the destination.
+  - *Note*: Binary stripping and UPX are disabled for `install_local` to preserve build artifacts for debugging and incremental checks.
+
+### Deployment Modules (`deployment/`)
+
+- **EnhancedQtDeploy.cmake**:
+  - Automatically runs `windeployqt` to copy Qt DLLs.
+  - **Optimization**: Checks for existing `Qt6Core.dll` in destination. If found, strictly skips `windeployqt` execution to speed up iteration.
+  - Deployment logic happens under the `Prerequisites` component.
+
+- **MinGWDeploy.cmake**: 
+  - Copies MinGW runtime DLLs (libgcc, libstdc++, etc.).
+  - Tagged as `COMPONENT Prerequisites`.
+
+- **PruneInstall.cmake**:
+  - Cleans up unnecessary files from the installation directory (duplicates, temp files).
+
+## Installation Components
+
+The project uses CMake components to separate frequently changed files from static dependencies:
+
+| Component | Contents | Install Behavior |
+| :--- | :--- | :--- |
+| **`Application`** | `.exe` files, `manifest.json` | **Always Installed** |
+| **`Prerequisites`** | Qt DLLs, MinGW DLLs, Icons, Context Menu DLL | **Conditional** (Skipped if `Qt6Core.dll` exists) |
+
+This structure ensures that hitting "Build" is nearly instantaneous when only modifying source code.
   - `setup_install_local_target(PROJECT_NAME)`: Creates install_local target
   - `add_context_menu_dependency(TARGET_NAME)`: Adds context menu handler dependency
   - Handles binary stripping and UPX compression for Unix/MinGW

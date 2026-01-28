@@ -53,7 +53,7 @@ if(TARGET eUpdater)
     add_dependencies(${PROJECT_NAME} eUpdater)
 
     # Install eUpdater alongside main executable
-    install(TARGETS eUpdater DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install(TARGETS eUpdater DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Application)
 
     # Add convenience target for rebuilding just eUpdater
     add_custom_target(build_updater

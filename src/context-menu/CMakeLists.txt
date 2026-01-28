@@ -41,4 +41,4 @@ target_compile_definitions(${ContextMenuDll} PRIVATE UNICODE _UNICODE)
 target_link_libraries(${ContextMenuDll} shlwapi shell32 pathcch gdiplus)
 
 # Install the context menu library
-install(TARGETS ${ContextMenuDll} DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS ${ContextMenuDll} DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Prerequisites)

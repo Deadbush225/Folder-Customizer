@@ -84,6 +84,11 @@ endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "FolderCustomizer")
 
+install(TARGETS ${PROJECT_NAME} 
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT Application
+)
+
 # Link libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE Core Logger Utils Customizer UserInterface Qt6::Widgets Qt6::Core)
 

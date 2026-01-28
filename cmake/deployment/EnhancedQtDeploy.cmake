@@ -104,38 +104,47 @@ function(deploy_qt_enhanced PROJECT_NAME)
             message(FATAL_ERROR \"Target executable not found: \${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/${PROJECT_NAME}.exe\")
         endif()
         
-        # Run windeployqt with comprehensive logging
-        execute_process(
-            COMMAND \"${WINDEPLOYQT_PATH}\" 
-                --release 
-                --no-translations 
-                --no-system-d3d-compiler 
-                --no-opengl-sw 
-                --no-compiler-runtime
-                --verbose 2
-                --dir \"\${CMAKE_INSTALL_PREFIX}/bin\" 
-                \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/${PROJECT_NAME}.exe\"
-            WORKING_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}\"
-            RESULT_VARIABLE DEPLOY_RESULT
-            OUTPUT_VARIABLE DEPLOY_OUTPUT
-            ERROR_VARIABLE DEPLOY_ERROR
-            TIMEOUT 300
-        )
-        
-        message(STATUS \"=== Deployment Results ===\")
-        message(STATUS \"Result code: \${DEPLOY_RESULT}\")
-        
-        if(DEPLOY_OUTPUT)
-            message(STATUS \"Output: \${DEPLOY_OUTPUT}\")
+        # Incremental Check: Skip windeployqt if Qt Core is already present
+        # This speeds up development builds significantly
+        if(EXISTS \"\${CMAKE_INSTALL_PREFIX}/bin/Qt6Core.dll\")
+            message(STATUS \"✓ Qt Core DLL found. Skipping windeployqt (incremental).\")
+        else()
+            message(STATUS \"Qt Core not found. Running windeployqt...\")
+            # Run windeployqt with comprehensive logging
+            execute_process(
+                COMMAND \"${WINDEPLOYQT_PATH}\" 
+                    --release 
+                    --no-translations 
+                    --no-system-d3d-compiler 
+                    --no-opengl-sw 
+                    --no-compiler-runtime
+                    --verbose 2
+                    --dir \"\${CMAKE_INSTALL_PREFIX}/bin\" 
+                    \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/${PROJECT_NAME}.exe\"
+                WORKING_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}\"
+                RESULT_VARIABLE DEPLOY_RESULT
+                OUTPUT_VARIABLE DEPLOY_OUTPUT
+                ERROR_VARIABLE DEPLOY_ERROR
+                TIMEOUT 300
+            )
+            
+            message(STATUS \"=== Deployment Results ===\")
+            message(STATUS \"Result code: \${DEPLOY_RESULT}\")
+            
+            if(DEPLOY_OUTPUT)
+                message(STATUS \"Output: \${DEPLOY_OUTPUT}\")
+            endif()
+            
+            if(DEPLOY_ERROR)
+                message(STATUS \"Error output: \${DEPLOY_ERROR}\")
+            endif()
+            
+            if(NOT DEPLOY_RESULT EQUAL 0)
+                message(FATAL_ERROR \"❌ Qt deployment failed with code \${DEPLOY_RESULT}\")
+            endif()
         endif()
         
-        if(DEPLOY_ERROR)
-            message(STATUS \"Error output: \${DEPLOY_ERROR}\")
-        endif()
-        
-        if(NOT DEPLOY_RESULT EQUAL 0)
-            message(FATAL_ERROR \"❌ Qt deployment failed with code \${DEPLOY_RESULT}\")
-        endif()
+        # Verify Qt DLLs were actually deployed
         
         # Verify Qt DLLs were actually deployed
         file(GLOB QT_DLLS \"\${CMAKE_INSTALL_PREFIX}/Qt6*.dll\" \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/Qt6*.dll\")
@@ -149,7 +158,7 @@ function(deploy_qt_enhanced PROJECT_NAME)
                 message(STATUS \"  - \${dll}\")
             endforeach()
         endif()
-    ")
+    " COMPONENT Prerequisites)
 endfunction()
 
 # Fallback manual Qt DLL deployment
