@@ -10,7 +10,7 @@
 
 <br />
 <div align="center">
-  <a href="https://github.com/Deadbush225/RePhrase">
+  <a href="https://github.com/Deadbush225/FolderCustomizer">
     <img src="./Icons/Folder Customizer.png" alt="Logo" width="80" height="80">
   </a>
   <h3 style="font-size: 1.5em" align="center">Folder Customizer</h3>
@@ -21,11 +21,11 @@
     <br />
     <a href="./docs/docs.md"><strong>Explore the docs »</strong></a>
     <br />
-    <a href="https://github.com/Deadbush225/RePhrase#Demo">View Demo</a>
+    <a href="https://github.com/Deadbush225/FolderCustomizer#Demo">View Demo</a>
     &middot;
-    <a href="https://github.com/Deadbush225/RePhrase/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    <a href="https://github.com/Deadbush225/FolderCustomizer/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     &middot;
-    <a href="https://github.com/Deadbush225/RePhrase/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+    <a href="https://github.com/Deadbush225/FolderCustomizer/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
 </div>
 
