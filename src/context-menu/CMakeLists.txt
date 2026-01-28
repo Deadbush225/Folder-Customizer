@@ -30,9 +30,7 @@ set_target_properties(${ContextMenuDll} PROPERTIES
 )
 
 # Include directories
-target_include_directories(${ContextMenuDll} PRIVATE ${PROJECT_SOURCE_DIR}/../../Include)
-
-message(${PROJECT_SOURCE_DIR}/../../Include)
+target_include_directories(${ContextMenuDll} PRIVATE ${CMAKE_SOURCE_DIR}/Include)
 
 # Define UNICODE and _UNICODE to ensure Unicode API is used
 target_compile_definitions(${ContextMenuDll} PRIVATE UNICODE _UNICODE)
