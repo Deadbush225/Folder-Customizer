@@ -10,13 +10,11 @@ function(setup_install_local_target PROJECT_NAME)
     endif()
 
     add_custom_target(install_local
-        COMMAND ${CMAKE_COMMAND} -E echo "Cleaning ${INSTALL_LOCAL_DIR}"
-        COMMAND ${CMAKE_COMMAND} -E rm -rf "${INSTALL_LOCAL_DIR}"
+        # Incremental install: Do NOT wipe the directory
         COMMAND ${CMAKE_COMMAND} -E make_directory "${INSTALL_LOCAL_DIR}"
-        COMMAND ${CMAKE_COMMAND} -E echo "Installing to ${INSTALL_LOCAL_DIR}"
         COMMAND ${CMAKE_COMMAND} --install "${CMAKE_BINARY_DIR}" --config $<IF:$<BOOL:$<CONFIG>>,$<CONFIG>,Release> --prefix "${INSTALL_LOCAL_DIR}"
         USES_TERMINAL
-        COMMENT "Build + local install to ${INSTALL_LOCAL_DIR}"
+        COMMENT "Build + local install to ${INSTALL_LOCAL_DIR} (Incremental)"
     )
 
     add_dependencies(install_local ${PROJECT_NAME})
