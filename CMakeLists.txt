@@ -77,6 +77,11 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES}
     ${app_icon_resource_windows}
     Icons/resource.qrc)
 
+# Hide console window in non-Debug builds
+if(WIN32 AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE ON)
+endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "FolderCustomizer")
 
 # Link libraries
