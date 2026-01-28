@@ -10,6 +10,7 @@ compile_commands.json
 release_notes.md
 /scripts/run.sh
 legacy/
+release-assets/
 
 release/
 pack/

@@ -1,0 +1,6 @@
+[submodule "scripts/scripts/eRelease"]
+	path = scripts/scripts/eRelease
+	url = https://github.com/Deadbush225/eRelease.git
+[submodule "scripts/eRelease"]
+	path = scripts/eRelease
+	url = https://github.com/Deadbush225/eRelease.git

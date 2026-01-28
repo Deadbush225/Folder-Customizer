@@ -44,7 +44,7 @@ DefaultDirName={autopf}\Folder Customizer
 ; up
 PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
-OutputDir=windows-installer
+OutputDir=release-assets
 OutputBaseFilename={#MyPackageId}-{#MyAppVersion}
 SetupIconFile=.\dist\windows\bin\icons\Folder Customizer.ico
 SolidCompression=yes
