@@ -53,24 +53,6 @@ You can use this to customize colors of your folders and apply tags on them to g
 1. Go to releases and download [`Folder_Customizer-Installer.exe`](https://github.com/Deadbush225/Folder-Customizer/releases/)
 2. Run it and follow the installation procedures
 
-## Linux
-
-- Ubuntu/Debian
-- Fedora/RHEL
-- Arch Linux
-- Other distributions (AppImage)
-
-1. Go to releases and download the appropriate package for your distribution
-2. Install using your package manager or run the installation script:
-
-   ```bash
-   # Extract and run
-   ./install.sh
-
-   # Validate installation
-   ./install.sh --validate
-   ```
-
 ### Updates
 
 1. Under advanced settings, click "Check Updates"
