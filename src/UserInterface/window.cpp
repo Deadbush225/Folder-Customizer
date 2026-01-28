@@ -152,27 +152,31 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     auto line_edit_layout = new QHBoxLayout();
     auto line_edit_label = new QLabel("Custom Tag");
     this->line_edit = new QLineEdit();
+    this->line_edit->setPlaceholderText("System Files, Work, Projects");
 
     line_edit_layout->addWidget(line_edit_label);
     line_edit_layout->addWidget(this->line_edit);
     this->yes_tag_chkbx->setLayout(line_edit_layout);
 
-    // + RESET CHECKBOX
-    auto resetCheckBoxLayout = new QVBoxLayout();
+    // + apply button
+    auto apply_button = new QPushButton("Apply now");
+    QObject::connect(apply_button, &QPushButton::clicked, this,
+                     &FolderCustomizerWindow::apply);
 
-    resetIcon_chkbx = new QCheckBox("Default Icon");
-    resetTag_chkbx = new QCheckBox("Default Tag");
+    // + RESET CHECKBOX
+    auto reset_grpbx = new QGroupBox("What to Reset?");
+
+    auto resetCheckBoxLayout = new QVBoxLayout();
+    reset_grpbx->setLayout(resetCheckBoxLayout);
+
+    resetIcon_chkbx = new QCheckBox("Reset Icon");
+    resetTag_chkbx = new QCheckBox("Reset Tag");
 
     resetCheckBoxLayout->addWidget(resetIcon_chkbx);
     resetCheckBoxLayout->addWidget(resetTag_chkbx);
 
-    // + apply button
-    auto apply_button = new QPushButton("Apply");
-    QObject::connect(apply_button, &QPushButton::clicked, this,
-                     &FolderCustomizerWindow::apply);
-
     // + reset button
-    auto reset_button = new QPushButton("Reset");
+    auto reset_button = new QPushButton("Reset now");
     QObject::connect(reset_button, &QPushButton::clicked, this,
                      &FolderCustomizerWindow::reset);
 
@@ -192,7 +196,7 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     customization_layout->addStretch();
 
     customization_layout->addWidget(new QHSeparationLine());
-    customization_layout->addLayout(resetCheckBoxLayout);
+    customization_layout->addWidget(reset_grpbx);
     customization_layout->addWidget(reset_button);
     widget->setLayout(customization_layout);
     customizationDock->setWidget(widget);
