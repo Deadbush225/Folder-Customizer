@@ -55,8 +55,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/utilities/PostBuildOptimization.cmake)
 
 message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
 
-# Include project headers
-include_directories(${PROJECT_SOURCE_DIR}/Include)
+# Include project headers - now using target-specific includes instead of global
 
 add_subdirectory(src/Core)
 add_subdirectory(src/Logger)
@@ -76,6 +75,9 @@ set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/Icons/Folder Customiz
 add_executable(${PROJECT_NAME} ${SOURCE_FILES}
     ${app_icon_resource_windows}
     Icons/resource.qrc)
+
+# Add target-specific include directory
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/Include)
 
 # Hide console window in non-Debug builds
 if(WIN32 AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")

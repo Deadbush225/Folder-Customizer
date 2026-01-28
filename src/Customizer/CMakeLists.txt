@@ -5,4 +5,5 @@ add_library(${SUBDIR_NAME} OBJECT
     ${CMAKE_CURRENT_SOURCE_DIR}/tagger.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/folderCustomizer.cpp)
 
+target_include_directories(${SUBDIR_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/Include)
 target_link_libraries(${SUBDIR_NAME} PRIVATE Qt6::Core)

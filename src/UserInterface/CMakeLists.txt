@@ -1,14 +1,13 @@
 set(SUBDIR_NAME UserInterface)
 
-file(GLOB_RECURSE HEADERS_IN ${CMAKE_SOURCE_DIR}/Include/UserInterface/*.h)
-
+# Remove GLOB_RECURSE for headers - they shouldn't be in add_library sources
 add_library(${SUBDIR_NAME} OBJECT
     ${CMAKE_CURRENT_SOURCE_DIR}/subclass.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/window.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cli.cpp
-    ${HEADERS_IN}
 )
 
+target_include_directories(${SUBDIR_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/Include)
 target_link_libraries(${SUBDIR_NAME} PRIVATE Customizer Qt6::Widgets Qt6::Core)
 
 # Make sure Boost headers are visible on Windows (vcpkg or Chocolatey layouts)

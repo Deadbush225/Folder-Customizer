@@ -30,7 +30,7 @@ set_target_properties(${ContextMenuDll} PROPERTIES
 )
 
 # Include directories
-include_directories(${ContextMenuDll} PRIVATE ${PROJECT_SOURCE_DIR}/../../Include)
+target_include_directories(${ContextMenuDll} PRIVATE ${PROJECT_SOURCE_DIR}/../../Include)
 
 message(${PROJECT_SOURCE_DIR}/../../Include)
 
