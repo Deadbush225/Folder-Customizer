@@ -152,7 +152,7 @@ FolderCustomizerWindow::FolderCustomizerWindow() {
     auto line_edit_layout = new QHBoxLayout();
     auto line_edit_label = new QLabel("Custom Tag");
     this->line_edit = new QLineEdit();
-    this->line_edit->setPlaceholderText("System Files, Work, Projects");
+    this->line_edit->setPlaceholderText("Acads, Hobby, Database...");
 
     line_edit_layout->addWidget(line_edit_label);
     line_edit_layout->addWidget(this->line_edit);

@@ -53,11 +53,6 @@ void Logger::write(QVariant message,
 
     line.append(message.toString());
 
-    qDebug() << line;
-    qDebug() << line.toStdString().c_str();
-
-    ///////////////////////////////
-
     // this->mt_file = new QFile("Test.txt");
     // this->mt_file->open(QIODevice::WriteOnly);
     QTextStream stream = QTextStream(this->m_file);

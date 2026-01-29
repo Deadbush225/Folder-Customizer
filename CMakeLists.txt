@@ -19,9 +19,9 @@ endif()
 cmake_policy(SET CMP0144 NEW) # Case-insensitive
 
 # Set default build type
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Release")
-endif()
+set(CMAKE_BUILD_TYPE "Release")
+
+message("Building in ${CMAKE_BUILD_TYPE} mode")
 
 # Allow disabling Qt deploy script generation
 option(ENABLE_QT_DEPLOY_SCRIPT "Generate and run Qt deploy script during install" ON)
@@ -78,7 +78,7 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES}
     Icons/resource.qrc)
 
 # Hide console window in non-Debug builds
-if(WIN32 AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE ON)
 endif()
 
