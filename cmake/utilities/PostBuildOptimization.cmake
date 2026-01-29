@@ -13,9 +13,20 @@ function(setup_install_local_target PROJECT_NAME)
         add_custom_target(install_local
             COMMAND ${CMAKE_COMMAND} -E make_directory "${INSTALL_LOCAL_DIR}"
             # Install Application (Apps + Manifest) - Always
-            COMMAND ${CMAKE_COMMAND} --install "${CMAKE_BINARY_DIR}" --config $<IF:$<BOOL:$<CONFIG>>,$<CONFIG>,Release> --prefix "${INSTALL_LOCAL_DIR}" --component Application
+            COMMAND ${CMAKE_COMMAND} 
+              --install "${CMAKE_BINARY_DIR}" 
+              --config $<IF:$<BOOL:$<CONFIG>>,$<CONFIG>,Release> 
+              --prefix "${INSTALL_LOCAL_DIR}" 
+              --component Application
             # Install Prerequisites (DLLs, Icons, Qt) - Only if missing marker
-            COMMAND if not exist "${INSTALL_LOCAL_DIR}/bin/Qt6Core.dll" ${CMAKE_COMMAND} --install "${CMAKE_BINARY_DIR}" --config $<IF:$<BOOL:$<CONFIG>>,$<CONFIG>,Release> --prefix "${INSTALL_LOCAL_DIR}" --component Prerequisites
+            COMMAND if not exist            
+              "${INSTALL_LOCAL_DIR}/bin/Qt6Core.dll" 
+              ${CMAKE_COMMAND} --install "${CMAKE_BINARY_DIR}" 
+              --config $<IF:$<BOOL:$<CONFIG>>,$<CONFIG>,Release> 
+              --prefix "${INSTALL_LOCAL_DIR}" 
+              --component Prerequisites
+            # Strip binary in Release mode for reduced size
+            COMMAND if "$<CONFIG>" == "Release" ${CMAKE_STRIP} "${INSTALL_LOCAL_DIR}/bin/FolderCustomizer.exe" || exit /b 0
             USES_TERMINAL
             COMMENT "Smart Install: Application (Always) + Prerequisites (Conditional)"
         )
@@ -23,6 +34,8 @@ function(setup_install_local_target PROJECT_NAME)
         add_custom_target(install_local
             COMMAND ${CMAKE_COMMAND} -E make_directory "${INSTALL_LOCAL_DIR}"
             COMMAND ${CMAKE_COMMAND} --install "${CMAKE_BINARY_DIR}" --config $<IF:$<BOOL:$<CONFIG>>,$<CONFIG>,Release> --prefix "${INSTALL_LOCAL_DIR}"
+            # Strip binary in Release mode for reduced size
+            COMMAND bash -c "if [ \"$<CONFIG>\" = \"Release\" ]; then ${CMAKE_STRIP} ${INSTALL_LOCAL_DIR}/bin/FolderCustomizer || true; fi"
             USES_TERMINAL
             COMMENT "Build + local install to ${INSTALL_LOCAL_DIR}"
         )
